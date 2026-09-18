@@ -63,12 +63,12 @@
       "policy": "appVersion"
     },
     "extra": {
-      "firebaseApiKey": "YOUR_API_KEY",
-      "firebaseAuthDomain": "YOUR_PROJECT.firebaseapp.com",
-      "firebaseProjectId": "YOUR_PROJECT_ID",
-      "firebaseStorageBucket": "YOUR_PROJECT.appspot.com",
-      "firebaseMessagingSenderId": "YOUR_SENDER_ID",
-      "firebaseAppId": "YOUR_APP_ID"
+      "firebaseApiKey": "AIzaSyBqfIyOBPgjM4yRSMeA0nt68C7u9uRkHws",
+      "firebaseAuthDomain": "diaspoafricconnect.firebaseapp.com",
+      "firebaseProjectId": "diaspoafricconnect",
+      "firebaseStorageBucket": "diaspoafricconnect.firebasestorage.app",
+      "firebaseMessagingSenderId": "277479570571",
+      "firebaseAppId": "1:277479570571:web:7a993449b788c53502688e"
     }
   }
 }

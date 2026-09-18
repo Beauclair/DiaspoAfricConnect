@@ -1,7 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
@@ -22,12 +20,25 @@ export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
 
-export const db = getFirestore(app);
+// Lazy singletons – call getDb() / getStorageRef() the first time you need them.
+// Keeps the top-level module import safe even if firebase/firestore or
+// firebase/storage have Metro resolution problems.
+let _db: any = null;
+export function getDb() {
+  if (!_db) {
+    const mod = require('firebase/firestore');
+    _db = mod.getFirestore(app);
+  }
+  return _db;
+}
 
-enableIndexedDbPersistence(db).catch(() => {
-  // Persistence already enabled or unsupported — safe to ignore
-});
-
-export const storage = getStorage(app);
+let _storage: any = null;
+export function getStorageRef() {
+  if (!_storage) {
+    const mod = require('firebase/storage');
+    _storage = mod.getStorage(app);
+  }
+  return _storage;
+}
 
 export default app;

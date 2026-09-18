@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 import { HostCountryCode } from '../constants/countries';
 
 export interface User {

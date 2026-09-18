@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Card from '../common/Card';
+import NetworkImage from '../common/NetworkImage';
 import { Colors } from '../../constants/colors';
 import { Business } from '../../types';
 
@@ -20,7 +21,7 @@ export default function BusinessCard({ business, onPress }: BusinessCardProps) {
     >
       <Card style={styles.card}>
         {business.photos.length > 0 ? (
-          <Image source={{ uri: business.photos[0] }} style={styles.image} />
+          <NetworkImage uri={business.photos[0]} style={styles.image} />
         ) : (
           <View style={[styles.image, styles.placeholder]}>
             <MaterialIcons name="storefront" size={40} color={Colors.textLight} />

@@ -1,30 +1,36 @@
-import { useEffect } from 'react';
-import { Slot } from 'expo-router';
-import * as Sentry from '@sentry/react-native';
-import { AuthProvider } from '../src/contexts/AuthContext';
+import { Stack } from 'expo-router';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { CountryProvider } from '../src/contexts/CountryContext';
 import { StatusBar } from 'expo-status-bar';
 import ErrorBoundary from '../src/components/common/ErrorBoundary';
 import OfflineBanner from '../src/components/common/OfflineBanner';
 
-Sentry.init({
-  dsn: 'YOUR_SENTRY_DSN',
-  tracesSampleRate: 0.2,
-  enabled: !__DEV__,
-});
-
-function RootLayout() {
+function InnerLayout() {
+  const { user } = useAuth();
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <CountryProvider>
-          <StatusBar style="dark" />
-          <OfflineBanner />
-          <Slot />
-        </CountryProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <CountryProvider user={user}>
+      <StatusBar style="light" />
+      <OfflineBanner />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="business" />
+        <Stack.Screen name="immigration" />
+      </Stack>
+    </CountryProvider>
   );
 }
 
-export default Sentry.wrap(RootLayout);
+export default function RootLayout() {
+  return (
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <InnerLayout />
+        </AuthProvider>
+      </ErrorBoundary>
+    </SafeAreaProvider>
+  );
+}

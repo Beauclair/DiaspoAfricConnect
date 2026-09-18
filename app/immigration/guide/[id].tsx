@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../../src/constants/colors';
-import Card from '../../src/components/common/Card';
-import LoadingSpinner from '../../src/components/common/LoadingSpinner';
-import ErrorView from '../../src/components/common/ErrorView';
-import { getGuideById } from '../../src/services/immigrationService';
-import { ImmigrationGuide } from '../../src/types';
+import { Colors } from '../../../src/constants/colors';
+import Card from '../../../src/components/common/Card';
+import LoadingSpinner from '../../../src/components/common/LoadingSpinner';
+import ErrorView from '../../../src/components/common/ErrorView';
+import { getGuideById } from '../../../src/services/immigrationService';
+import { ImmigrationGuide } from '../../../src/types';
 
 export default function GuideDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

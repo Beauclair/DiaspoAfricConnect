@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { router } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
@@ -10,6 +11,7 @@ import { isValidEmail } from '../../src/utils/validation';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -56,7 +58,9 @@ export default function LoginScreen() {
             placeholder="Enter your password"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            rightIcon={<MaterialIcons name={showPassword ? 'visibility-off' : 'visibility'} size={22} color={Colors.textLight} />}
+            onRightIconPress={() => setShowPassword(!showPassword)}
           />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}

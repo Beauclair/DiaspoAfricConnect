@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
-import { collection, addDoc, getDocs, updateDoc, doc, query, where } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { getDb } from '../config/firebase';
 import { Business, ImmigrationGuide, Lawyer } from '../types';
 
 const sampleBusinesses: Omit<Business, 'id'>[] = [
@@ -18,7 +18,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     phone: '(202) 555-0101',
     website: 'https://mamaafrica.example.com',
     languagesSpoken: ['English', 'Yoruba', 'Igbo'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.7,
     reviewCount: 23,
@@ -38,7 +38,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     coordinates: { latitude: 38.9572, longitude: -77.0236 },
     phone: '(202) 555-0202',
     languagesSpoken: ['English', 'Amharic', 'Tigrinya'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.5,
     reviewCount: 15,
@@ -58,7 +58,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     coordinates: { latitude: 38.9940, longitude: -77.0261 },
     phone: '(301) 555-0303',
     languagesSpoken: ['English', 'French', 'Wolof'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.8,
     reviewCount: 42,
@@ -78,7 +78,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     coordinates: { latitude: 38.9545, longitude: -76.9429 },
     phone: '(301) 555-0404',
     languagesSpoken: ['English', 'Twi'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.6,
     reviewCount: 18,
@@ -99,7 +99,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     phone: '(703) 555-0505',
     website: 'https://ubuntutech.example.com',
     languagesSpoken: ['English', 'Swahili'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.9,
     reviewCount: 11,
@@ -119,7 +119,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     coordinates: { latitude: 43.6655, longitude: -79.4088 },
     phone: '(416) 555-0606',
     languagesSpoken: ['English', 'Yoruba'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.6,
     reviewCount: 19,
@@ -139,7 +139,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     coordinates: { latitude: 51.4613, longitude: -0.1156 },
     phone: '+44 20 7555 0707',
     languagesSpoken: ['English', 'Twi', 'French'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.7,
     reviewCount: 31,
@@ -159,7 +159,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     coordinates: { latitude: 48.8886, longitude: 2.3520 },
     phone: '+33 1 55 55 08 08',
     languagesSpoken: ['French', 'Wolof', 'English'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.5,
     reviewCount: 27,
@@ -179,7 +179,7 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
     coordinates: { latitude: 52.5480, longitude: 13.3590 },
     phone: '+49 30 555 0909',
     languagesSpoken: ['German', 'French', 'English'],
-    photos: [],
+    photos: ['https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop'],
     ownerId: 'seed',
     averageRating: 4.4,
     reviewCount: 14,
@@ -513,9 +513,31 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
 ];
 
 export async function seedDatabase() {
+  const db = getDb();
+
+  // Check if seed businesses already have photos — if so, seeding is complete
   const businessSnap = await getDocs(collection(db, 'businesses'));
-  if (businessSnap.size > 0) {
-    console.log('Database already seeded, skipping...');
+  const seedDocs = businessSnap.docs.filter((d) => d.data().ownerId === 'seed');
+
+  if (seedDocs.length > 0) {
+    const hasPhotos = seedDocs.some((d) => {
+      const photos = d.data().photos;
+      return photos && photos.length > 0;
+    });
+    if (hasPhotos) {
+      console.log('Database already seeded with photos, skipping...');
+      return;
+    }
+    // Old seed data without photos — delete and re-seed
+    console.log('Replacing old seed data with updated version (with photos)...');
+    for (const d of seedDocs) {
+      await deleteDoc(doc(db, 'businesses', d.id));
+    }
+  }
+
+  // Skip if there are non-seed businesses but no seed businesses (user has real data)
+  if (businessSnap.size > 0 && seedDocs.length === 0) {
+    console.log('Database has user data, skipping seed...');
     return;
   }
 
@@ -526,20 +548,28 @@ export async function seedDatabase() {
   }
   console.log(`Seeded ${sampleBusinesses.length} businesses`);
 
-  for (const guide of sampleGuides) {
-    await addDoc(collection(db, 'immigrationGuides'), guide);
+  // Only seed guides and lawyers if they don't exist yet
+  const guideSnap = await getDocs(collection(db, 'immigrationGuides'));
+  if (guideSnap.size === 0) {
+    for (const guide of sampleGuides) {
+      await addDoc(collection(db, 'immigrationGuides'), guide);
+    }
+    console.log(`Seeded ${sampleGuides.length} immigration guides`);
   }
-  console.log(`Seeded ${sampleGuides.length} immigration guides`);
 
-  for (const lawyer of sampleLawyers) {
-    await addDoc(collection(db, 'lawyers'), lawyer);
+  const lawyerSnap = await getDocs(collection(db, 'lawyers'));
+  if (lawyerSnap.size === 0) {
+    for (const lawyer of sampleLawyers) {
+      await addDoc(collection(db, 'lawyers'), lawyer);
+    }
+    console.log(`Seeded ${sampleLawyers.length} lawyers`);
   }
-  console.log(`Seeded ${sampleLawyers.length} lawyers`);
 
   console.log('Database seeding complete!');
 }
 
 export async function migrateExistingData() {
+  const db = getDb();
   const collections = ['businesses', 'immigrationGuides', 'lawyers'];
   for (const col of collections) {
     const snapshot = await getDocs(collection(db, col));
@@ -552,4 +582,22 @@ export async function migrateExistingData() {
     }
     if (migrated > 0) console.log(`Migrated ${migrated} ${col} documents to hostCountry: US`);
   }
+
+  // Update seed businesses that have no photos with placeholder images
+  const photoMap: Record<string, string[]> = {};
+  for (const biz of sampleBusinesses) {
+    if (biz.photos.length > 0) {
+      photoMap[biz.name] = biz.photos;
+    }
+  }
+  const bizSnap = await getDocs(collection(db, 'businesses'));
+  let photoUpdates = 0;
+  for (const d of bizSnap.docs) {
+    const data = d.data();
+    if ((!data.photos || data.photos.length === 0) && photoMap[data.name]) {
+      await updateDoc(doc(db, 'businesses', d.id), { photos: photoMap[data.name] });
+      photoUpdates++;
+    }
+  }
+  if (photoUpdates > 0) console.log(`Updated ${photoUpdates} businesses with placeholder photos`);
 }

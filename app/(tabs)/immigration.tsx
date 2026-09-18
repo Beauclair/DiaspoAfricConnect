@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import Card from '../../src/components/common/Card';
@@ -18,11 +18,7 @@ export default function ImmigrationHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, [hostCountry]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setError('');
     try {
       const [g, l] = await Promise.all([getGuides(hostCountry), getLawyers(hostCountry)]);
@@ -32,7 +28,13 @@ export default function ImmigrationHomeScreen() {
       setError(e.message || 'Failed to load immigration data');
     }
     setLoading(false);
-  };
+  }, [hostCountry]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorView message={error} onRetry={loadData} />;

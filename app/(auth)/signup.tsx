@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { router } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
@@ -15,6 +16,8 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const [hostCountry, setHostCountry] = useState<HostCountryCode>('US');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -77,7 +80,9 @@ export default function SignupScreen() {
             placeholder="Create a password"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            rightIcon={<MaterialIcons name={showPassword ? 'visibility-off' : 'visibility'} size={22} color={Colors.textLight} />}
+            onRightIconPress={() => setShowPassword(!showPassword)}
           />
           <Input
             label="Confirm Password"

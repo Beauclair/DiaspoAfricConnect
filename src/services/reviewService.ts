@@ -1,10 +1,11 @@
 import {
   collection, addDoc, getDocs, getDoc, query, where, orderBy, Timestamp, doc, updateDoc, increment,
 } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { getDb } from '../config/firebase';
 import { Review } from '../types';
 
 export async function getReviewsForBusiness(businessId: string): Promise<Review[]> {
+  const db = getDb();
   const q = query(
     collection(db, 'reviews'),
     where('businessId', '==', businessId),
@@ -15,6 +16,7 @@ export async function getReviewsForBusiness(businessId: string): Promise<Review[
 }
 
 export async function addReview(review: Omit<Review, 'id' | 'createdAt'>): Promise<string> {
+  const db = getDb();
   const docRef = await addDoc(collection(db, 'reviews'), {
     ...review,
     createdAt: Timestamp.now(),
@@ -40,6 +42,7 @@ export async function addReview(review: Omit<Review, 'id' | 'createdAt'>): Promi
 }
 
 export async function respondToReview(reviewId: string, response: string): Promise<void> {
+  const db = getDb();
   await updateDoc(doc(db, 'reviews', reviewId), {
     ownerResponse: response,
     ownerResponseAt: Timestamp.now(),
