@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import SearchBar from '../../src/components/common/SearchBar';
@@ -22,11 +22,7 @@ export default function HomeScreen() {
   const [recentGuides, setRecentGuides] = useState<ImmigrationGuide[]>([]);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, [hostCountry]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setError('');
     try {
       const [businesses, guides] = await Promise.all([getBusinesses(hostCountry), getGuides(hostCountry)]);
@@ -35,7 +31,14 @@ export default function HomeScreen() {
     } catch (e: any) {
       setError(e.message || 'Failed to load data');
     }
-  };
+  }, [hostCountry]);
+
+  // Reload data every time this tab gains focus (e.g. after adding a business)
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   if (error) {
     return <ErrorView message={error} onRetry={loadData} />;

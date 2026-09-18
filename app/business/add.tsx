@@ -28,7 +28,7 @@ export default function AddBusinessScreen() {
   const [zipCode, setZipCode] = useState('');
   const [phone, setPhone] = useState('');
   const [website, setWebsite] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<{ uri: string; base64: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
@@ -46,9 +46,15 @@ export default function AddBusinessScreen() {
       allowsEditing: true,
       aspect: [16, 9],
       quality: 0.7,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
-      setImages((prev) => [...prev, result.assets[0].uri]);
+      const asset = result.assets[0];
+      if (asset.base64) {
+        setImages((prev) => [...prev, { uri: asset.uri, base64: asset.base64! }]);
+      } else {
+        Alert.alert('Error', 'Could not read image data. Please try another photo.');
+      }
     }
   };
 
@@ -87,7 +93,7 @@ export default function AddBusinessScreen() {
       });
 
       if (images.length > 0) {
-        const photoUrls = await uploadBusinessPhotos(businessId, images);
+        const photoUrls = await uploadBusinessPhotos(businessId, images.map((img) => img.base64));
         const { updateBusiness } = await import('../../src/services/businessService');
         await updateBusiness(businessId, { photos: photoUrls });
       }
@@ -127,9 +133,9 @@ export default function AddBusinessScreen() {
 
           <Text style={styles.label}>Photos (up to 3)</Text>
           <View style={styles.imageRow}>
-            {images.map((uri, i) => (
+            {images.map((img, i) => (
               <View key={i} style={styles.imageWrapper}>
-                <Image source={{ uri }} style={styles.thumbnail} />
+                <Image source={{ uri: img.uri }} style={styles.thumbnail} />
                 <TouchableOpacity style={styles.removeBtn} onPress={() => removeImage(i)}>
                   <MaterialIcons name="close" size={16} color={Colors.textWhite} />
                 </TouchableOpacity>

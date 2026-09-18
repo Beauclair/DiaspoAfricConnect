@@ -36,7 +36,7 @@ export default function EditBusinessScreen() {
   const [phone, setPhone] = useState('');
   const [website, setWebsite] = useState('');
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
-  const [newImages, setNewImages] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<{ uri: string; base64: string }[]>([]);
 
   useEffect(() => {
     loadBusiness();
@@ -90,9 +90,15 @@ export default function EditBusinessScreen() {
       allowsEditing: true,
       aspect: [16, 9],
       quality: 0.7,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
-      setNewImages((prev) => [...prev, result.assets[0].uri]);
+      const asset = result.assets[0];
+      if (asset.base64) {
+        setNewImages((prev) => [...prev, { uri: asset.uri, base64: asset.base64! }]);
+      } else {
+        Alert.alert('Error', 'Could not read image data. Please try another photo.');
+      }
     }
   };
 
@@ -118,7 +124,7 @@ export default function EditBusinessScreen() {
     try {
       let allPhotos = [...existingPhotos];
       if (newImages.length > 0) {
-        const uploaded = await uploadBusinessPhotos(id, newImages);
+        const uploaded = await uploadBusinessPhotos(id, newImages.map((img) => img.base64));
         allPhotos = [...allPhotos, ...uploaded];
       }
 
@@ -183,9 +189,9 @@ export default function EditBusinessScreen() {
                 </TouchableOpacity>
               </View>
             ))}
-            {newImages.map((uri, i) => (
+            {newImages.map((img, i) => (
               <View key={`new-${i}`} style={styles.imageWrapper}>
-                <Image source={{ uri }} style={styles.thumbnail} />
+                <Image source={{ uri: img.uri }} style={styles.thumbnail} />
                 <TouchableOpacity style={styles.removeBtn} onPress={() => removeNewImage(i)}>
                   <MaterialIcons name="close" size={16} color={Colors.textWhite} />
                 </TouchableOpacity>

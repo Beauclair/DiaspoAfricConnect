@@ -1,8 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HostCountryCode, CountryConfig, getCountryConfig } from '../constants/countries';
-import { useAuth } from './AuthContext';
-import { getUserProfile, updateUserProfile } from '../services/authService';
+
+// Lazy-import authService to avoid crashing at module load time
+let _getUserProfile: ((uid: string) => Promise<any>) | null = null;
+let _updateUserProfile: ((uid: string, data: any) => Promise<void>) | null = null;
+
+async function loadAuthService() {
+  if (!_getUserProfile) {
+    try {
+      const mod = await import('../services/authService');
+      _getUserProfile = mod.getUserProfile;
+      _updateUserProfile = mod.updateUserProfile;
+    } catch (e) {
+      console.error('CountryContext: Failed to load authService:', e);
+    }
+  }
+}
 
 const STORAGE_KEY = '@host_country';
 
@@ -18,8 +32,12 @@ const CountryContext = createContext<CountryContextValue>({
   setHostCountry: async () => {},
 });
 
-export function CountryProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+interface CountryProviderProps {
+  children: React.ReactNode;
+  user?: { uid: string } | null;
+}
+
+export function CountryProvider({ children, user = null }: CountryProviderProps) {
   const [hostCountry, setHostCountryState] = useState<HostCountryCode>('US');
 
   useEffect(() => {
@@ -30,19 +48,26 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
-    getUserProfile(user.uid).then((profile) => {
-      if (profile?.hostCountry) {
-        setHostCountryState(profile.hostCountry);
-        AsyncStorage.setItem(STORAGE_KEY, profile.hostCountry);
+    loadAuthService().then(() => {
+      if (_getUserProfile) {
+        _getUserProfile(user.uid).then((profile: any) => {
+          if (profile?.hostCountry) {
+            setHostCountryState(profile.hostCountry);
+            AsyncStorage.setItem(STORAGE_KEY, profile.hostCountry);
+          }
+        }).catch((e: any) => console.error('CountryContext: getUserProfile error:', e));
       }
-    });
+    }).catch((e: any) => console.error('CountryContext: loadAuthService error:', e));
   }, [user]);
 
   const setHostCountry = useCallback(async (code: HostCountryCode) => {
     setHostCountryState(code);
     await AsyncStorage.setItem(STORAGE_KEY, code);
     if (user) {
-      await updateUserProfile(user.uid, { hostCountry: code });
+      await loadAuthService();
+      if (_updateUserProfile) {
+        await _updateUserProfile(user.uid, { hostCountry: code });
+      }
     }
   }, [user]);
 

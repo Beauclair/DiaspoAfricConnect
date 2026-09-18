@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
 import SearchBar from '../../src/components/common/SearchBar';
 import CategoryChip from '../../src/components/common/CategoryChip';
@@ -21,11 +21,7 @@ export default function BusinessListScreen() {
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | null>(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadBusinesses();
-  }, [selectedCategory, hostCountry]);
-
-  const loadBusinesses = async () => {
+  const loadBusinesses = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -39,7 +35,14 @@ export default function BusinessListScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory, hostCountry]);
+
+  // Reload every time this tab gains focus
+  useFocusEffect(
+    useCallback(() => {
+      loadBusinesses();
+    }, [loadBusinesses])
+  );
 
   const handleSearch = async (text: string) => {
     setSearch(text);

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking, TextInput, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, TextInput, Alert,
 } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import Card from '../../src/components/common/Card';
 import Button from '../../src/components/common/Button';
+import NetworkImage from '../../src/components/common/NetworkImage';
 import ReviewCard from '../../src/components/business/ReviewCard';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 import ErrorView from '../../src/components/common/ErrorView';
@@ -120,7 +121,7 @@ export default function BusinessDetailScreen() {
       <Stack.Screen options={{ headerTitle: business.name }} />
       <ScrollView style={styles.container}>
         {business.photos.length > 0 ? (
-          <Image source={{ uri: business.photos[0] }} style={styles.heroImage} />
+          <NetworkImage uri={business.photos[0]} style={styles.heroImage} />
         ) : (
           <View style={[styles.heroImage, styles.placeholder]}>
             <MaterialIcons name="storefront" size={60} color={Colors.textLight} />

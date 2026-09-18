@@ -1,11 +1,12 @@
 import {
   collection, doc, getDocs, getDoc, addDoc, query, where, orderBy, Timestamp,
 } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { getDb } from '../config/firebase';
 import { ImmigrationGuide, Lawyer, ImmigrationCategory } from '../types';
 import { HostCountryCode } from '../constants/countries';
 
 export async function getGuides(hostCountry?: HostCountryCode): Promise<ImmigrationGuide[]> {
+  const db = getDb();
   const constraints: any[] = [];
   if (hostCountry) constraints.push(where('hostCountry', '==', hostCountry));
   constraints.push(orderBy('lastUpdated', 'desc'));
@@ -15,11 +16,13 @@ export async function getGuides(hostCountry?: HostCountryCode): Promise<Immigrat
 }
 
 export async function getGuideById(id: string): Promise<ImmigrationGuide | null> {
+  const db = getDb();
   const snapshot = await getDoc(doc(db, 'immigrationGuides', id));
   return snapshot.exists() ? ({ id: snapshot.id, ...snapshot.data() } as ImmigrationGuide) : null;
 }
 
 export async function getGuidesByCategory(category: ImmigrationCategory, hostCountry?: HostCountryCode): Promise<ImmigrationGuide[]> {
+  const db = getDb();
   const constraints: any[] = [where('category', '==', category)];
   if (hostCountry) constraints.push(where('hostCountry', '==', hostCountry));
   constraints.push(orderBy('lastUpdated', 'desc'));
@@ -29,6 +32,7 @@ export async function getGuidesByCategory(category: ImmigrationCategory, hostCou
 }
 
 export async function getLawyers(hostCountry?: HostCountryCode): Promise<Lawyer[]> {
+  const db = getDb();
   const constraints: any[] = [];
   if (hostCountry) constraints.push(where('hostCountry', '==', hostCountry));
   constraints.push(orderBy('averageRating', 'desc'));
@@ -38,6 +42,7 @@ export async function getLawyers(hostCountry?: HostCountryCode): Promise<Lawyer[
 }
 
 export async function getLawyerById(id: string): Promise<Lawyer | null> {
+  const db = getDb();
   const snapshot = await getDoc(doc(db, 'lawyers', id));
   return snapshot.exists() ? ({ id: snapshot.id, ...snapshot.data() } as Lawyer) : null;
 }
