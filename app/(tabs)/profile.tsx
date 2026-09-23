@@ -61,11 +61,34 @@ export default function ProfileScreen() {
         style: 'destructive',
         onPress: async () => {
           await logOut();
-          router.replace('/(auth)/login');
+          router.replace('/(tabs)/home');
         },
       },
     ]);
   };
+
+  if (!user) {
+    return (
+      <View style={styles.guestContainer}>
+        <MaterialIcons name="person-outline" size={80} color={Colors.textLight} />
+        <Text style={styles.guestTitle}>Sign in to your account</Text>
+        <Text style={styles.guestSubtitle}>
+          Create an account to add businesses, write reviews, and manage your profile.
+        </Text>
+        <Button
+          title="Sign In"
+          onPress={() => router.push('/(auth)/login')}
+          style={{ marginTop: 24, width: '100%' }}
+        />
+        <Button
+          title="Create Account"
+          onPress={() => router.push('/(auth)/signup')}
+          variant="outline"
+          style={{ marginTop: 12, width: '100%' }}
+        />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -166,6 +189,26 @@ function MenuItem({ icon, label, onPress }: { icon: string; label: string; onPre
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  guestContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  guestTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginTop: 20,
+  },
+  guestSubtitle: {
+    fontSize: 15,
+    color: Colors.textLight,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 22,
+  },
   avatarSection: { alignItems: 'center', paddingVertical: 24, backgroundColor: Colors.primary },
   avatar: {
     width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.textWhite,

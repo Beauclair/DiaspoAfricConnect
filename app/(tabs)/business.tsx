@@ -8,12 +8,15 @@ import BusinessCard from '../../src/components/business/BusinessCard';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 import ErrorView from '../../src/components/common/ErrorView';
 import Button from '../../src/components/common/Button';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { useCountry } from '../../src/contexts/CountryContext';
+import { requireAuth } from '../../src/utils/authGuard';
 import { getBusinesses, getBusinessesByCategory, searchBusinesses } from '../../src/services/businessService';
 import { Business, BusinessCategory } from '../../src/types';
 import { BUSINESS_CATEGORIES } from '../../src/constants/categories';
 
 export default function BusinessListScreen() {
+  const { user } = useAuth();
   const { hostCountry } = useCountry();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +112,7 @@ export default function BusinessListScreen() {
               <Text style={styles.emptyText}>No businesses found</Text>
               <Button
                 title="Add a Business"
-                onPress={() => router.push('/business/add')}
+                onPress={() => requireAuth(user, () => router.push('/business/add'))}
                 variant="outline"
                 style={{ marginTop: 16 }}
               />
@@ -120,7 +123,7 @@ export default function BusinessListScreen() {
 
       <Button
         title="+ Add Business"
-        onPress={() => router.push('/business/add')}
+        onPress={() => requireAuth(user, () => router.push('/business/add'))}
         style={styles.fab}
       />
     </View>

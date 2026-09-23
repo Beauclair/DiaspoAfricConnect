@@ -62,13 +62,13 @@ export default function SignupScreen() {
 
         <View style={styles.form}>
           <Input
-            label="Full Name"
+            label="Full Name *"
             placeholder="Enter your name"
             value={displayName}
             onChangeText={setDisplayName}
           />
           <Input
-            label="Email"
+            label="Email *"
             placeholder="Enter your email"
             value={email}
             onChangeText={setEmail}
@@ -76,7 +76,7 @@ export default function SignupScreen() {
             autoCapitalize="none"
           />
           <Input
-            label="Password"
+            label="Password *"
             placeholder="Create a password"
             value={password}
             onChangeText={setPassword}
@@ -85,14 +85,14 @@ export default function SignupScreen() {
             onRightIconPress={() => setShowPassword(!showPassword)}
           />
           <Input
-            label="Confirm Password"
+            label="Confirm Password *"
             placeholder="Confirm your password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
           />
 
-          <Text style={styles.countryLabel}>Where do you live?</Text>
+          <Text style={styles.countryLabel}>Where do you live? *</Text>
           <View style={styles.countryGrid}>
             {HOST_COUNTRY_LIST.map((c) => (
               <TouchableOpacity
@@ -121,6 +121,10 @@ export default function SignupScreen() {
               <Text style={styles.footerLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity onPress={() => router.replace('/(tabs)/home')} style={styles.guestLink}>
+            <Text style={styles.guestLinkText}>Continue without an account</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -210,5 +214,14 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  guestLink: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  guestLinkText: {
+    color: Colors.textLight,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });

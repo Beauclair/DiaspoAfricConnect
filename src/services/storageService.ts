@@ -1,21 +1,16 @@
-import { ref, uploadBytes, getDownloadURL, updateMetadata, listAll } from 'firebase/storage';
+import { ref, getDownloadURL, updateMetadata, listAll } from 'firebase/storage';
 import { getStorageRef } from '../config/firebase';
+import { auth } from '../config/firebase';
 import { File, Directory, Paths } from 'expo-file-system';
 
 /**
  * Upload a base64-encoded image to Firebase Storage.
  *
- * React Native's Blob polyfill cannot create Blobs from ArrayBuffer /
- * Uint8Array, so both `uploadBytes(ref, uint8array)` and
- * `uploadString(ref, base64, 'base64')` crash with:
- *   "Creating blobs from ArrayBuffer and ArrayBufferView are not supported"
- *
- * Workaround:
- *  1. Write the base64 to a temp file via expo-file-system (decodes natively).
- *  2. `fetch()` that local `file://` URI → RN returns a real native Blob.
- *  3. Pass the Blob to `uploadBytes` — Firebase sees a native Blob and
- *     uploads without ever touching ArrayBuffer.
- *  4. Clean up the temp file.
+ * React Native's Blob polyfill in Expo Go is broken — `fetch(file://).blob()`
+ * returns truncated data (e.g. 14 bytes from a 33 KB file). To avoid all JS
+ * Blob issues we use expo-file-system's native `File.upload()` which sends the
+ * file via the platform's native HTTP stack, completely bypassing RN's JS
+ * networking and Blob layers.
  */
 export async function uploadImage(base64Data: string, path: string, contentType = 'image/jpeg'): Promise<string> {
   if (!base64Data || base64Data.length === 0) {
@@ -25,7 +20,7 @@ export async function uploadImage(base64Data: string, path: string, contentType 
   // Strip data-URI prefix if accidentally included
   const raw = base64Data.replace(/^data:[^;]+;base64,/, '');
   const approxBytes = Math.round((raw.length * 3) / 4);
-  console.log(`Uploading image: ${path} (~${approxBytes} bytes, ${contentType})`);
+  console.log(`[upload] path=${path}, ~${approxBytes} bytes, type=${contentType}`);
 
   // 1. Write base64 → binary temp file
   const ext = contentType === 'image/png' ? 'png' : 'jpg';
@@ -37,24 +32,54 @@ export async function uploadImage(base64Data: string, path: string, contentType 
   const tmpFile = new File(tmpDir, tmpName);
   tmpFile.create();
   tmpFile.write(raw, { encoding: 'base64' });
-  console.log(`Temp file written: ${tmpFile.uri} (exists: ${tmpFile.exists})`);
+
+  const fileSize = tmpFile.size;
+  console.log(`[upload] Temp file: ${tmpFile.uri}, size=${fileSize}`);
+
+  if (fileSize < 100) {
+    tmpFile.delete();
+    throw new Error(`Temp file too small (${fileSize} bytes) — image data may be corrupt`);
+  }
 
   try {
-    // 2. fetch() the local file → native Blob (no ArrayBuffer involved)
-    const blobResponse = await fetch(tmpFile.uri);
-    const blob = await blobResponse.blob();
-    console.log(`Blob created: ${blob.size} bytes, type: ${blob.type}`);
+    // 2. Get Firebase auth token
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) {
+      throw new Error('Not authenticated — cannot upload');
+    }
 
-    // 3. Upload to Firebase Storage
-    const storageRef = ref(getStorageRef(), path);
-    await uploadBytes(storageRef, blob, { contentType });
+    // 3. Build the Firebase Storage REST upload URL
+    //    https://firebase.google.com/docs/reference/rest/storage/rest/v0/b/o/insert
+    const storage = getStorageRef();
+    const bucket = storage.app.options.storageBucket;
+    const encodedPath = encodeURIComponent(path);
+    const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodedPath}`;
 
+    console.log(`[upload] Native upload to ${bucket}/${path}`);
+
+    // 4. Upload via expo-file-system native HTTP (bypasses JS Blob entirely)
+    const result = await tmpFile.upload(uploadUrl, {
+      httpMethod: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': contentType,
+      },
+      sessionType: 'foreground',
+    });
+
+    console.log(`[upload] Response: status=${result.status}`);
+
+    if (result.status < 200 || result.status >= 300) {
+      throw new Error(`Upload failed (${result.status}): ${result.body}`);
+    }
+
+    // 5. Get the download URL via Firebase SDK
+    const storageRef = ref(storage, path);
     const downloadURL = await getDownloadURL(storageRef);
-    console.log(`Upload complete, URL: ${downloadURL.substring(0, 80)}...`);
+    console.log(`[upload] Done: ${downloadURL.substring(0, 80)}...`);
     return downloadURL;
   } finally {
-    // 4. Clean up temp file
-    try { tmpFile.delete(); } catch { /* ignore cleanup errors */ }
+    try { tmpFile.delete(); } catch { /* ignore */ }
   }
 }
 
@@ -69,7 +94,7 @@ export async function uploadBusinessPhotos(
 ): Promise<string[]> {
   const urls: string[] = [];
   for (let i = 0; i < base64Images.length; i++) {
-    const path = `businesses/${businessId}/photo_${i}_${Date.now()}`;
+    const path = `businesses/${businessId}/photo_${i}_${Date.now()}.jpg`;
     const url = await uploadImage(base64Images[i], path);
     urls.push(url);
   }

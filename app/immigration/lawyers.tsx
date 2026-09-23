@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Linking } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import SearchBar from '../../src/components/common/SearchBar';
@@ -8,6 +8,8 @@ import Card from '../../src/components/common/Card';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 import ErrorView from '../../src/components/common/ErrorView';
 import { useCountry } from '../../src/contexts/CountryContext';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { requireAuth } from '../../src/utils/authGuard';
 import { getLawyers, searchLawyers } from '../../src/services/immigrationService';
 import { Lawyer } from '../../src/types';
 
@@ -76,6 +78,7 @@ function LawyerCard({ lawyer }: { lawyer: Lawyer }) {
 
 export default function LawyerDirectoryScreen() {
   const { hostCountry } = useCountry();
+  const { user } = useAuth();
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -131,9 +134,29 @@ export default function LawyerDirectoryScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <LawyerCard lawyer={item} />}
             contentContainerStyle={styles.list}
-            ListEmptyComponent={<Text style={styles.empty}>No lawyers found</Text>}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <MaterialIcons name="gavel" size={48} color={Colors.textLight} />
+                <Text style={styles.empty}>No lawyers registered yet</Text>
+                <TouchableOpacity
+                  style={styles.registerLink}
+                  onPress={() => requireAuth(user, () => router.push('/immigration/register-lawyer'))}
+                >
+                  <Text style={styles.registerLinkText}>Be the first to register</Text>
+                </TouchableOpacity>
+              </View>
+            }
           />
         )}
+
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => requireAuth(user, () => router.push('/immigration/register-lawyer'))}
+          accessibilityRole="button"
+          accessibilityLabel="Register as a lawyer"
+        >
+          <MaterialIcons name="person-add" size={24} color={Colors.textWhite} />
+        </TouchableOpacity>
       </View>
     </>
   );
@@ -143,7 +166,26 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   searchSection: { padding: 16, paddingBottom: 8 },
   list: { padding: 16, paddingBottom: 24 },
-  empty: { textAlign: 'center', color: Colors.textLight, marginTop: 40, fontSize: 16 },
+  empty: { textAlign: 'center', color: Colors.textLight, marginTop: 12, fontSize: 16 },
+  emptyContainer: { alignItems: 'center', marginTop: 40 },
+  registerLink: { marginTop: 12 },
+  registerLinkText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
   lawyerCard: { marginBottom: 12 },
   lawyerHeader: { flexDirection: 'row', alignItems: 'center' },
   avatar: {

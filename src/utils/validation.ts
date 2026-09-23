@@ -1,16 +1,16 @@
 import { HostCountryCode, getCountryConfig } from '../constants/countries';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[\d\s()+-]{7,20}$/;
 const URL_REGEX = /^https?:\/\/.+\..+/;
 
 export function isValidEmail(email: string): boolean {
   return EMAIL_REGEX.test(email.trim());
 }
 
-export function isValidPhone(phone: string): boolean {
-  if (!phone) return true;
-  return PHONE_REGEX.test(phone.trim());
+export function isValidPhone(phone: string, countryCode: HostCountryCode = 'US'): boolean {
+  if (!phone || !phone.trim()) return false;
+  const config = getCountryConfig(countryCode);
+  return config.phoneFields.phoneRegex.test(phone.trim());
 }
 
 export function isValidURL(url: string): boolean {
@@ -42,7 +42,7 @@ export function validateBusinessForm(fields: {
   city: string;
   state: string;
   zipCode: string;
-  phone?: string;
+  phone: string;
   website?: string;
 }, hostCountry: HostCountryCode = 'US'): string | null {
   const config = getCountryConfig(hostCountry);
@@ -53,7 +53,8 @@ export function validateBusinessForm(fields: {
   if (!fields.city.trim()) return 'City is required';
   if (!fields.state.trim()) return `${config.addressFields.regionLabel} is required`;
   if (!isValidPostalCode(fields.zipCode, hostCountry)) return `Enter a valid ${config.addressFields.postalCodeLabel.toLowerCase()} (e.g. ${config.addressFields.postalCodePlaceholder.replace('e.g. ', '')})`;
-  if (fields.phone && !isValidPhone(fields.phone)) return 'Enter a valid phone number';
+  if (!fields.phone.trim()) return 'Phone number is required';
+  if (!isValidPhone(fields.phone, hostCountry)) return `Enter a valid phone number (e.g. ${config.phoneFields.placeholder})`;
   if (fields.website && !isValidURL(fields.website)) return 'Website must start with http:// or https://';
   return null;
 }

@@ -8,11 +8,14 @@ import GuideCard from '../../src/components/immigration/GuideCard';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 import ErrorView from '../../src/components/common/ErrorView';
 import { useCountry } from '../../src/contexts/CountryContext';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { requireAuth } from '../../src/utils/authGuard';
 import { getGuides, getLawyers } from '../../src/services/immigrationService';
 import { ImmigrationGuide, Lawyer } from '../../src/types';
 
 export default function ImmigrationHomeScreen() {
   const { hostCountry, countryConfig } = useCountry();
+  const { user } = useAuth();
   const [guides, setGuides] = useState<ImmigrationGuide[]>([]);
   const [lawyerCount, setLawyerCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -60,8 +63,16 @@ export default function ImmigrationHomeScreen() {
           onPress={() => router.push('/immigration/checklist')}
         >
           <MaterialIcons name="checklist" size={28} color={Colors.secondary} />
-          <Text style={styles.linkTitle}>Document Checklist</Text>
+          <Text style={styles.linkTitle}>Checklist</Text>
           <Text style={styles.linkSub}>Track your docs</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.linkCard}
+          onPress={() => requireAuth(user, () => router.push('/immigration/register-lawyer'))}
+        >
+          <MaterialIcons name="person-add" size={28} color={Colors.accent} />
+          <Text style={styles.linkTitle}>I'm a Lawyer</Text>
+          <Text style={styles.linkSub}>Register now</Text>
         </TouchableOpacity>
       </View>
 
