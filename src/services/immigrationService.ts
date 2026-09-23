@@ -58,3 +58,14 @@ export async function searchLawyers(searchTerm: string, hostCountry?: HostCountr
       l.specializations.some((s) => s.toLowerCase().includes(lower))
   );
 }
+
+export async function addLawyer(lawyer: Omit<Lawyer, 'id' | 'createdAt' | 'averageRating' | 'reviewCount'>): Promise<string> {
+  const db = getDb();
+  const docRef = await addDoc(collection(db, 'lawyers'), {
+    ...lawyer,
+    averageRating: 0,
+    reviewCount: 0,
+    createdAt: Timestamp.now(),
+  });
+  return docRef.id;
+}

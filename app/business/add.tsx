@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, TouchableOpacity } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router, Stack, Redirect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
@@ -30,6 +30,10 @@ export default function AddBusinessScreen() {
   const [website, setWebsite] = useState('');
   const [images, setImages] = useState<{ uri: string; base64: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  if (!user) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const pickImage = async () => {
     if (images.length >= 3) {
@@ -73,7 +77,7 @@ export default function AddBusinessScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      const businessId = await addBusiness({
+      const businessData: Record<string, any> = {
         name,
         description,
         category,
@@ -84,13 +88,15 @@ export default function AddBusinessScreen() {
         state,
         zipCode,
         coordinates: { latitude: 0, longitude: 0 },
-        phone: phone || undefined,
-        website: website || undefined,
+        phone: phone.trim(),
         languagesSpoken: [],
         photos: [],
         ownerId: user.uid,
         isVerified: false,
-      });
+      };
+      if (website.trim()) businessData.website = website.trim();
+
+      const businessId = await addBusiness(businessData as any);
 
       if (images.length > 0) {
         const photoUrls = await uploadBusinessPhotos(businessId, images.map((img) => img.base64));
@@ -154,7 +160,7 @@ export default function AddBusinessScreen() {
           <Input label="City *" placeholder="Enter city" value={city} onChangeText={setCity} />
           <Input label={`${countryConfig.addressFields.regionLabel} *`} placeholder={countryConfig.addressFields.regionPlaceholder} value={state} onChangeText={setState} />
           <Input label={`${countryConfig.addressFields.postalCodeLabel} *`} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} />
-          <Input label="Phone" placeholder="(555) 123-4567" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <Input label="Phone *" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
           <Input label="Website" placeholder="https://..." value={website} onChangeText={setWebsite} autoCapitalize="none" />
 
           <Button title={loading ? 'Submitting...' : 'Submit Business'} onPress={handleSubmit} loading={loading} style={{ marginTop: 16 }} />

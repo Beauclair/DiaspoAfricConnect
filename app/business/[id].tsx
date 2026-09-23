@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, TextInput, Alert,
+  FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 import { Colors } from '../../src/constants/colors';
 import Card from '../../src/components/common/Card';
 import Button from '../../src/components/common/Button';
@@ -14,6 +17,7 @@ import ErrorView from '../../src/components/common/ErrorView';
 import { getBusinessById, deleteBusiness } from '../../src/services/businessService';
 import { getReviewsForBusiness, addReview, respondToReview } from '../../src/services/reviewService';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { requireAuth } from '../../src/utils/authGuard';
 import { Business, Review } from '../../src/types';
 
 export default function BusinessDetailScreen() {
@@ -31,6 +35,9 @@ export default function BusinessDetailScreen() {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
   const [respondingSubmitting, setRespondingSubmitting] = useState(false);
+
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const isOwner = business && user && business.ownerId === user.uid;
 
@@ -119,9 +126,43 @@ export default function BusinessDetailScreen() {
   return (
     <>
       <Stack.Screen options={{ headerTitle: business.name }} />
-      <ScrollView style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         {business.photos.length > 0 ? (
-          <NetworkImage uri={business.photos[0]} style={styles.heroImage} />
+          <View>
+            <FlatList
+              data={business.photos}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(_, i) => `photo-${i}`}
+              onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                setActivePhotoIndex(index);
+              }}
+              renderItem={({ item }) => (
+                <NetworkImage uri={item} style={styles.heroImage} />
+              )}
+            />
+            {business.photos.length > 1 && (
+              <View style={styles.dotRow}>
+                {business.photos.map((_, i) => (
+                  <View
+                    key={i}
+                    style={[styles.dot, i === activePhotoIndex && styles.dotActive]}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
         ) : (
           <View style={[styles.heroImage, styles.placeholder]}>
             <MaterialIcons name="storefront" size={60} color={Colors.textLight} />
@@ -131,27 +172,30 @@ export default function BusinessDetailScreen() {
         <View style={styles.content}>
           {isOwner && (
             <View style={styles.ownerBanner}>
-              <MaterialIcons name="verified-user" size={18} color={Colors.primary} />
-              <Text style={styles.ownerBannerText}>You own this business</Text>
-              <View style={{ flex: 1 }} />
-              <TouchableOpacity
-                style={styles.ownerActionBtn}
-                onPress={() => router.push({ pathname: '/business/edit', params: { id: business.id } })}
-                accessibilityRole="button"
-                accessibilityLabel="Edit business"
-              >
-                <MaterialIcons name="edit" size={18} color={Colors.primary} />
-                <Text style={styles.ownerActionText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.ownerActionBtn}
-                onPress={handleDelete}
-                accessibilityRole="button"
-                accessibilityLabel="Delete business"
-              >
-                <MaterialIcons name="delete" size={18} color={Colors.accent} />
-                <Text style={[styles.ownerActionText, { color: Colors.accent }]}>Delete</Text>
-              </TouchableOpacity>
+              <View style={styles.ownerBannerTop}>
+                <MaterialIcons name="verified-user" size={18} color={Colors.primary} />
+                <Text style={styles.ownerBannerText}>You own this business</Text>
+              </View>
+              <View style={styles.ownerActions}>
+                <TouchableOpacity
+                  style={styles.ownerActionBtn}
+                  onPress={() => router.push({ pathname: '/business/edit', params: { id: business.id } })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit business"
+                >
+                  <MaterialIcons name="edit" size={18} color={Colors.primary} />
+                  <Text style={styles.ownerActionText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.ownerActionBtn}
+                  onPress={handleDelete}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete business"
+                >
+                  <MaterialIcons name="delete" size={18} color={Colors.accent} />
+                  <Text style={[styles.ownerActionText, { color: Colors.accent }]}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -206,7 +250,7 @@ export default function BusinessDetailScreen() {
               !showReviewForm ? (
                 <Button
                   title="Write a Review"
-                  onPress={() => setShowReviewForm(true)}
+                  onPress={() => requireAuth(user, () => setShowReviewForm(true))}
                   variant="outline"
                   style={{ marginBottom: 16 }}
                 />
@@ -231,6 +275,11 @@ export default function BusinessDetailScreen() {
                     onChangeText={setComment}
                     multiline
                     numberOfLines={4}
+                    onFocus={() => {
+                      setTimeout(() => {
+                        scrollViewRef.current?.scrollToEnd({ animated: true });
+                      }, 300);
+                    }}
                   />
                   {reviewError ? <Text style={styles.reviewErrorText}>{reviewError}</Text> : null}
                   <View style={styles.reviewActions}>
@@ -289,28 +338,58 @@ export default function BusinessDetailScreen() {
           </View>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  heroImage: { width: '100%', height: 220 },
+  heroImage: { width: SCREEN_WIDTH, height: 220 },
   placeholder: { backgroundColor: Colors.border, justifyContent: 'center', alignItems: 'center' },
-  content: { padding: 20 },
-  ownerBanner: {
+  dotRow: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  dotActive: {
+    backgroundColor: '#fff',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  content: { padding: 20 },
+  ownerBanner: {
     backgroundColor: Colors.primary + '10',
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: Colors.primary + '30',
+    gap: 10,
+  },
+  ownerBannerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   ownerBannerText: { fontSize: 14, fontWeight: '600', color: Colors.primary },
-  ownerActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 8 },
+  ownerActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  ownerActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   ownerActionText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   name: { fontSize: 24, fontWeight: 'bold', color: Colors.text, flex: 1 },

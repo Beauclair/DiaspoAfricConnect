@@ -81,6 +81,7 @@ export interface Lawyer {
   averageRating: number;
   reviewCount: number;
   consultationFee?: string;
+  ownerId: string;
   createdAt: Timestamp;
 }
 

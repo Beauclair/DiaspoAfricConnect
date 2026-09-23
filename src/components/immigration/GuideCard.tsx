@@ -43,11 +43,11 @@ export default function GuideCard({ guide, onPress }: GuideCardProps) {
           <View style={styles.meta}>
             <View style={styles.metaItem}>
               <MaterialIcons name="schedule" size={14} color={Colors.textLight} />
-              <Text style={styles.metaText}>{guide.estimatedTimeline}</Text>
+              <Text style={styles.metaText} numberOfLines={1}>{guide.estimatedTimeline}</Text>
             </View>
             <View style={styles.metaItem}>
               <MaterialIcons name="attach-money" size={14} color={Colors.textLight} />
-              <Text style={styles.metaText}>{guide.estimatedCost}</Text>
+              <Text style={styles.metaText} numberOfLines={1}>{guide.estimatedCost}</Text>
             </View>
           </View>
         </View>
@@ -95,9 +95,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flex: 1,
   },
   metaText: {
     fontSize: 12,
     color: Colors.textLight,
+    flexShrink: 1,
   },
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router, Stack, Redirect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/colors';
 import BusinessCard from '../../src/components/business/BusinessCard';
@@ -20,6 +20,10 @@ export default function MyBusinessesScreen() {
   useEffect(() => {
     loadMyBusinesses();
   }, [user]);
+
+  if (!user) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const loadMyBusinesses = async () => {
     if (!user) return;

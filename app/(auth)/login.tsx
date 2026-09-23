@@ -77,6 +77,10 @@ export default function LoginScreen() {
               <Text style={styles.footerLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity onPress={() => router.replace('/(tabs)/home')} style={styles.guestLink}>
+            <Text style={styles.guestLinkText}>Continue without an account</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -136,5 +140,14 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  guestLink: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  guestLinkText: {
+    color: Colors.textLight,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
