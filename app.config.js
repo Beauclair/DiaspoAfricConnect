@@ -11,7 +11,6 @@ const config = {
   icon: './assets/icon.png',
   scheme: 'diaspoafricconnect',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
 
   ios: {
     supportsTablet: true,
@@ -26,17 +25,12 @@ const config = {
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     package: 'com.diaspoafricconnect.app',
+    versionCode: 2,
   },
 
   web: {
     favicon: './assets/favicon.png',
     bundler: 'metro',
-  },
-
-  splash: {
-    image: './assets/splash-icon.png',
-    resizeMode: 'contain',
-    backgroundColor: '#1B5E20',
   },
 
   plugins: [
