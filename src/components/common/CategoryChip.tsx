@@ -1,49 +1,64 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../constants/colors';
+import { Text, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import AnimatedPress from './AnimatedPressable';
+import { useTheme } from '../../theme';
 
 interface CategoryChipProps {
   label: string;
+  icon?: keyof typeof MaterialIcons.glyphMap;
   selected?: boolean;
   onPress: () => void;
 }
 
-export default function CategoryChip({ label, selected, onPress }: CategoryChipProps) {
+export default function CategoryChip({ label, icon, selected, onPress }: CategoryChipProps) {
+  const { colors, radii, typography } = useTheme();
+
   return (
-    <TouchableOpacity
-      style={[styles.chip, selected && styles.selectedChip]}
+    <AnimatedPress
       onPress={onPress}
-      activeOpacity={0.7}
+      pressScale={0.95}
+      haptic
+      style={[
+        styles.chip,
+        {
+          backgroundColor: selected ? colors.primary : colors.surfaceContainer,
+          borderRadius: radii.full,
+          borderWidth: selected ? 0 : 1,
+          borderColor: selected ? 'transparent' : colors.outlineVariant,
+        },
+      ]}
       accessibilityRole="button"
       accessibilityLabel={`${label} category${selected ? ', selected' : ''}`}
       accessibilityState={{ selected }}
     >
-      <Text style={[styles.label, selected && styles.selectedLabel]}>{label}</Text>
-    </TouchableOpacity>
+      {icon && (
+        <MaterialIcons
+          name={icon}
+          size={16}
+          color={selected ? colors.onPrimary : colors.onSurfaceVariant}
+          style={{ marginRight: 4 }}
+        />
+      )}
+      <Text
+        style={[
+          typography.labelMedium,
+          { color: selected ? colors.onPrimary : colors.onSurface },
+        ]}
+      >
+        {label}
+      </Text>
+    </AnimatedPress>
   );
 }
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
     marginRight: 8,
     marginBottom: 8,
-  },
-  selectedChip: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  label: {
-    fontSize: 14,
-    color: Colors.text,
-  },
-  selectedLabel: {
-    color: Colors.textWhite,
-    fontWeight: '600',
   },
 });

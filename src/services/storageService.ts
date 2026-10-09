@@ -2,6 +2,8 @@ import { ref, getDownloadURL, updateMetadata, listAll } from 'firebase/storage';
 import { getStorageRef } from '../config/firebase';
 import { auth } from '../config/firebase';
 import { File, Directory, Paths } from 'expo-file-system';
+import { logger } from '../utils/logger';
+import { compressImage } from '../utils/imageCompression';
 
 /**
  * Upload a base64-encoded image to Firebase Storage.
@@ -20,9 +22,24 @@ export async function uploadImage(base64Data: string, path: string, contentType 
   // Strip data-URI prefix if accidentally included
   const raw = base64Data.replace(/^data:[^;]+;base64,/, '');
   const approxBytes = Math.round((raw.length * 3) / 4);
-  console.log(`[upload] path=${path}, ~${approxBytes} bytes, type=${contentType}`);
+  logger.log(`[upload] path=${path}, ~${approxBytes} bytes, type=${contentType}`);
 
-  // 1. Write base64 → binary temp file
+  // Compress & resize before uploading (saves bandwidth + storage quota).
+  // Timeout ensures a stuck ImageManipulator can't block the upload forever.
+  let optimised: string;
+  try {
+    optimised = await Promise.race([
+      compressImage(raw),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Image compression timed out')), 15_000),
+      ),
+    ]);
+  } catch (e) {
+    logger.warn('[upload] Image compression failed, uploading original', e);
+    optimised = raw;
+  }
+
+  // 1. Write compressed base64 → binary temp file
   const ext = contentType === 'image/png' ? 'png' : 'jpg';
   const tmpName = `upload_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
   const tmpDir = new Directory(Paths.cache, 'uploads');
@@ -31,10 +48,10 @@ export async function uploadImage(base64Data: string, path: string, contentType 
   }
   const tmpFile = new File(tmpDir, tmpName);
   tmpFile.create();
-  tmpFile.write(raw, { encoding: 'base64' });
+  tmpFile.write(optimised, { encoding: 'base64' });
 
   const fileSize = tmpFile.size;
-  console.log(`[upload] Temp file: ${tmpFile.uri}, size=${fileSize}`);
+  logger.log(`[upload] Temp file: ${tmpFile.uri}, size=${fileSize}`);
 
   if (fileSize < 100) {
     tmpFile.delete();
@@ -55,7 +72,7 @@ export async function uploadImage(base64Data: string, path: string, contentType 
     const encodedPath = encodeURIComponent(path);
     const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodedPath}`;
 
-    console.log(`[upload] Native upload to ${bucket}/${path}`);
+    logger.log(`[upload] Native upload to ${bucket}/${path}`);
 
     // 4. Upload via expo-file-system native HTTP (bypasses JS Blob entirely)
     const result = await tmpFile.upload(uploadUrl, {
@@ -67,7 +84,7 @@ export async function uploadImage(base64Data: string, path: string, contentType 
       sessionType: 'foreground',
     });
 
-    console.log(`[upload] Response: status=${result.status}`);
+    logger.log(`[upload] Response: status=${result.status}`);
 
     if (result.status < 200 || result.status >= 300) {
       throw new Error(`Upload failed (${result.status}): ${result.body}`);
@@ -76,7 +93,7 @@ export async function uploadImage(base64Data: string, path: string, contentType 
     // 5. Get the download URL via Firebase SDK
     const storageRef = ref(storage, path);
     const downloadURL = await getDownloadURL(storageRef);
-    console.log(`[upload] Done: ${downloadURL.substring(0, 80)}...`);
+    logger.log(`[upload] Done: ${downloadURL.substring(0, 80)}...`);
     return downloadURL;
   } finally {
     try { tmpFile.delete(); } catch { /* ignore */ }
@@ -85,6 +102,11 @@ export async function uploadImage(base64Data: string, path: string, contentType 
 
 /**
  * Upload multiple base64 images for a business.
+ *
+ * Storage path: businesses/{uid}/{businessId}/photo_...
+ * Storage rules enforce that {uid} == request.auth.uid, so only the
+ * business owner can write photos into their folder.
+ *
  * @param businessId Firestore document ID
  * @param base64Images Array of raw base64 strings
  */
@@ -92,9 +114,12 @@ export async function uploadBusinessPhotos(
   businessId: string,
   base64Images: string[]
 ): Promise<string[]> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('Not authenticated — cannot upload photos');
+
   const urls: string[] = [];
   for (let i = 0; i < base64Images.length; i++) {
-    const path = `businesses/${businessId}/photo_${i}_${Date.now()}.jpg`;
+    const path = `businesses/${uid}/${businessId}/photo_${i}_${Date.now()}.jpg`;
     const url = await uploadImage(base64Images[i], path);
     urls.push(url);
   }
@@ -119,7 +144,7 @@ export async function fixStorageContentTypes(): Promise<number> {
           await updateMetadata(itemRef, { contentType: 'image/jpeg' });
           fixed++;
         } catch (e) {
-          console.warn('Failed to update metadata for', itemRef.fullPath, e);
+          logger.warn('Failed to update metadata for', itemRef.fullPath, e);
         }
       }
     }
@@ -129,14 +154,14 @@ export async function fixStorageContentTypes(): Promise<number> {
         await updateMetadata(itemRef, { contentType: 'image/jpeg' });
         fixed++;
       } catch (e) {
-        console.warn('Failed to update metadata for', itemRef.fullPath, e);
+        logger.warn('Failed to update metadata for', itemRef.fullPath, e);
       }
     }
 
-    if (fixed > 0) console.log(`Fixed content type for ${fixed} storage files`);
+    if (fixed > 0) logger.log(`Fixed content type for ${fixed} storage files`);
     return fixed;
   } catch (e) {
-    console.warn('fixStorageContentTypes: could not list storage:', e);
+    logger.warn('fixStorageContentTypes: could not list storage:', e);
     return 0;
   }
 }

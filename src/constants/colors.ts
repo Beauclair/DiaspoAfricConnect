@@ -1,20 +1,26 @@
+/**
+ * Legacy Colors export — kept for backward compatibility.
+ * New code should use `useTheme().colors` instead.
+ */
+import { LightColors } from '../theme/colors';
+
 export const Colors = {
-  primary: '#1B5E20',
+  primary: LightColors.primary,
   primaryLight: '#2E7D32',
   primaryDark: '#0D3B0F',
-  secondary: '#F9A825',
+  secondary: LightColors.secondary,
   secondaryLight: '#FDD835',
-  accent: '#C62828',
+  accent: LightColors.tertiary,
   accentLight: '#E53935',
-  background: '#FAFAFA',
-  card: '#FFFFFF',
-  text: '#212121',
-  textLight: '#757575',
+  background: LightColors.background,
+  card: LightColors.surface,
+  text: LightColors.onSurface,
+  textLight: LightColors.onSurfaceVariant,
   textWhite: '#FFFFFF',
-  border: '#E0E0E0',
-  star: '#FFC107',
-  success: '#4CAF50',
-  error: '#F44336',
-  warning: '#FF9800',
-  overlay: 'rgba(0,0,0,0.5)',
+  border: LightColors.outline,
+  star: LightColors.star,
+  success: LightColors.success,
+  error: LightColors.error,
+  warning: LightColors.warning,
+  overlay: LightColors.overlay,
 } as const;

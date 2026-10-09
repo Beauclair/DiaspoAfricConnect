@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DiaspoAfricConnect Icon Generator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { color: #1B5E20; }
+    .preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .preview-item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .preview-item h3 { margin: 8px 0 4px; color: #333; }
+    .preview-item p { margin: 0; color: #666; font-size: 13px; }
+    canvas { display: block; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; }
+    button {
+      background: #1B5E20;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+    }
+    button:hover { background: #2E7D32; }
+    .instructions {
+      max-width: 600px;
+      margin: 20px auto;
+      text-align: left;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .instructions li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>🌍 DiaspoAfricConnect — Icon Generator</h1>
+  <p>Generate clean, professional text-based icons for the app.</p>
+
+  <div class="preview" id="previews"></div>
+
+  <button onclick="downloadAll()">⬇️ Download All Icons</button>
+
+  <div class="instructions">
+    <h3>After downloading:</h3>
+    <ol>
+      <li>Move <code>icon.png</code> → <code>assets/icon.png</code></li>
+      <li>Move <code>android-icon-foreground.png</code> → <code>assets/android-icon-foreground.png</code></li>
+      <li>Move <code>android-icon-background.png</code> → <code>assets/android-icon-background.png</code></li>
+      <li>Move <code>android-icon-monochrome.png</code> → <code>assets/android-icon-monochrome.png</code></li>
+      <li>Move <code>splash-icon.png</code> → <code>assets/splash-icon.png</code></li>
+      <li>Move <code>favicon.png</code> → <code>assets/favicon.png</code></li>
+      <li>Run <code>npx expo prebuild --clean</code> to regenerate native icons</li>
+    </ol>
+  </div>
+
+  <script>
+    // ── Brand constants ──
+    const BRAND_GREEN  = '#1B5E20';
+    const BRAND_LIGHT  = '#2E7D32';
+    const BRAND_GOLD   = '#F9A825';
+    const WHITE        = '#FFFFFF';
+
+    // ── Icon definitions ──
+    const icons = [
+      { name: 'icon',                     size: 1024, type: 'full'       },
+      { name: 'android-icon-foreground',   size: 1024, type: 'foreground' },
+      { name: 'android-icon-background',   size: 1024, type: 'background' },
+      { name: 'android-icon-monochrome',   size: 1024, type: 'monochrome' },
+      { name: 'splash-icon',              size: 1024, type: 'splash'     },
+      { name: 'favicon',                  size: 196,  type: 'favicon'    },
+    ];
+
+    // ── Drawing helpers ──
+
+    function drawGlobe(ctx, cx, cy, r, color, lineWidth) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'round';
+
+      // outer circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // vertical center ellipse
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, r * 0.4, r, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // horizontal lines (latitude)
+      for (const frac of [-0.5, 0, 0.5]) {
+        const y = cy + r * frac;
+        const halfW = Math.sqrt(r * r - (r * frac) ** 2);
+        ctx.beginPath();
+        ctx.moveTo(cx - halfW, y);
+        // slight curve
+        ctx.quadraticCurveTo(cx, y + (frac === 0 ? 0 : -r * 0.05 * Math.sign(frac)), cx + halfW, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawConnectionDots(ctx, cx, cy, r, color) {
+      const dots = [
+        { angle: -30,  dist: 0.7 },  // "Europe/Middle East"
+        { angle: -80,  dist: 0.85 }, // "North"
+        { angle: 160,  dist: 0.6 },  // "Africa"
+        { angle: 200,  dist: 0.75 }, // "South America"
+        { angle: 40,   dist: 0.5 },  // center
+      ];
+
+      ctx.fillStyle = color;
+      const dotR = r * 0.07;
+
+      const positions = dots.map(d => {
+        const rad = (d.angle * Math.PI) / 180;
+        return {
+          x: cx + Math.cos(rad) * r * d.dist,
+          y: cy + Math.sin(rad) * r * d.dist,
+        };
+      });
+
+      // draw connection lines first (thinner, subtle)
+      ctx.strokeStyle = color;
+      ctx.lineWidth = r * 0.02;
+      ctx.globalAlpha = 0.4;
+      for (let i = 0; i < positions.length; i++) {
+        for (let j = i + 1; j < positions.length; j++) {
+          if (Math.random() > 0.4) { // ~60% of connections shown
+            ctx.beginPath();
+            ctx.moveTo(positions[i].x, positions[i].y);
+            ctx.lineTo(positions[j].x, positions[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // draw dots on top
+      for (const p of positions) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawText(ctx, cx, y, text, fontSize, color, weight = '700') {
+      ctx.fillStyle = color;
+      ctx.font = `${weight} ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(text, cx, y);
+    }
+
+    // ── Deterministic seed for connection lines ──
+    // Override Math.random for reproducibility
+    let seed = 42;
+    const origRandom = Math.random;
+    function seededRandom() {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    }
+
+    // ── Main draw function ──
+    function drawIcon(canvas, icon) {
+      const s = icon.size;
+      canvas.width = s;
+      canvas.height = s;
+      const ctx = canvas.getContext('2d');
+
+      // Reset seed for reproducibility
+      seed = 42;
+      Math.random = seededRandom;
+
+      const cx = s / 2;
+      const cy = s / 2;
+
+      switch (icon.type) {
+        case 'full': {
+          // Rounded rect green background
+          ctx.fillStyle = BRAND_GREEN;
+          const rad = s * 0.18;
+          ctx.beginPath();
+          ctx.roundRect(0, 0, s, s, rad);
+          ctx.fill();
+
+          // Globe
+          const gr = s * 0.24;
+          const globeY = cy - s * 0.08;
+          drawGlobe(ctx, cx, globeY, gr, WHITE, s * 0.02);
+          drawConnectionDots(ctx, cx, globeY, gr, BRAND_GOLD);
+
+          // App name
+          drawText(ctx, cx, cy + s * 0.2, 'Diaspo', s * 0.1, WHITE, '300');
+          drawText(ctx, cx, cy + s * 0.31, 'AfricConnect', s * 0.09, BRAND_GOLD, '700');
+          break;
+        }
+
+        case 'foreground': {
+          // Transparent background — only foreground elements
+          // Android adaptive icon safe zone is center 66%
+          const gr = s * 0.18;
+          const globeY = cy - s * 0.06;
+          drawGlobe(ctx, cx, globeY, gr, WHITE, s * 0.018);
+          drawConnectionDots(ctx, cx, globeY, gr, BRAND_GOLD);
+
+          drawText(ctx, cx, cy + s * 0.15, 'Diaspo', s * 0.075, WHITE, '300');
+          drawText(ctx, cx, cy + s * 0.23, 'AfricConnect', s * 0.065, BRAND_GOLD, '700');
+          break;
+        }
+
+        case 'background': {
+          // Solid dark green background
+          ctx.fillStyle = BRAND_GREEN;
+          ctx.fillRect(0, 0, s, s);
+          break;
+        }
+
+        case 'monochrome': {
+          // White elements on transparent
+          const gr = s * 0.18;
+          const globeY = cy - s * 0.06;
+          drawGlobe(ctx, cx, globeY, gr, WHITE, s * 0.018);
+
+          // dots in white too
+          const dots = [
+            { angle: -30,  dist: 0.7 },
+            { angle: -80,  dist: 0.85 },
+            { angle: 160,  dist: 0.6 },
+            { angle: 200,  dist: 0.75 },
+            { angle: 40,   dist: 0.5 },
+          ];
+          ctx.fillStyle = WHITE;
+          for (const d of dots) {
+            const rad = (d.angle * Math.PI) / 180;
+            const x = cx + Math.cos(rad) * gr * d.dist;
+            const y = globeY + Math.sin(rad) * gr * d.dist;
+            ctx.beginPath();
+            ctx.arc(x, y, gr * 0.07, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          drawText(ctx, cx, cy + s * 0.15, 'Diaspo', s * 0.075, WHITE, '300');
+          drawText(ctx, cx, cy + s * 0.23, 'AfricConnect', s * 0.065, WHITE, '700');
+          break;
+        }
+
+        case 'splash': {
+          // Splash icon — larger globe with text, on transparent background
+          const gr = s * 0.22;
+          const globeY = cy - s * 0.1;
+          drawGlobe(ctx, cx, globeY, gr, BRAND_GREEN, s * 0.022);
+          drawConnectionDots(ctx, cx, globeY, gr, BRAND_GOLD);
+
+          drawText(ctx, cx, cy + s * 0.18, 'DiaspoAfricConnect', s * 0.07, BRAND_GREEN, '700');
+          drawText(ctx, cx, cy + s * 0.27, 'Your African Diaspora Community', s * 0.032, BRAND_LIGHT, '400');
+          break;
+        }
+
+        case 'favicon': {
+          // Small — just globe + initials
+          ctx.fillStyle = BRAND_GREEN;
+          const rad = s * 0.18;
+          ctx.beginPath();
+          ctx.roundRect(0, 0, s, s, rad);
+          ctx.fill();
+
+          const gr = s * 0.22;
+          const globeY = cy - s * 0.05;
+          drawGlobe(ctx, cx, globeY, gr, WHITE, s * 0.03);
+
+          drawText(ctx, cx, cy + s * 0.2, 'DAC', s * 0.18, BRAND_GOLD, '700');
+          break;
+        }
+      }
+
+      // Restore original random
+      Math.random = origRandom;
+    }
+
+    // ── Render previews ──
+    const container = document.getElementById('previews');
+    const canvases = {};
+
+    for (const icon of icons) {
+      const div = document.createElement('div');
+      div.className = 'preview-item';
+
+      const canvas = document.createElement('canvas');
+      const previewSize = Math.min(icon.size, 256);
+      canvas.style.width = previewSize + 'px';
+      canvas.style.height = previewSize + 'px';
+      drawIcon(canvas, icon);
+      canvases[icon.name] = canvas;
+
+      const h3 = document.createElement('h3');
+      h3.textContent = icon.name + '.png';
+      const p = document.createElement('p');
+      p.textContent = icon.size + '×' + icon.size + 'px';
+
+      div.appendChild(canvas);
+      div.appendChild(h3);
+      div.appendChild(p);
+
+      const btn = document.createElement('button');
+      btn.textContent = '⬇️ Download';
+      btn.style.fontSize = '13px';
+      btn.style.padding = '6px 16px';
+      btn.onclick = () => downloadOne(icon.name);
+      div.appendChild(btn);
+
+      container.appendChild(div);
+    }
+
+    function downloadOne(name) {
+      const canvas = canvases[name];
+      const link = document.createElement('a');
+      link.download = name + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function downloadAll() {
+      for (const icon of icons) {
+        setTimeout(() => downloadOne(icon.name), icons.indexOf(icon) * 300);
+      }
+    }
+  </script>
+</body>
+</html>

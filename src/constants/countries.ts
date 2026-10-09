@@ -1,3 +1,5 @@
+import { LegalCategory } from '../types';
+
 export type HostCountryCode = 'US' | 'CA' | 'UK' | 'FR' | 'DE';
 
 export interface CountryConfig {
@@ -17,8 +19,8 @@ export interface CountryConfig {
     postalCodeRegex: RegExp;
     postalCodeKeyboardType: 'numeric' | 'default';
   };
-  immigrationCategories: { key: string; label: string; icon: string }[];
-  immigrationSystemLabel: string;
+  immigrationSubCategories: { key: string; label: string; icon: string }[];
+  legalSystemLabel: string;
 }
 
 export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
@@ -39,7 +41,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^\d{5}(-\d{4})?$/,
       postalCodeKeyboardType: 'numeric',
     },
-    immigrationCategories: [
+    immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'greencard', label: 'Green Card', icon: 'credit-card' },
       { key: 'asylum', label: 'Asylum', icon: 'security' },
@@ -49,7 +51,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       { key: 'student', label: 'Student', icon: 'school' },
       { key: 'other', label: 'Other', icon: 'help-outline' },
     ],
-    immigrationSystemLabel: 'US immigration system',
+    legalSystemLabel: 'US legal system',
   },
   CA: {
     code: 'CA',
@@ -68,7 +70,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d$/,
       postalCodeKeyboardType: 'default',
     },
-    immigrationCategories: [
+    immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'permanent-residence', label: 'Permanent Residence', icon: 'credit-card' },
       { key: 'asylum', label: 'Refugee & Asylum', icon: 'security' },
@@ -78,7 +80,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       { key: 'student', label: 'Study Permit', icon: 'school' },
       { key: 'other', label: 'Other', icon: 'help-outline' },
     ],
-    immigrationSystemLabel: 'Canadian immigration system',
+    legalSystemLabel: 'Canadian legal system',
   },
   UK: {
     code: 'UK',
@@ -97,7 +99,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i,
       postalCodeKeyboardType: 'default',
     },
-    immigrationCategories: [
+    immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'indefinite-leave', label: 'Indefinite Leave', icon: 'credit-card' },
       { key: 'asylum', label: 'Asylum', icon: 'security' },
@@ -107,7 +109,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       { key: 'student', label: 'Student Visa', icon: 'school' },
       { key: 'other', label: 'Other', icon: 'help-outline' },
     ],
-    immigrationSystemLabel: 'UK immigration system',
+    legalSystemLabel: 'UK legal system',
   },
   FR: {
     code: 'FR',
@@ -126,7 +128,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^\d{5}$/,
       postalCodeKeyboardType: 'numeric',
     },
-    immigrationCategories: [
+    immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'carte-de-sejour', label: 'Carte de Séjour', icon: 'credit-card' },
       { key: 'asylum', label: 'Asile', icon: 'security' },
@@ -136,7 +138,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       { key: 'student', label: 'Visa Étudiant', icon: 'school' },
       { key: 'other', label: 'Autre', icon: 'help-outline' },
     ],
-    immigrationSystemLabel: 'French immigration system',
+    legalSystemLabel: 'French legal system',
   },
   DE: {
     code: 'DE',
@@ -155,7 +157,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^\d{5}$/,
       postalCodeKeyboardType: 'numeric',
     },
-    immigrationCategories: [
+    immigrationSubCategories: [
       { key: 'visa', label: 'Visa', icon: 'card-travel' },
       { key: 'aufenthaltstitel', label: 'Aufenthaltstitel', icon: 'credit-card' },
       { key: 'asylum', label: 'Asyl', icon: 'security' },
@@ -165,10 +167,19 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       { key: 'student', label: 'Studienvisum', icon: 'school' },
       { key: 'other', label: 'Sonstiges', icon: 'help-outline' },
     ],
-    immigrationSystemLabel: 'German immigration system',
+    legalSystemLabel: 'German legal system',
   },
 };
 
 export function getCountryConfig(code: HostCountryCode): CountryConfig {
   return HOST_COUNTRIES[code];
 }
+
+export const LEGAL_CATEGORIES: { key: LegalCategory; label: string; icon: string; description: string }[] = [
+  { key: 'immigration', label: 'Immigration', icon: 'flight', description: 'Visas, green cards, asylum, work permits' },
+  { key: 'deportation-defense', label: 'Deportation Defense', icon: 'shield', description: 'Removal proceedings, appeals' },
+  { key: 'family-law', label: 'Family Law', icon: 'people', description: 'Divorce, custody, child support' },
+  { key: 'criminal-defense', label: 'Criminal Defense', icon: 'gavel', description: 'DUI, charges, expungement' },
+  { key: 'personal-injury', label: 'Personal Injury', icon: 'local-hospital', description: 'Accidents, workplace injuries' },
+  { key: 'housing', label: 'Housing Rights', icon: 'home', description: 'Evictions, lease disputes' },
+];

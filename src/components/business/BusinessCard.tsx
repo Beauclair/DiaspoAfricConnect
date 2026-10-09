@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Card from '../common/Card';
+import { LinearGradient } from 'expo-linear-gradient';
+import AnimatedPress from '../common/AnimatedPressable';
 import NetworkImage from '../common/NetworkImage';
-import { Colors } from '../../constants/colors';
+import Badge from '../common/Badge';
+import VerificationBadge from '../common/VerificationBadge';
+import { useTheme } from '../../theme';
 import { Business } from '../../types';
 
 interface BusinessCardProps {
@@ -12,96 +15,126 @@ interface BusinessCardProps {
 }
 
 export default function BusinessCard({ business, onPress }: BusinessCardProps) {
+  const { colors, radii, typography, shadows, spacing } = useTheme();
+
   return (
-    <TouchableOpacity
+    <AnimatedPress
       onPress={onPress}
-      activeOpacity={0.8}
+      pressScale={0.98}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          borderRadius: radii.lg,
+          borderWidth: 1,
+          borderColor: colors.outlineVariant,
+        },
+      ]}
       accessibilityRole="button"
       accessibilityLabel={`${business.name}, ${business.category}, rated ${business.averageRating.toFixed(1)} stars, ${business.city} ${business.state}`}
     >
-      <Card style={styles.card}>
+      {/* Image section */}
+      <View style={styles.imageWrapper}>
         {business.photos.length > 0 ? (
           <NetworkImage uri={business.photos[0]} style={styles.image} />
         ) : (
-          <View style={[styles.image, styles.placeholder]}>
-            <MaterialIcons name="storefront" size={40} color={Colors.textLight} />
+          <View style={[styles.image, styles.placeholder, { backgroundColor: colors.surfaceVariant }]}>
+            <MaterialIcons name="storefront" size={40} color={colors.onSurfaceDisabled} />
           </View>
         )}
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.name} numberOfLines={1}>{business.name}</Text>
-            {business.isVerified && (
-              <MaterialIcons name="verified" size={18} color={Colors.primary} />
-            )}
-          </View>
-          <Text style={styles.category}>{business.category} | {business.countryOfOrigin}</Text>
-          <Text style={styles.address} numberOfLines={1}>
-            <MaterialIcons name="location-on" size={14} color={Colors.textLight} />
-            {' '}{business.city}, {business.state}
+        {/* Gradient overlay at bottom of image */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.4)']}
+          style={styles.imageGradient}
+        />
+        {/* Rating badge on image */}
+        <View style={[styles.ratingBadge, { backgroundColor: colors.surface }]}>
+          <MaterialIcons name="star" size={14} color={colors.star} />
+          <Text style={[typography.labelMedium, { color: colors.onSurface }]}>
+            {business.averageRating.toFixed(1)}
           </Text>
-          <View style={styles.ratingRow}>
-            <MaterialIcons name="star" size={16} color={Colors.star} />
-            <Text style={styles.rating}>
-              {business.averageRating.toFixed(1)} ({business.reviewCount})
-            </Text>
-          </View>
         </View>
-      </Card>
-    </TouchableOpacity>
+      </View>
+
+      {/* Content section */}
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={[typography.titleLarge, { color: colors.onSurface, flex: 1 }]} numberOfLines={1}>
+            {business.name}
+          </Text>
+          {(business.verificationStatus === 'verified' || business.isVerified) && (
+            <VerificationBadge status="verified" variant="compact" size="sm" />
+          )}
+        </View>
+
+        <View style={styles.metaRow}>
+          <Badge label={business.category.charAt(0).toUpperCase() + business.category.slice(1)} variant="primary" size="sm" />
+          <MaterialIcons name="location-on" size={13} color={colors.onSurfaceVariant} />
+          <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+            {business.city}, {business.state}
+          </Text>
+        </View>
+
+        <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, marginTop: 6 }]}>
+          {business.reviewCount} review{business.reviewCount !== 1 ? 's' : ''}
+        </Text>
+      </View>
+    </AnimatedPress>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 12,
-    padding: 0,
+    marginBottom: 14,
     overflow: 'hidden',
+  },
+  imageWrapper: {
+    position: 'relative',
   },
   image: {
     width: '100%',
-    height: 150,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    height: 160,
   },
   placeholder: {
-    backgroundColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  imageGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
   content: {
-    padding: 12,
+    padding: 14,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.text,
-    flex: 1,
-  },
-  category: {
-    fontSize: 13,
-    color: Colors.primary,
-    marginTop: 4,
-    textTransform: 'capitalize',
-  },
-  address: {
-    fontSize: 13,
-    color: Colors.textLight,
-    marginTop: 4,
-  },
-  ratingRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
-    gap: 4,
+    gap: 8,
+    marginTop: 8,
   },
-  rating: {
-    fontSize: 14,
-    color: Colors.text,
-    fontWeight: '500',
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 2,
   },
 });

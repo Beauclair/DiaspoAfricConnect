@@ -1,0 +1,599 @@
+[debug] [2026-09-28T21:58:23.301Z] ----------------------------------------------------------------------
+[debug] [2026-09-28T21:58:23.303Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\bnanf\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2026-09-28T21:58:23.304Z] CLI Version:   15.32.0
+[debug] [2026-09-28T21:58:23.304Z] Platform:      win32
+[debug] [2026-09-28T21:58:23.304Z] Node Version:  v24.19.0
+[debug] [2026-09-28T21:58:23.304Z] Detected Agent: unknown
+[debug] [2026-09-28T21:58:23.304Z] Time:          Mon Sep 28 2026 16:58:23 GMT-0500 (Central Daylight Time)
+[debug] [2026-09-28T21:58:23.304Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-09-28T21:58:24.758Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-28T21:58:24.759Z] > authorizing via signed-in user (b.nanfack@gmail.com)
+[debug] [2026-09-28T21:58:24.759Z] [iam] checking project diaspoafricconnect for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-09-28T21:58:24.771Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:24.772Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:24.773Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions [none]
+[debug] [2026-09-28T21:58:24.773Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions  x-goog-user-project=diaspoafricconnect
+[debug] [2026-09-28T21:58:24.773Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-09-28T21:58:24.908Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions 200
+[debug] [2026-09-28T21:58:24.908Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-09-28T21:58:24.908Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:24.908Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:24.908Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/diaspoafricconnect/serviceAccounts/diaspoafricconnect@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-09-28T21:58:24.909Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/diaspoafricconnect/serviceAccounts/diaspoafricconnect@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-09-28T21:58:25.037Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/diaspoafricconnect/serviceAccounts/diaspoafricconnect@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-09-28T21:58:25.037Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/diaspoafricconnect/serviceAccounts/diaspoafricconnect@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'diaspoafricconnect'...
+[info] 
+[info] i  deploying functions 
+[debug] [2026-09-28T21:58:25.044Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:25.044Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:25.044Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect [none]
+[debug] [2026-09-28T21:58:25.109Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect 200
+[debug] [2026-09-28T21:58:25.109Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect {"projectNumber":"REDACTED_SENDER_ID","projectId":"diaspoafricconnect","lifecycleState":"ACTIVE","name":"DiaspoAfricConnect","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-09-17T17:34:37.392Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-09-28T21:58:25.115Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:25.116Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:25.116Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/diaspoafricconnect/adminSdkConfig [none]
+[debug] [2026-09-28T21:58:25.390Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/diaspoafricconnect/adminSdkConfig 200
+[debug] [2026-09-28T21:58:25.391Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/diaspoafricconnect/adminSdkConfig {"projectId":"diaspoafricconnect","storageBucket":"diaspoafricconnect.firebasestorage.app"}
+[debug] [2026-09-28T21:58:25.392Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:25.392Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:25.393Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/diaspoafricconnect/configs [none]
+[debug] [2026-09-28T21:58:25.620Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/diaspoafricconnect/configs 200
+[debug] [2026-09-28T21:58:25.620Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/diaspoafricconnect/configs {}
+[debug] [2026-09-28T21:58:25.622Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-09-28T21:58:26.886Z] > [functions] package.json contents: {
+  "name": "diaspoafricconnect-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.10.0",
+    "firebase-functions": "^6.3.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.0"
+  }
+}
+[debug] [2026-09-28T21:58:26.886Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2026-09-28T21:58:26.888Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-09-28T21:58:26.912Z] Found firebase-functions binary at 'E:\Personnal\DiaspoAfricConnect\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8941
+
+[debug] [2026-09-28T21:58:28.696Z] Got response from /__/functions.yaml {"endpoints":{"onBusinessCreate":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"businesses/{businessId}"},"retry":false},"entryPoint":"onBusinessCreate"},"onReviewCreate":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"reviews/{reviewId}"},"retry":false},"entryPoint":"onReviewCreate"},"onLawyerCreate":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"lawyers/{lawyerId}"},"retry":false},"entryPoint":"onLawyerCreate"},"onVerificationRequestCreate":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"verificationRequests/{requestId}"},"retry":false},"entryPoint":"onVerificationRequestCreate"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[debug] [2026-09-28T21:58:31.748Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:31.748Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:31.748Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/diaspoafricconnect/locations/-/functions [none]
+[debug] [2026-09-28T21:58:32.250Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/diaspoafricconnect/locations/-/functions 200
+[debug] [2026-09-28T21:58:32.251Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/diaspoafricconnect/locations/-/functions {}
+[debug] [2026-09-28T21:58:32.251Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:32.252Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:32.252Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2026-09-28T21:58:32.640Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/-/functions 200
+[debug] [2026-09-28T21:58:32.640Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/-/functions {}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2026-09-28T21:58:32.643Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:32.644Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:32.644Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com [none]
+[debug] [2026-09-28T21:58:32.644Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com  x-goog-user-project=diaspoafricconnect
+[debug] [2026-09-28T21:58:32.915Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com 200
+[debug] [2026-09-28T21:58:32.916Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com [omitted]
+[warn] !  extensions: missing required API firebaseextensions.googleapis.com. Enabling now... 
+[debug] [2026-09-28T21:58:32.916Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:32.916Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:32.917Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com:enable [none]
+[debug] [2026-09-28T21:58:32.917Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com:enable  x-goog-user-project=diaspoafricconnect
+[debug] [2026-09-28T21:58:33.295Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com:enable 200
+[debug] [2026-09-28T21:58:33.295Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/firebaseextensions.googleapis.com:enable [omitted]
+[debug] [2026-09-28T21:58:43.315Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-28T21:58:43.316Z] > authorizing via signed-in user (b.nanfack@gmail.com)
+[debug] [2026-09-28T21:58:43.316Z] [iam] checking project diaspoafricconnect for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2026-09-28T21:58:43.316Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:43.316Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:43.316Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions [none]
+[debug] [2026-09-28T21:58:43.316Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions  x-goog-user-project=diaspoafricconnect
+[debug] [2026-09-28T21:58:43.316Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-09-28T21:58:43.400Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions 200
+[debug] [2026-09-28T21:58:43.401Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/diaspoafricconnect:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-09-28T21:58:43.401Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:43.401Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:43.401Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/diaspoafricconnect/instances pageSize=100&pageToken=
+[debug] [2026-09-28T21:58:44.810Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/diaspoafricconnect/instances 200
+[debug] [2026-09-28T21:58:44.810Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/diaspoafricconnect/instances {}
+[debug] [2026-09-28T21:58:44.813Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:44.813Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:44.813Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/diaspoafricconnect/databases/(default) [none]
+[debug] [2026-09-28T21:58:45.006Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/diaspoafricconnect/databases/(default) 200
+[debug] [2026-09-28T21:58:45.006Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/diaspoafricconnect/databases/(default) {"name":"projects/diaspoafricconnect/databases/(default)","uid":"5859030d-e02a-4259-85fc-185c6db1d995","createTime":"2026-09-17T17:54:14.532279Z","updateTime":"2026-09-17T17:54:14.532279Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-09-28T20:58:44.452488Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"s","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"ILej29uikpcDMKuZidih9pYD"}
+[debug] [2026-09-28T21:58:45.007Z] Attempting to merge .env secret bindings {} into declared secrets...)}
+[debug] [2026-09-28T21:58:45.007Z] onBusinessCreate declared secrets: undefined
+[debug] [2026-09-28T21:58:45.007Z] onReviewCreate declared secrets: undefined
+[debug] [2026-09-28T21:58:45.007Z] onLawyerCreate declared secrets: undefined
+[debug] [2026-09-28T21:58:45.007Z] onVerificationRequestCreate declared secrets: undefined
+[info] i  functions: preparing functions directory for uploading... 
+[info] i  functions: packaged E:\Personnal\DiaspoAfricConnect\functions (51.38 KB) for uploading 
+[info] i  functions: ensuring required API run.googleapis.com is enabled... 
+[debug] [2026-09-28T21:58:45.086Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.086Z] Checked if tokens are valid: true, expires at: 1790635872433
+[info] i  functions: ensuring required API eventarc.googleapis.com is enabled... 
+[debug] [2026-09-28T21:58:45.088Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.088Z] Checked if tokens are valid: true, expires at: 1790635872433
+[info] i  functions: ensuring required API pubsub.googleapis.com is enabled... 
+[debug] [2026-09-28T21:58:45.089Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.089Z] Checked if tokens are valid: true, expires at: 1790635872433
+[info] i  functions: ensuring required API storage.googleapis.com is enabled... 
+[debug] [2026-09-28T21:58:45.091Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.091Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.091Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com [none]
+[debug] [2026-09-28T21:58:45.091Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:45.092Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com [none]
+[debug] [2026-09-28T21:58:45.092Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:45.093Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com [none]
+[debug] [2026-09-28T21:58:45.093Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:45.094Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/storage.googleapis.com [none]
+[debug] [2026-09-28T21:58:45.094Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/storage.googleapis.com  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:45.330Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com 200
+[debug] [2026-09-28T21:58:45.330Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com [omitted]
+[warn] !  functions: missing required API eventarc.googleapis.com. Enabling now... 
+[debug] [2026-09-28T21:58:45.331Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.331Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.331Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:enable [none]
+[debug] [2026-09-28T21:58:45.331Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:enable  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:45.334Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com 200
+[debug] [2026-09-28T21:58:45.335Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com [omitted]
+[info] +  functions: required API pubsub.googleapis.com is enabled 
+[debug] [2026-09-28T21:58:45.355Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/storage.googleapis.com 200
+[debug] [2026-09-28T21:58:45.355Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/storage.googleapis.com [omitted]
+[info] +  functions: required API storage.googleapis.com is enabled 
+[debug] [2026-09-28T21:58:45.369Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com 200
+[debug] [2026-09-28T21:58:45.370Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com [omitted]
+[warn] !  functions: missing required API run.googleapis.com. Enabling now... 
+[debug] [2026-09-28T21:58:45.370Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.370Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:45.370Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com:enable [none]
+[debug] [2026-09-28T21:58:45.370Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com:enable  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:45.653Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:enable 200
+[debug] [2026-09-28T21:58:45.654Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:enable [omitted]
+[debug] [2026-09-28T21:58:45.870Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com:enable 200
+[debug] [2026-09-28T21:58:45.870Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/REDACTED_SENDER_ID/services/run.googleapis.com:enable [omitted]
+[info] i  functions: generating the service identity for pubsub.googleapis.com... 
+[debug] [2026-09-28T21:58:55.895Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:55.896Z] Checked if tokens are valid: true, expires at: 1790635872433
+[info] i  functions: generating the service identity for eventarc.googleapis.com... 
+[debug] [2026-09-28T21:58:55.896Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:55.897Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:55.897Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-09-28T21:58:55.897Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com:generateServiceIdentity  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:55.897Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com:generateServiceIdentity {}
+[debug] [2026-09-28T21:58:55.898Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-09-28T21:58:55.898Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:generateServiceIdentity  x-goog-user-project=REDACTED_SENDER_ID
+[debug] [2026-09-28T21:58:55.898Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:generateServiceIdentity {}
+[debug] [2026-09-28T21:58:56.474Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com:generateServiceIdentity 200
+[debug] [2026-09-28T21:58:56.474Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/pubsub.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-REDACTED_SENDER_ID@gcp-sa-pubsub.iam.gserviceaccount.com","uniqueId":"100103186382787405724"}}
+[debug] [2026-09-28T21:58:56.521Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:generateServiceIdentity 200
+[debug] [2026-09-28T21:58:56.521Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/REDACTED_SENDER_ID/services/eventarc.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-REDACTED_SENDER_ID@gcp-sa-eventarc.iam.gserviceaccount.com","uniqueId":"111455453900206459811"}}
+[debug] [2026-09-28T21:58:56.523Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:56.523Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:56.523Z] >>> [apiv2][query] GET https://compute.googleapis.com/compute/v1/projects/REDACTED_SENDER_ID [none]
+[debug] [2026-09-28T21:58:56.674Z] <<< [apiv2][status] GET https://compute.googleapis.com/compute/v1/projects/REDACTED_SENDER_ID 403
+[debug] [2026-09-28T21:58:56.674Z] <<< [apiv2][body] GET https://compute.googleapis.com/compute/v1/projects/REDACTED_SENDER_ID {"error":{"code":403,"message":"Compute Engine API has not been used in project REDACTED_SENDER_ID before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project REDACTED_SENDER_ID before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID","service":"compute.googleapis.com","containerInfo":"REDACTED_SENDER_ID","consumer":"projects/REDACTED_SENDER_ID","serviceTitle":"Compute Engine API"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project REDACTED_SENDER_ID before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID"}]}]}}
+[debug] [2026-09-28T21:58:56.675Z] unable to look up default compute service account. Falling back to REDACTED_SENDER_ID-compute@developer.gserviceaccount.com. Error: {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":403,"message":"Compute Engine API has not been used in project REDACTED_SENDER_ID before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project REDACTED_SENDER_ID before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID","service":"compute.googleapis.com","containerInfo":"REDACTED_SENDER_ID","consumer":"projects/REDACTED_SENDER_ID","serviceTitle":"Compute Engine API"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project REDACTED_SENDER_ID before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID"}]}]}},"response":{"statusCode":403}},"exit":1,"message":"Request to https://compute.googleapis.com/compute/v1/projects/REDACTED_SENDER_ID had HTTP Error: 403, Compute Engine API has not been used in project REDACTED_SENDER_ID before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=REDACTED_SENDER_ID then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":403}
+[debug] [2026-09-28T21:58:56.676Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:56.676Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:56.677Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/REDACTED_SENDER_ID:getIamPolicy [none]
+[debug] [2026-09-28T21:58:56.885Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/REDACTED_SENDER_ID:getIamPolicy 200
+[debug] [2026-09-28T21:58:56.885Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/REDACTED_SENDER_ID:getIamPolicy {"version":1,"etag":"BwZckiuwmf0=","bindings":[{"role":"roles/cloudbuild.builds.builder","members":["serviceAccount:REDACTED_SENDER_ID@cloudbuild.gserviceaccount.com"]},{"role":"roles/cloudbuild.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-cloudbuild.iam.gserviceaccount.com"]},{"role":"roles/cloudfunctions.standardServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcf-admin-robot.iam.gserviceaccount.com"]},{"role":"roles/containerregistry.ServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@containerregistry.iam.gserviceaccount.com"]},{"role":"roles/editor","members":["serviceAccount:REDACTED_SENDER_ID-compute@developer.gserviceaccount.com","serviceAccount:REDACTED_SENDER_ID@cloudservices.gserviceaccount.com","serviceAccount:diaspoafricconnect@appspot.gserviceaccount.com"]},{"role":"roles/firebase.managementServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebase.iam.gserviceaccount.com"]},{"role":"roles/firebase.sdkAdminServiceAgent","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/firebaseauth.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/firebasemods.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebasemods.iam.gserviceaccount.com"]},{"role":"roles/firebaserules.system","members":["serviceAccount:service-REDACTED_SENDER_ID@firebase-rules.iam.gserviceaccount.com"]},{"role":"roles/firebasestorage.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebasestorage.iam.gserviceaccount.com"]},{"role":"roles/firestore.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firestore.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountTokenCreator","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/owner","members":["user:B.nanfack@gmail.com"]},{"role":"roles/run.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@serverless-robot-prod.iam.gserviceaccount.com"]},{"role":"roles/storage.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]}]}
+[debug] [2026-09-28T21:58:56.886Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:56.886Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:56.886Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/REDACTED_SENDER_ID:setIamPolicy [none]
+[debug] [2026-09-28T21:58:56.887Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/REDACTED_SENDER_ID:setIamPolicy {"policy":{"version":1,"etag":"BwZckiuwmf0=","bindings":[{"role":"roles/cloudbuild.builds.builder","members":["serviceAccount:REDACTED_SENDER_ID@cloudbuild.gserviceaccount.com"]},{"role":"roles/cloudbuild.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-cloudbuild.iam.gserviceaccount.com"]},{"role":"roles/cloudfunctions.standardServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcf-admin-robot.iam.gserviceaccount.com"]},{"role":"roles/containerregistry.ServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@containerregistry.iam.gserviceaccount.com"]},{"role":"roles/editor","members":["serviceAccount:REDACTED_SENDER_ID-compute@developer.gserviceaccount.com","serviceAccount:REDACTED_SENDER_ID@cloudservices.gserviceaccount.com","serviceAccount:diaspoafricconnect@appspot.gserviceaccount.com"]},{"role":"roles/firebase.managementServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebase.iam.gserviceaccount.com"]},{"role":"roles/firebase.sdkAdminServiceAgent","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/firebaseauth.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/firebasemods.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebasemods.iam.gserviceaccount.com"]},{"role":"roles/firebaserules.system","members":["serviceAccount:service-REDACTED_SENDER_ID@firebase-rules.iam.gserviceaccount.com"]},{"role":"roles/firebasestorage.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebasestorage.iam.gserviceaccount.com"]},{"role":"roles/firestore.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firestore.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountTokenCreator","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com","serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-pubsub.iam.gserviceaccount.com"]},{"role":"roles/owner","members":["user:B.nanfack@gmail.com"]},{"role":"roles/run.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@serverless-robot-prod.iam.gserviceaccount.com"]},{"role":"roles/storage.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/run.invoker","members":["serviceAccount:REDACTED_SENDER_ID-compute@developer.gserviceaccount.com"]},{"role":"roles/eventarc.eventReceiver","members":["serviceAccount:REDACTED_SENDER_ID-compute@developer.gserviceaccount.com"]}]},"updateMask":"bindings"}
+[debug] [2026-09-28T21:58:57.564Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/REDACTED_SENDER_ID:setIamPolicy 200
+[debug] [2026-09-28T21:58:57.564Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/REDACTED_SENDER_ID:setIamPolicy {"version":1,"etag":"BwZckiw2Iyc=","bindings":[{"role":"roles/cloudbuild.builds.builder","members":["serviceAccount:REDACTED_SENDER_ID@cloudbuild.gserviceaccount.com"]},{"role":"roles/cloudbuild.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-cloudbuild.iam.gserviceaccount.com"]},{"role":"roles/cloudfunctions.standardServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcf-admin-robot.iam.gserviceaccount.com"]},{"role":"roles/containerregistry.ServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@containerregistry.iam.gserviceaccount.com"]},{"role":"roles/editor","members":["serviceAccount:REDACTED_SENDER_ID-compute@developer.gserviceaccount.com","serviceAccount:REDACTED_SENDER_ID@cloudservices.gserviceaccount.com","serviceAccount:diaspoafricconnect@appspot.gserviceaccount.com"]},{"role":"roles/eventarc.eventReceiver","members":["serviceAccount:REDACTED_SENDER_ID-compute@developer.gserviceaccount.com"]},{"role":"roles/firebase.managementServiceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebase.iam.gserviceaccount.com"]},{"role":"roles/firebase.sdkAdminServiceAgent","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/firebaseauth.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]},{"role":"roles/firebasemods.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebasemods.iam.gserviceaccount.com"]},{"role":"roles/firebaserules.system","members":["serviceAccount:service-REDACTED_SENDER_ID@firebase-rules.iam.gserviceaccount.com"]},{"role":"roles/firebasestorage.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firebasestorage.iam.gserviceaccount.com"]},{"role":"roles/firestore.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-firestore.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountTokenCreator","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com","serviceAccount:service-REDACTED_SENDER_ID@gcp-sa-pubsub.iam.gserviceaccount.com"]},{"role":"roles/owner","members":["user:B.nanfack@gmail.com"]},{"role":"roles/run.invoker","members":["serviceAccount:REDACTED_SENDER_ID-compute@developer.gserviceaccount.com"]},{"role":"roles/run.serviceAgent","members":["serviceAccount:service-REDACTED_SENDER_ID@serverless-robot-prod.iam.gserviceaccount.com"]},{"role":"roles/storage.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@diaspoafricconnect.iam.gserviceaccount.com"]}]}
+[debug] [2026-09-28T21:58:57.569Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:57.569Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:57.569Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com [none]
+[debug] [2026-09-28T21:58:57.569Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com  x-goog-user-project=diaspoafricconnect
+[debug] [2026-09-28T21:58:57.776Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com 200
+[debug] [2026-09-28T21:58:57.776Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com [omitted]
+[debug] [2026-09-28T21:58:57.777Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:57.777Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:58:57.777Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com:enable [none]
+[debug] [2026-09-28T21:58:57.777Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com:enable  x-goog-user-project=diaspoafricconnect
+[debug] [2026-09-28T21:58:57.999Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com:enable 200
+[debug] [2026-09-28T21:58:57.999Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/diaspoafricconnect/services/cloudbilling.googleapis.com:enable [omitted]
+[debug] [2026-09-28T21:59:08.029Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:08.029Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:08.029Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/diaspoafricconnect/billingInfo [none]
+[debug] [2026-09-28T21:59:08.029Z] >>> [apiv2][(partial)header] GET https://cloudbilling.googleapis.com/v1/projects/diaspoafricconnect/billingInfo  x-goog-user-project=diaspoafricconnect
+[debug] [2026-09-28T21:59:08.372Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/diaspoafricconnect/billingInfo 200
+[debug] [2026-09-28T21:59:08.372Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/diaspoafricconnect/billingInfo {"name":"projects/diaspoafricconnect/billingInfo","projectId":"diaspoafricconnect","billingAccountName":"billingAccounts/01571A-D4FDBD-5D9DB9","billingEnabled":true}
+[debug] [2026-09-28T21:59:08.375Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:08.375Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:08.375Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions:generateUploadUrl [none]
+[debug] [2026-09-28T21:59:09.870Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions:generateUploadUrl 200
+[debug] [2026-09-28T21:59:09.871Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com/d05b3eb8-d099-4fc9-b287-9f204fb14527.zip?GoogleAccessId=service-REDACTED_SENDER_ID@gcf-admin-robot.iam.gserviceaccount.com&Expires=1790634549&Signature=ikEe8pTVzYVTaFk%2F9%2Bmxwts8RcUaFbzRUYWywyKajO%2FEh7G6uzb3Yrne24aMkklNH5g34AWOutA3I%2FQwB8gBmIgcUu4bxjtduQbMcMf44oO9SY2tUTLdhwARvsCQEcGqveQhszkIn%2FyTJvb2ngR3n3cmcfhKQQKGka0wlJW3uYve9F583zj4DSL%2BE0JXrkNKEwjqnWL%2BCZd6y9Cu7HOk%2F8tcd0vEeBqrZGomKwVtQGmknuG5LKPjFeGfbe8t9WPKBGtr3uBOTXGXpflQC0rz7qLhpeKdWATJwGXU2UyJMDBCVkex7M%2BMRUYvkrpjEOg4BjoPwLY2xpFdsdxWNPrXOQ%3D%3D","storageSource":{"bucket":"gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com","object":"d05b3eb8-d099-4fc9-b287-9f204fb14527.zip"}}
+[debug] [2026-09-28T21:59:09.871Z] >>> [apiv2][query] PUT https://storage.googleapis.com/gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com/d05b3eb8-d099-4fc9-b287-9f204fb14527.zip GoogleAccessId=service-REDACTED_SENDER_ID%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1790634549&Signature=ikEe8pTVzYVTaFk%2F9%2Bmxwts8RcUaFbzRUYWywyKajO%2FEh7G6uzb3Yrne24aMkklNH5g34AWOutA3I%2FQwB8gBmIgcUu4bxjtduQbMcMf44oO9SY2tUTLdhwARvsCQEcGqveQhszkIn%2FyTJvb2ngR3n3cmcfhKQQKGka0wlJW3uYve9F583zj4DSL%2BE0JXrkNKEwjqnWL%2BCZd6y9Cu7HOk%2F8tcd0vEeBqrZGomKwVtQGmknuG5LKPjFeGfbe8t9WPKBGtr3uBOTXGXpflQC0rz7qLhpeKdWATJwGXU2UyJMDBCVkex7M%2BMRUYvkrpjEOg4BjoPwLY2xpFdsdxWNPrXOQ%3D%3D
+[debug] [2026-09-28T21:59:09.871Z] >>> [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com/d05b3eb8-d099-4fc9-b287-9f204fb14527.zip [stream]
+[debug] [2026-09-28T21:59:10.098Z] <<< [apiv2][status] PUT https://storage.googleapis.com/gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com/d05b3eb8-d099-4fc9-b287-9f204fb14527.zip 200
+[debug] [2026-09-28T21:59:10.099Z] <<< [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com/d05b3eb8-d099-4fc9-b287-9f204fb14527.zip [omitted]
+[info] +  functions: functions source uploaded successfully 
+[info] i  functions: creating Node.js 22 (2nd Gen) function onBusinessCreate(us-central1)... 
+[info] i  functions: creating Node.js 22 (2nd Gen) function onReviewCreate(us-central1)... 
+[info] i  functions: creating Node.js 22 (2nd Gen) function onLawyerCreate(us-central1)... 
+[info] i  functions: creating Node.js 22 (2nd Gen) function onVerificationRequestCreate(us-central1)... 
+[debug] [2026-09-28T21:59:10.103Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:10.103Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:10.103Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions functionId=onBusinessCreate
+[debug] [2026-09-28T21:59:10.103Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"name":"projects/diaspoafricconnect/locations/us-central1/functions/onBusinessCreate","buildConfig":{"runtime":"nodejs22","entryPoint":"onBusinessCreate","source":{"storageSource":{"bucket":"gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com","object":"d05b3eb8-d099-4fc9-b287-9f204fb14527.zip"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""}},"serviceConfig":{"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}","GCLOUD_PROJECT":"diaspoafricconnect","EVENTARC_CLOUD_EVENT_SOURCE":"projects/diaspoafricconnect/locations/us-central1/services/onBusinessCreate","FUNCTION_REGION":"us-central1","FUNCTION_SIGNATURE_TYPE":"cloudevent","FUNCTION_TARGET":"onBusinessCreate","LOG_EXECUTION_ID":"true"},"ingressSettings":null,"timeoutSeconds":null,"serviceAccountEmail":null,"availableMemory":"256Mi","minInstanceCount":null,"maxInstanceCount":null,"maxInstanceRequestConcurrency":80,"availableCpu":"1","vpcConnector":null,"vpcConnectorEgressSettings":null,"directVpcNetworkInterface":null,"directVpcEgress":null},"labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"61c66aa3a9b434868fffb2c91a959a5e0f7df21a"},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY","eventFilters":[{"attribute":"database","value":"(default)"},{"attribute":"namespace","value":"(default)"},{"attribute":"document","value":"businesses/{businessId}","operator":"match-path-pattern"}],"triggerRegion":"nam5"}}
+[debug] [2026-09-28T21:59:26.354Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions 400
+[debug] [2026-09-28T21:59:26.354Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"error":{"code":400,"message":"Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onbusinesscreate-686425: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.","status":"FAILED_PRECONDITION"}}
+[warn] !  functions: Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onBusinessCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onbusinesscreate-686425: Invalid resource state for "": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role. 
+[warn] !  functions: Since this is your first time using 2nd gen functions, we need a little bit longer to finish setting everything up. Retry the deployment in a few minutes. 
+[warn] !  functions:  failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onBusinessCreate 
+[debug] [2026-09-28T21:59:26.357Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:26.357Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:26.357Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:26.357Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:26.357Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:26.357Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:26.358Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions functionId=onReviewCreate
+[debug] [2026-09-28T21:59:26.358Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"name":"projects/diaspoafricconnect/locations/us-central1/functions/onReviewCreate","buildConfig":{"runtime":"nodejs22","entryPoint":"onReviewCreate","source":{"storageSource":{"bucket":"gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com","object":"d05b3eb8-d099-4fc9-b287-9f204fb14527.zip"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""}},"serviceConfig":{"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}","GCLOUD_PROJECT":"diaspoafricconnect","EVENTARC_CLOUD_EVENT_SOURCE":"projects/diaspoafricconnect/locations/us-central1/services/onReviewCreate","FUNCTION_REGION":"us-central1","FUNCTION_SIGNATURE_TYPE":"cloudevent","FUNCTION_TARGET":"onReviewCreate","LOG_EXECUTION_ID":"true"},"ingressSettings":null,"timeoutSeconds":null,"serviceAccountEmail":null,"availableMemory":"256Mi","minInstanceCount":null,"maxInstanceCount":null,"maxInstanceRequestConcurrency":80,"availableCpu":"1","vpcConnector":null,"vpcConnectorEgressSettings":null,"directVpcNetworkInterface":null,"directVpcEgress":null},"labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"61c66aa3a9b434868fffb2c91a959a5e0f7df21a"},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY","eventFilters":[{"attribute":"database","value":"(default)"},{"attribute":"namespace","value":"(default)"},{"attribute":"document","value":"reviews/{reviewId}","operator":"match-path-pattern"}],"triggerRegion":"nam5"}}
+[debug] [2026-09-28T21:59:26.359Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions functionId=onLawyerCreate
+[debug] [2026-09-28T21:59:26.359Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"name":"projects/diaspoafricconnect/locations/us-central1/functions/onLawyerCreate","buildConfig":{"runtime":"nodejs22","entryPoint":"onLawyerCreate","source":{"storageSource":{"bucket":"gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com","object":"d05b3eb8-d099-4fc9-b287-9f204fb14527.zip"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""}},"serviceConfig":{"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}","GCLOUD_PROJECT":"diaspoafricconnect","EVENTARC_CLOUD_EVENT_SOURCE":"projects/diaspoafricconnect/locations/us-central1/services/onLawyerCreate","FUNCTION_REGION":"us-central1","FUNCTION_SIGNATURE_TYPE":"cloudevent","FUNCTION_TARGET":"onLawyerCreate","LOG_EXECUTION_ID":"true"},"ingressSettings":null,"timeoutSeconds":null,"serviceAccountEmail":null,"availableMemory":"256Mi","minInstanceCount":null,"maxInstanceCount":null,"maxInstanceRequestConcurrency":80,"availableCpu":"1","vpcConnector":null,"vpcConnectorEgressSettings":null,"directVpcNetworkInterface":null,"directVpcEgress":null},"labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"61c66aa3a9b434868fffb2c91a959a5e0f7df21a"},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY","eventFilters":[{"attribute":"database","value":"(default)"},{"attribute":"namespace","value":"(default)"},{"attribute":"document","value":"lawyers/{lawyerId}","operator":"match-path-pattern"}],"triggerRegion":"nam5"}}
+[debug] [2026-09-28T21:59:26.360Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions functionId=onVerificationRequestCreate
+[debug] [2026-09-28T21:59:26.360Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"name":"projects/diaspoafricconnect/locations/us-central1/functions/onVerificationRequestCreate","buildConfig":{"runtime":"nodejs22","entryPoint":"onVerificationRequestCreate","source":{"storageSource":{"bucket":"gcf-v2-uploads-REDACTED_SENDER_ID.us-central1.cloudfunctions.appspot.com","object":"d05b3eb8-d099-4fc9-b287-9f204fb14527.zip"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""}},"serviceConfig":{"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}","GCLOUD_PROJECT":"diaspoafricconnect","EVENTARC_CLOUD_EVENT_SOURCE":"projects/diaspoafricconnect/locations/us-central1/services/onVerificationRequestCreate","FUNCTION_REGION":"us-central1","FUNCTION_SIGNATURE_TYPE":"cloudevent","FUNCTION_TARGET":"onVerificationRequestCreate","LOG_EXECUTION_ID":"true"},"ingressSettings":null,"timeoutSeconds":null,"serviceAccountEmail":null,"availableMemory":"256Mi","minInstanceCount":null,"maxInstanceCount":null,"maxInstanceRequestConcurrency":80,"availableCpu":"1","vpcConnector":null,"vpcConnectorEgressSettings":null,"directVpcNetworkInterface":null,"directVpcEgress":null},"labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"61c66aa3a9b434868fffb2c91a959a5e0f7df21a"},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY","eventFilters":[{"attribute":"database","value":"(default)"},{"attribute":"namespace","value":"(default)"},{"attribute":"document","value":"verificationRequests/{requestId}","operator":"match-path-pattern"}],"triggerRegion":"nam5"}}
+[error] Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onBusinessCreate
+[debug] [2026-09-28T21:59:41.599Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions 400
+[debug] [2026-09-28T21:59:41.600Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"error":{"code":400,"message":"Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onreviewcreate-685410: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.","status":"FAILED_PRECONDITION"}}
+[warn] !  functions: Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onReviewCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onreviewcreate-685410: Invalid resource state for "": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role. 
+[warn] !  functions: Since this is your first time using 2nd gen functions, we need a little bit longer to finish setting everything up. Retry the deployment in a few minutes. 
+[warn] !  functions:  failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onReviewCreate 
+[error] Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onReviewCreate
+[debug] [2026-09-28T21:59:41.628Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions 400
+[debug] [2026-09-28T21:59:41.628Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"error":{"code":400,"message":"Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onlawyercreate-959365: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.","status":"FAILED_PRECONDITION"}}
+[warn] !  functions: Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onLawyerCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onlawyercreate-959365: Invalid resource state for "": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role. 
+[warn] !  functions: Since this is your first time using 2nd gen functions, we need a little bit longer to finish setting everything up. Retry the deployment in a few minutes. 
+[warn] !  functions:  failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onLawyerCreate 
+[error] Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onLawyerCreate
+[debug] [2026-09-28T21:59:41.630Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions 400
+[debug] [2026-09-28T21:59:41.631Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions {"error":{"code":400,"message":"Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onverificationrequestcreate-867226: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.","status":"FAILED_PRECONDITION"}}
+[warn] !  functions: Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onVerificationRequestCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onverificationrequestcreate-867226: Invalid resource state for "": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role. 
+[warn] !  functions: Since this is your first time using 2nd gen functions, we need a little bit longer to finish setting everything up. Retry the deployment in a few minutes. 
+[warn] !  functions:  failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onVerificationRequestCreate 
+[error] Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onVerificationRequestCreate
+[warn] !  functions: Deploys failed. Skipping deletes. 
+[debug] [2026-09-28T21:59:41.643Z] Total Function Deployment time: 31532
+[debug] [2026-09-28T21:59:41.643Z] 4 Functions Deployed
+[debug] [2026-09-28T21:59:41.644Z] 4 Functions Errored
+[debug] [2026-09-28T21:59:41.644Z] 0 Function Deployments Aborted
+[debug] [2026-09-28T21:59:41.644Z] Average Function Deployment time: 27704.5
+[info] 
+[info] Functions deploy had errors with the following functions:
+	onBusinessCreate(us-central1)
+	onLawyerCreate(us-central1)
+	onReviewCreate(us-central1)
+	onVerificationRequestCreate(us-central1)
+[debug] [2026-09-28T21:59:41.711Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:41.711Z] Checked if tokens are valid: true, expires at: 1790635872433
+[debug] [2026-09-28T21:59:41.711Z] >>> [apiv2][query] GET https://artifactregistry.googleapis.com/v1/projects/diaspoafricconnect/locations/us-central1/repositories/gcf-artifacts [none]
+[debug] [2026-09-28T21:59:41.907Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/diaspoafricconnect/locations/us-central1/repositories/gcf-artifacts 404
+[debug] [2026-09-28T21:59:41.907Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/diaspoafricconnect/locations/us-central1/repositories/gcf-artifacts {"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}}
+[debug] [2026-09-28T21:59:41.907Z] Failed to check artifact cleanup policy for region us-central1: Request to https://artifactregistry.googleapis.com/v1/projects/diaspoafricconnect/locations/us-central1/repositories/gcf-artifacts had HTTP Error: 404, Requested entity was not found. {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}},"response":{"statusCode":404}},"exit":1,"message":"Request to https://artifactregistry.googleapis.com/v1/projects/diaspoafricconnect/locations/us-central1/repositories/gcf-artifacts had HTTP Error: 404, Requested entity was not found.","status":404}
+[debug] [2026-09-28T21:59:41.908Z] Functions deploy failed.
+[debug] [2026-09-28T21:59:41.909Z] {
+  "endpoint": {
+    "id": "onBusinessCreate",
+    "project": "diaspoafricconnect",
+    "region": "us-central1",
+    "entryPoint": "onBusinessCreate",
+    "platform": "gcfv2",
+    "runtime": "nodejs22",
+    "eventTrigger": {
+      "eventType": "google.cloud.firestore.document.v1.created",
+      "retry": false,
+      "eventFilters": {
+        "database": "(default)",
+        "namespace": "(default)"
+      },
+      "eventFilterPathPatterns": {
+        "document": "businesses/{businessId}"
+      },
+      "region": "nam5"
+    },
+    "labels": {
+      "deployment-tool": "cli-firebase"
+    },
+    "serviceAccount": null,
+    "ingressSettings": null,
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "maxInstances": null,
+    "minInstances": null,
+    "concurrency": 80,
+    "vpc": null,
+    "environmentVariables": {
+      "FIREBASE_CONFIG": "{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}",
+      "GCLOUD_PROJECT": "diaspoafricconnect",
+      "EVENTARC_CLOUD_EVENT_SOURCE": "projects/diaspoafricconnect/locations/us-central1/services/onBusinessCreate",
+      "FUNCTION_REGION": "us-central1"
+    },
+    "codebase": "default",
+    "cpu": 1,
+    "targetedByOnly": false,
+    "hash": "61c66aa3a9b434868fffb2c91a959a5e0f7df21a"
+  },
+  "op": "create",
+  "original": {
+    "name": "FirebaseError",
+    "children": [],
+    "context": {
+      "function": "projects/diaspoafricconnect/locations/us-central1/functions/onBusinessCreate"
+    },
+    "exit": 1,
+    "message": "Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onBusinessCreate",
+    "original": {
+      "name": "FirebaseError",
+      "children": [],
+      "context": {
+        "body": {
+          "error": {
+            "code": 400,
+            "message": "Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onbusinesscreate-686425: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+            "status": "FAILED_PRECONDITION"
+          }
+        },
+        "response": {
+          "statusCode": 400
+        }
+      },
+      "exit": 1,
+      "message": "Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onBusinessCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onbusinesscreate-686425: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+      "status": 400
+    },
+    "status": 400,
+    "code": 400
+  }
+}
+[debug] [2026-09-28T21:59:41.909Z] {
+  "endpoint": {
+    "id": "onReviewCreate",
+    "project": "diaspoafricconnect",
+    "region": "us-central1",
+    "entryPoint": "onReviewCreate",
+    "platform": "gcfv2",
+    "runtime": "nodejs22",
+    "eventTrigger": {
+      "eventType": "google.cloud.firestore.document.v1.created",
+      "retry": false,
+      "eventFilters": {
+        "database": "(default)",
+        "namespace": "(default)"
+      },
+      "eventFilterPathPatterns": {
+        "document": "reviews/{reviewId}"
+      },
+      "region": "nam5"
+    },
+    "labels": {
+      "deployment-tool": "cli-firebase"
+    },
+    "serviceAccount": null,
+    "ingressSettings": null,
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "maxInstances": null,
+    "minInstances": null,
+    "concurrency": 80,
+    "vpc": null,
+    "environmentVariables": {
+      "FIREBASE_CONFIG": "{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}",
+      "GCLOUD_PROJECT": "diaspoafricconnect",
+      "EVENTARC_CLOUD_EVENT_SOURCE": "projects/diaspoafricconnect/locations/us-central1/services/onReviewCreate",
+      "FUNCTION_REGION": "us-central1"
+    },
+    "codebase": "default",
+    "cpu": 1,
+    "targetedByOnly": false,
+    "hash": "61c66aa3a9b434868fffb2c91a959a5e0f7df21a"
+  },
+  "op": "create",
+  "original": {
+    "name": "FirebaseError",
+    "children": [],
+    "context": {
+      "function": "projects/diaspoafricconnect/locations/us-central1/functions/onReviewCreate"
+    },
+    "exit": 1,
+    "message": "Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onReviewCreate",
+    "original": {
+      "name": "FirebaseError",
+      "children": [],
+      "context": {
+        "body": {
+          "error": {
+            "code": 400,
+            "message": "Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onreviewcreate-685410: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+            "status": "FAILED_PRECONDITION"
+          }
+        },
+        "response": {
+          "statusCode": 400
+        }
+      },
+      "exit": 1,
+      "message": "Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onReviewCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onreviewcreate-685410: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+      "status": 400
+    },
+    "status": 400,
+    "code": 400
+  }
+}
+[debug] [2026-09-28T21:59:41.909Z] {
+  "endpoint": {
+    "id": "onLawyerCreate",
+    "project": "diaspoafricconnect",
+    "region": "us-central1",
+    "entryPoint": "onLawyerCreate",
+    "platform": "gcfv2",
+    "runtime": "nodejs22",
+    "eventTrigger": {
+      "eventType": "google.cloud.firestore.document.v1.created",
+      "retry": false,
+      "eventFilters": {
+        "database": "(default)",
+        "namespace": "(default)"
+      },
+      "eventFilterPathPatterns": {
+        "document": "lawyers/{lawyerId}"
+      },
+      "region": "nam5"
+    },
+    "labels": {
+      "deployment-tool": "cli-firebase"
+    },
+    "serviceAccount": null,
+    "ingressSettings": null,
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "maxInstances": null,
+    "minInstances": null,
+    "concurrency": 80,
+    "vpc": null,
+    "environmentVariables": {
+      "FIREBASE_CONFIG": "{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}",
+      "GCLOUD_PROJECT": "diaspoafricconnect",
+      "EVENTARC_CLOUD_EVENT_SOURCE": "projects/diaspoafricconnect/locations/us-central1/services/onLawyerCreate",
+      "FUNCTION_REGION": "us-central1"
+    },
+    "codebase": "default",
+    "cpu": 1,
+    "targetedByOnly": false,
+    "hash": "61c66aa3a9b434868fffb2c91a959a5e0f7df21a"
+  },
+  "op": "create",
+  "original": {
+    "name": "FirebaseError",
+    "children": [],
+    "context": {
+      "function": "projects/diaspoafricconnect/locations/us-central1/functions/onLawyerCreate"
+    },
+    "exit": 1,
+    "message": "Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onLawyerCreate",
+    "original": {
+      "name": "FirebaseError",
+      "children": [],
+      "context": {
+        "body": {
+          "error": {
+            "code": 400,
+            "message": "Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onlawyercreate-959365: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+            "status": "FAILED_PRECONDITION"
+          }
+        },
+        "response": {
+          "statusCode": 400
+        }
+      },
+      "exit": 1,
+      "message": "Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onLawyerCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onlawyercreate-959365: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+      "status": 400
+    },
+    "status": 400,
+    "code": 400
+  }
+}
+[debug] [2026-09-28T21:59:41.910Z] {
+  "endpoint": {
+    "id": "onVerificationRequestCreate",
+    "project": "diaspoafricconnect",
+    "region": "us-central1",
+    "entryPoint": "onVerificationRequestCreate",
+    "platform": "gcfv2",
+    "runtime": "nodejs22",
+    "eventTrigger": {
+      "eventType": "google.cloud.firestore.document.v1.created",
+      "retry": false,
+      "eventFilters": {
+        "database": "(default)",
+        "namespace": "(default)"
+      },
+      "eventFilterPathPatterns": {
+        "document": "verificationRequests/{requestId}"
+      },
+      "region": "nam5"
+    },
+    "labels": {
+      "deployment-tool": "cli-firebase"
+    },
+    "serviceAccount": null,
+    "ingressSettings": null,
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "maxInstances": null,
+    "minInstances": null,
+    "concurrency": 80,
+    "vpc": null,
+    "environmentVariables": {
+      "FIREBASE_CONFIG": "{\"projectId\":\"diaspoafricconnect\",\"storageBucket\":\"diaspoafricconnect.firebasestorage.app\"}",
+      "GCLOUD_PROJECT": "diaspoafricconnect",
+      "EVENTARC_CLOUD_EVENT_SOURCE": "projects/diaspoafricconnect/locations/us-central1/services/onVerificationRequestCreate",
+      "FUNCTION_REGION": "us-central1"
+    },
+    "codebase": "default",
+    "cpu": 1,
+    "targetedByOnly": false,
+    "hash": "61c66aa3a9b434868fffb2c91a959a5e0f7df21a"
+  },
+  "op": "create",
+  "original": {
+    "name": "FirebaseError",
+    "children": [],
+    "context": {
+      "function": "projects/diaspoafricconnect/locations/us-central1/functions/onVerificationRequestCreate"
+    },
+    "exit": 1,
+    "message": "Failed to create function projects/diaspoafricconnect/locations/us-central1/functions/onVerificationRequestCreate",
+    "original": {
+      "name": "FirebaseError",
+      "children": [],
+      "context": {
+        "body": {
+          "error": {
+            "code": 400,
+            "message": "Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onverificationrequestcreate-867226: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+            "status": "FAILED_PRECONDITION"
+          }
+        },
+        "response": {
+          "statusCode": 400
+        }
+      },
+      "exit": 1,
+      "message": "Request to https://cloudfunctions.googleapis.com/v2/projects/diaspoafricconnect/locations/us-central1/functions?functionId=onVerificationRequestCreate had HTTP Error: 400, Validation failed for trigger projects/diaspoafricconnect/locations/nam5/triggers/onverificationrequestcreate-867226: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+      "status": 400
+    },
+    "status": 400,
+    "code": 400
+  }
+}
+[error] Error: There was an error deploying functions:
+[error] - Error Failed to create function onBusinessCreate in region us-central1
+[error] - Error Failed to create function onReviewCreate in region us-central1
+[error] - Error Failed to create function onLawyerCreate in region us-central1
+[error] - Error Failed to create function onVerificationRequestCreate in region us-central1

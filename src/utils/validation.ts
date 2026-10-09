@@ -37,7 +37,6 @@ export function isStrongPassword(password: string): string | null {
 export function validateBusinessForm(fields: {
   name: string;
   description: string;
-  countryOfOrigin: string;
   address: string;
   city: string;
   state: string;
@@ -48,7 +47,6 @@ export function validateBusinessForm(fields: {
   const config = getCountryConfig(hostCountry);
   if (!fields.name.trim()) return 'Business name is required';
   if (!fields.description.trim()) return 'Description is required';
-  if (!fields.countryOfOrigin.trim()) return 'Country of origin is required';
   if (!fields.address.trim()) return 'Address is required';
   if (!fields.city.trim()) return 'City is required';
   if (!fields.state.trim()) return `${config.addressFields.regionLabel} is required`;

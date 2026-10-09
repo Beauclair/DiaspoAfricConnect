@@ -1,4 +1,4 @@
-import { BusinessCategory, ImmigrationCategory } from '../types';
+import { BusinessCategory, ImmigrationCategory, LegalCategory } from '../types';
 
 export const BUSINESS_CATEGORIES: { key: BusinessCategory; label: string; icon: string }[] = [
   { key: 'restaurant', label: 'Restaurants', icon: 'restaurant' },

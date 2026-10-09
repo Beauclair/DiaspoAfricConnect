@@ -51,8 +51,13 @@ for (const [mod, target] of Object.entries(aliases)) {
   }
 }
 
+const functionsAbsolute = path.resolve(__dirname, 'functions');
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Block any resolution from within the functions/ directory
+  if (context.originModulePath && context.originModulePath.startsWith(functionsAbsolute)) {
+    return { type: 'empty' };
+  }
   if (aliases[moduleName]) {
     return { type: 'sourceFile', filePath: aliases[moduleName] };
   }
@@ -61,5 +66,17 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   }
   return context.resolveRequest(context, moduleName, platform);
 };
+
+// Exclude Cloud Functions directory from Metro bundler entirely.
+// firebase-admin and firebase-functions are server-only packages that use
+// Node built-ins (fs, async_hooks) which don't exist in React Native.
+const functionsEscaped = functionsAbsolute.replace(/[/\\]/g, '[/\\\\]');
+config.resolver.blockList = [
+  ...(config.resolver.blockList || []),
+  new RegExp(functionsEscaped + '($|[/\\\\].*)'),
+  /^functions($|[/\\].*)/,
+  /[/\\]functions[/\\]lib[/\\]/,
+  /[/\\]functions[/\\]node_modules[/\\]/,
+];
 
 module.exports = config;

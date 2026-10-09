@@ -1,20 +1,44 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
 import Button from './Button';
+import { useTheme } from '../../theme';
 
 interface ErrorViewProps {
   message?: string;
   onRetry?: () => void;
 }
 
-export default function ErrorView({ message = 'Something went wrong. Please try again.', onRetry }: ErrorViewProps) {
+export default function ErrorView({
+  message = 'Something went wrong. Please try again.',
+  onRetry,
+}: ErrorViewProps) {
+  const { colors, typography, spacing } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <MaterialIcons name="error-outline" size={48} color={Colors.accent} />
-      <Text style={styles.message}>{message}</Text>
-      {onRetry && <Button title="Retry" onPress={onRetry} variant="outline" style={styles.button} />}
+    <View
+      style={[styles.container, { backgroundColor: colors.background }]}
+      accessibilityRole="alert"
+      accessibilityLabel={message}
+    >
+      <View style={[styles.iconWrapper, { backgroundColor: colors.errorContainer }]}>
+        <MaterialIcons name="wifi-off" size={32} color={colors.error} />
+      </View>
+      <Text style={[typography.titleMedium, { color: colors.onSurface, marginTop: spacing.xl }]}>
+        Oops!
+      </Text>
+      <Text style={[typography.bodyMedium, styles.message, { color: colors.onSurfaceVariant }]}>
+        {message}
+      </Text>
+      {onRetry && (
+        <Button
+          title="Try Again"
+          onPress={onRetry}
+          variant="tonal"
+          icon="refresh"
+          style={{ marginTop: spacing.xxl }}
+        />
+      )}
     </View>
   );
 }
@@ -25,17 +49,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
-    backgroundColor: Colors.background,
+  },
+  iconWrapper: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   message: {
-    fontSize: 15,
-    color: Colors.textLight,
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: 8,
     lineHeight: 22,
-  },
-  button: {
-    marginTop: 16,
-    minWidth: 120,
+    maxWidth: 280,
   },
 });

@@ -1,50 +1,104 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, ScrollView, ActivityIndicator } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { Colors } from '../../src/constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { useTheme } from '../../src/theme';
 import SearchBar from '../../src/components/common/SearchBar';
 import CategoryChip from '../../src/components/common/CategoryChip';
 import BusinessCard from '../../src/components/business/BusinessCard';
-import LoadingSpinner from '../../src/components/common/LoadingSpinner';
-import ErrorView from '../../src/components/common/ErrorView';
 import Button from '../../src/components/common/Button';
+import ErrorView from '../../src/components/common/ErrorView';
+import { BusinessCardSkeleton } from '../../src/components/common/Skeleton';
+import AnimatedPress from '../../src/components/common/AnimatedPressable';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useCountry } from '../../src/contexts/CountryContext';
 import { requireAuth } from '../../src/utils/authGuard';
 import { getBusinesses, getBusinessesByCategory, searchBusinesses } from '../../src/services/businessService';
 import { Business, BusinessCategory } from '../../src/types';
+import { getUserMessage } from '../../src/utils/errorMessages';
 import { BUSINESS_CATEGORIES } from '../../src/constants/categories';
+import { trackEvent, trackScreen } from '../../src/config/analytics';
+import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
 
 export default function BusinessListScreen() {
   const { user } = useAuth();
   const { hostCountry } = useCountry();
+  const { colors, typography, spacing, radii, shadows } = useTheme();
+  const insets = useSafeAreaInsets();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | null>(null);
   const [error, setError] = useState('');
+  const hasLoadedOnce = useRef(false);
+  const cursorRef = useRef<unknown>(null);
+  const hasMoreRef = useRef(true);
 
   const loadBusinesses = useCallback(async () => {
-    setLoading(true);
+    if (!hasLoadedOnce.current) setLoading(true);
     setError('');
+    cursorRef.current = null;
+    hasMoreRef.current = true;
     try {
-      const data = selectedCategory
+      const page = selectedCategory
         ? await getBusinessesByCategory(selectedCategory, hostCountry)
         : await getBusinesses(hostCountry);
-      setBusinesses(data);
+      setBusinesses(page.data);
+      cursorRef.current = page.lastDoc;
+      hasMoreRef.current = page.hasMore;
+      hasLoadedOnce.current = true;
     } catch (e: any) {
       setBusinesses([]);
-      setError(e.message || 'Failed to load businesses');
+      if (!hasLoadedOnce.current) setError(getUserMessage(e, 'loadBusinesses', 'Failed to load businesses.'));
     } finally {
       setLoading(false);
     }
   }, [selectedCategory, hostCountry]);
 
-  // Reload every time this tab gains focus
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMoreRef.current || !cursorRef.current) return;
+    setLoadingMore(true);
+    try {
+      const page = selectedCategory
+        ? await getBusinessesByCategory(selectedCategory, hostCountry, cursorRef.current)
+        : await getBusinesses(hostCountry, cursorRef.current);
+      setBusinesses((prev) => [...prev, ...page.data]);
+      cursorRef.current = page.lastDoc;
+      hasMoreRef.current = page.hasMore;
+    } catch {
+      // Silently fail on load-more — user still has current data
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [selectedCategory, hostCountry, loadingMore]);
+
+  const refreshList = useCallback(async () => {
+    trackScreen('BusinessList');
+    if (search.length > 2) {
+      setLoading(true);
+      try {
+        const results = await searchBusinesses(search, hostCountry);
+        setBusinesses(results.data);
+        cursorRef.current = results.lastDoc;
+        hasMoreRef.current = results.hasMore;
+      } catch {
+        // Keep stale results on refocus failure
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      loadBusinesses();
+    }
+  }, [search, hostCountry, loadBusinesses]);
+
   useFocusEffect(
     useCallback(() => {
-      loadBusinesses();
-    }, [loadBusinesses])
+      refreshList();
+    }, [refreshList])
   );
 
   const handleSearch = async (text: string) => {
@@ -53,9 +107,12 @@ export default function BusinessListScreen() {
       setLoading(true);
       try {
         const results = await searchBusinesses(text, hostCountry);
-        setBusinesses(results);
+        setBusinesses(results.data);
+        cursorRef.current = results.lastDoc;
+        hasMoreRef.current = results.hasMore;
+        trackEvent(AnalyticsEvents.BUSINESS_SEARCH, { search_term: text, result_count: results.data.length });
       } catch (e: any) {
-        setError(e.message || 'Search failed');
+        setError(getUserMessage(e, 'searchBusinesses', 'Search failed.'));
       } finally {
         setLoading(false);
       }
@@ -65,55 +122,98 @@ export default function BusinessListScreen() {
   };
 
   const handleCategoryPress = (key: BusinessCategory) => {
-    setSelectedCategory(selectedCategory === key ? null : key);
+    const newCategory = selectedCategory === key ? null : key;
+    setSelectedCategory(newCategory);
     setSearch('');
+    if (newCategory) {
+      trackEvent(AnalyticsEvents.BUSINESS_CATEGORY_FILTERED, { category: newCategory });
+    }
   };
 
+  const renderItem = ({ item, index }: { item: Business; index: number }) => (
+    <Animated.View entering={FadeIn.delay(Math.min(index * 40, 160)).duration(250)}>
+      <BusinessCard
+        business={item}
+        onPress={() => router.push({ pathname: '/business/[id]', params: { id: item.id } })}
+      />
+    </Animated.View>
+  );
+
+  const ListFooter = loadingMore ? (
+    <ActivityIndicator size="small" color={colors.primary} style={{ paddingVertical: 16 }} />
+  ) : null;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.searchSection}>
-        <SearchBar
-          value={search}
-          onChangeText={handleSearch}
-          placeholder="Search businesses..."
-        />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <LinearGradient
+        colors={['#1B6B2E', '#145222']}
+        style={[styles.header, { paddingTop: insets.top + 12 }]}
+      >
+        <Text style={[typography.displaySmall, { color: '#FFFFFF' }]}>
+          Businesses
+        </Text>
+        <Text style={[typography.bodyMedium, { color: 'rgba(255,255,255,0.8)', marginTop: 2 }]}>
+          Discover African-owned businesses
+        </Text>
+      </LinearGradient>
+
+      {/* Sticky search + categories */}
+      <View style={[styles.filterSection, { backgroundColor: colors.background }]}>
+        <View style={{ paddingHorizontal: spacing.xxl, paddingTop: spacing.xl }}>
+          <SearchBar
+            value={search}
+            onChangeText={handleSearch}
+            placeholder="Search businesses..."
+          />
+        </View>
+        <View style={{ paddingHorizontal: spacing.xxl, paddingTop: spacing.lg }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {BUSINESS_CATEGORIES.map((cat) => (
+              <CategoryChip
+                key={cat.key}
+                label={cat.label}
+                selected={selectedCategory === cat.key}
+                onPress={() => handleCategoryPress(cat.key)}
+              />
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
-      <View style={styles.categories}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {BUSINESS_CATEGORIES.map((cat) => (
-            <CategoryChip
-              key={cat.key}
-              label={cat.label}
-              selected={selectedCategory === cat.key}
-              onPress={() => handleCategoryPress(cat.key)}
-            />
-          ))}
-        </ScrollView>
-      </View>
-
+      {/* Business list */}
       {loading ? (
-        <LoadingSpinner />
+        <View style={{ paddingHorizontal: spacing.xxl, paddingTop: spacing.xl }}>
+          <BusinessCardSkeleton />
+          <BusinessCardSkeleton />
+          <BusinessCardSkeleton />
+        </View>
       ) : error ? (
         <ErrorView message={error} onRetry={loadBusinesses} />
       ) : (
         <FlatList
           data={businesses}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <BusinessCard
-              business={item}
-              onPress={() => router.push({ pathname: '/business/[id]', params: { id: item.id } })}
-            />
-          )}
-          contentContainerStyle={styles.list}
+          renderItem={renderItem}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: spacing.xxl, paddingBottom: 120 }}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={ListFooter}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>No businesses found</Text>
+            <View style={[styles.empty, { backgroundColor: colors.surfaceContainerLow, borderRadius: radii.lg }]}>
+              <MaterialIcons name="search-off" size={48} color={colors.onSurfaceDisabled} />
+              <Text style={[typography.titleMedium, { color: colors.onSurface, marginTop: 12 }]}>
+                No businesses found
+              </Text>
+              <Text style={[typography.bodyMedium, { color: colors.onSurfaceVariant, marginTop: 4, textAlign: 'center' }]}>
+                Be the first to list your business
+              </Text>
               <Button
                 title="Add a Business"
                 onPress={() => requireAuth(user, () => router.push('/business/add'))}
-                variant="outline"
+                variant="tonal"
+                icon="add"
                 style={{ marginTop: 16 }}
               />
             </View>
@@ -121,11 +221,24 @@ export default function BusinessListScreen() {
         />
       )}
 
-      <Button
-        title="+ Add Business"
+      {/* FAB */}
+      <AnimatedPress
         onPress={() => requireAuth(user, () => router.push('/business/add'))}
-        style={styles.fab}
-      />
+        pressScale={0.92}
+        haptic
+        style={[
+          styles.fab,
+          {
+            backgroundColor: colors.primary,
+            borderRadius: radii.full,
+          },
+          shadows.lg,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Add business"
+      >
+        <MaterialIcons name="add" size={28} color={colors.onPrimary} />
+      </AnimatedPress>
     </View>
   );
 }
@@ -133,38 +246,26 @@ export default function BusinessListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
-  searchSection: {
-    padding: 16,
-    paddingBottom: 8,
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  categories: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  list: {
-    padding: 16,
-    paddingBottom: 80,
+  filterSection: {
+    // Sticky search and category area
   },
   empty: {
+    padding: 32,
     alignItems: 'center',
-    paddingTop: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: Colors.textLight,
+    marginTop: 20,
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 120,
     right: 20,
-    borderRadius: 30,
-    paddingHorizontal: 20,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

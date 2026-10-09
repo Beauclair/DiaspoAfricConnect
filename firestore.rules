@@ -1,42 +1,226 @@
 rules_version = '2';
 service cloud.firestore {
    match /databases/{database}/documents {
-     // Allow authenticated users to read/write their own profile
+
+     // ─── Users ───────────────────────────────────────────────────────
+     // Only the user themselves can read/write their own profile.
      match /users/{userId} {
-       allow read, write: if request.auth != null && request.auth.uid == userId;
+       allow read: if request.auth != null && request.auth.uid == userId;
+
+       allow create: if request.auth != null && request.auth.uid == userId
+         && request.resource.data.keys().hasOnly(
+              ['uid', 'email', 'displayName', 'photoURL',
+               'countryOfOrigin', 'hostCountry', 'languagesSpoken',
+               'savedBusinesses', 'createdAt'])
+         && request.resource.data.email is string
+         && request.resource.data.displayName is string
+         && request.resource.data.displayName.size() <= 100
+         && request.resource.data.createdAt is timestamp;
+
+       allow update: if request.auth != null && request.auth.uid == userId
+         && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['displayName', 'photoURL', 'countryOfOrigin',
+                        'hostCountry', 'languagesSpoken', 'savedBusinesses'])
+         && request.resource.data.displayName is string
+         && request.resource.data.displayName.size() <= 100;
      }
-     // Businesses: anyone can read, authenticated users can create/manage their own
+
+     // ─── Businesses ──────────────────────────────────────────────────
      match /businesses/{businessId} {
        allow read: if true;
-       allow create: if request.auth != null;
-       // Owner can update anything; any authenticated user can update review stats
+
+       // Create: must set ownerId to self, start unverified with zero ratings
+       allow create: if request.auth != null
+         && request.resource.data.ownerId == request.auth.uid
+         && request.resource.data.isVerified == false
+         && request.resource.data.verificationStatus == 'unverified'
+         && request.resource.data.averageRating == 0
+         && request.resource.data.reviewCount == 0
+         && request.resource.data.name is string
+         && request.resource.data.name.size() > 0
+         && request.resource.data.name.size() <= 200
+         && request.resource.data.description is string
+         && request.resource.data.description.size() > 0
+         && request.resource.data.description.size() <= 2000
+         && request.resource.data.category is string
+         && request.resource.data.hostCountry is string
+         && request.resource.data.createdAt is timestamp;
+
+       // Update: two authorised paths
        allow update: if request.auth != null
-                     && (resource.data.ownerId == request.auth.uid
-                         || resource.data.ownerId == 'seed'
-                         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['averageRating', 'reviewCount']));
+         && (
+           // 1) Owner edits business details (cannot touch protected fields)
+           (resource.data.ownerId == request.auth.uid
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['ownerId', 'isVerified', 'verificationStatus',
+                         'averageRating', 'reviewCount', 'createdAt']))
+           ||
+           // 2) Claim / verification request (set to pending + store phone)
+           (request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['verificationStatus', 'claimedPhone'])
+            && request.resource.data.verificationStatus == 'pending'
+            && (resource.data.verificationStatus in ['unverified', 'rejected']
+                || !('verificationStatus' in resource.data)))
+         );
+         // NOTE: averageRating / reviewCount are updated exclusively by
+         // Cloud Functions (Admin SDK) — no client write path.
+
+       // Delete: owner only
        allow delete: if request.auth != null
-                     && (resource.data.ownerId == request.auth.uid || resource.data.ownerId == 'seed');
+                     && resource.data.ownerId == request.auth.uid;
      }
 
-     // Reviews: anyone can read, authenticated users can create/update
+     // ─── Reviews ─────────────────────────────────────────────────────
      match /reviews/{reviewId} {
        allow read: if true;
-       allow create: if request.auth != null;
-       allow update: if request.auth != null;
+
+       // Create: must be own userId, valid rating, validated owner references.
+       // Must have exactly one of businessId or lawyerId (no orphan reviews).
+       // businessOwnerId / lawyerOwnerId are REQUIRED and validated via get().
+       allow create: if request.auth != null
+         && request.resource.data.userId == request.auth.uid
+         && request.resource.data.userName is string
+         && request.resource.data.rating is int
+         && request.resource.data.rating >= 1
+         && request.resource.data.rating <= 5
+         && request.resource.data.comment is string
+         && request.resource.data.comment.size() > 0
+         && request.resource.data.comment.size() <= 2000
+         && request.resource.data.createdAt is timestamp
+         // Must be either a business review OR a lawyer review (not both, not neither)
+         && (('businessId' in request.resource.data) != ('lawyerId' in request.resource.data))
+         // Business review: businessId + businessOwnerId both required, ownerId validated
+         && (
+           !('businessId' in request.resource.data)
+           || (request.resource.data.businessId is string
+               && 'businessOwnerId' in request.resource.data
+               && request.resource.data.businessOwnerId ==
+                  get(/databases/$(database)/documents/businesses/$(request.resource.data.businessId)).data.ownerId)
+         )
+         // Lawyer review: lawyerId + lawyerOwnerId both required, ownerId validated
+         && (
+           !('lawyerId' in request.resource.data)
+           || (request.resource.data.lawyerId is string
+               && 'lawyerOwnerId' in request.resource.data
+               && request.resource.data.lawyerOwnerId ==
+                  get(/databases/$(database)/documents/lawyers/$(request.resource.data.lawyerId)).data.ownerId)
+         );
+
+       // Update: author can edit content, or business/lawyer owner can respond.
+       // Owner-response checks do a live get() against the actual entity — never
+       // trust the stored businessOwnerId/lawyerOwnerId.
+       allow update: if request.auth != null
+         && (
+           // Review author edits their review
+           (resource.data.userId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['rating', 'comment', 'updatedAt'])
+            && request.resource.data.rating is int
+            && request.resource.data.rating >= 1
+            && request.resource.data.rating <= 5
+            && request.resource.data.comment is string
+            && request.resource.data.comment.size() > 0
+            && request.resource.data.comment.size() <= 2000)
+           ||
+           // Business owner responds — validated via live get()
+           ('businessId' in resource.data
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['ownerResponse', 'ownerResponseAt'])
+            && get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId
+                == request.auth.uid
+            && request.resource.data.ownerResponse is string
+            && request.resource.data.ownerResponse.size() > 0
+            && request.resource.data.ownerResponse.size() <= 2000
+            && request.resource.data.ownerResponseAt is timestamp)
+           ||
+           // Lawyer owner responds — validated via live get()
+           ('lawyerId' in resource.data
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['ownerResponse', 'ownerResponseAt'])
+            && get(/databases/$(database)/documents/lawyers/$(resource.data.lawyerId)).data.ownerId
+                == request.auth.uid
+            && request.resource.data.ownerResponse is string
+            && request.resource.data.ownerResponse.size() > 0
+            && request.resource.data.ownerResponse.size() <= 2000
+            && request.resource.data.ownerResponseAt is timestamp)
+         );
+
+       // Delete: review author only
+       allow delete: if request.auth != null
+                     && resource.data.userId == request.auth.uid;
      }
 
-     // Immigration guides: anyone can read; create allowed for seeding
-     match /immigrationGuides/{guideId} {
+     // ─── Legal Guides ─────────────────────────────────────────────
+     // Read-only for clients. Seeding / admin edits use Admin SDK (bypasses rules).
+     match /legalGuides/{guideId} {
        allow read: if true;
-       allow create: if request.auth != null;
+       allow write: if false;
      }
 
-     // Lawyers: anyone can read; authenticated users can register; owners can update/delete
+     // ─── Lawyers ─────────────────────────────────────────────────────
      match /lawyers/{lawyerId} {
        allow read: if true;
-       allow create: if request.auth != null;
-       allow update: if request.auth != null && resource.data.ownerId == request.auth.uid;
-       allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+
+       // Create: must set ownerId to self, start unverified with zero ratings
+       allow create: if request.auth != null
+         && request.resource.data.ownerId == request.auth.uid
+         && request.resource.data.averageRating == 0
+         && request.resource.data.reviewCount == 0
+         && request.resource.data.verificationStatus == 'unverified'
+         && request.resource.data.name is string
+         && request.resource.data.name.size() > 0
+         && request.resource.data.name.size() <= 200
+         && request.resource.data.email is string
+         && request.resource.data.phone is string
+         && request.resource.data.createdAt is timestamp;
+
+       // Update: two authorised paths
+       allow update: if request.auth != null
+         && (
+           // 1) Owner edits lawyer details (cannot touch protected fields)
+           (resource.data.ownerId == request.auth.uid
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['ownerId', 'averageRating', 'reviewCount',
+                         'verificationStatus', 'createdAt']))
+           ||
+           // 2) Claim / verification request
+           (request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['verificationStatus', 'claimedPhone'])
+            && request.resource.data.verificationStatus == 'pending'
+            && (resource.data.verificationStatus in ['unverified', 'rejected']
+                || !('verificationStatus' in resource.data)))
+         );
+         // NOTE: averageRating / reviewCount are updated exclusively by
+         // Cloud Functions (Admin SDK) — no client write path.
+
+       // Delete: owner only
+       allow delete: if request.auth != null
+                     && resource.data.ownerId == request.auth.uid;
+     }
+
+     // ─── Verification Requests ───────────────────────────────────────
+     match /verificationRequests/{requestId} {
+       // Only the submitter can read their own requests
+       allow read: if request.auth != null
+                   && resource.data.submittedBy == request.auth.uid;
+
+       // Create: must be own submission, must start as pending
+       allow create: if request.auth != null
+         && request.resource.data.submittedBy == request.auth.uid
+         && request.resource.data.status == 'pending'
+         && request.resource.data.entityType in ['business', 'lawyer']
+         && request.resource.data.entityId is string
+         && request.resource.data.entityName is string
+         && request.resource.data.phone is string
+         && request.resource.data.submittedAt is timestamp;
+
+       // No client-side update or delete — admin reviews via Admin SDK
+     }
+
+     // ─── Internal (Admin SDK only) ─────────────────────────────────────
+     // Sentinel documents used by Cloud Functions. No client access.
+     match /_internal/{docId} {
+       allow read, write: if false;
      }
    }
 }

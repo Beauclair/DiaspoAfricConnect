@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, Stack, useLocalSearchParams, Redirect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../../src/constants/colors';
+import { useTheme, Typography } from '../../src/theme';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
 import CategoryChip from '../../src/components/common/CategoryChip';
@@ -16,11 +17,15 @@ import { useCountry } from '../../src/contexts/CountryContext';
 import { Business, BusinessCategory } from '../../src/types';
 import { BUSINESS_CATEGORIES } from '../../src/constants/categories';
 import { validateBusinessForm } from '../../src/utils/validation';
+import { useSubmitGuard } from '../../src/hooks';
+import { getUserMessage } from '../../src/utils/errorMessages';
 
 export default function EditBusinessScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { hostCountry, countryConfig } = useCountry();
+  const { colors, radii } = useTheme();
+  const { bottom } = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -28,7 +33,6 @@ export default function EditBusinessScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<BusinessCategory>('restaurant');
-  const [countryOfOrigin, setCountryOfOrigin] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -64,7 +68,6 @@ export default function EditBusinessScreen() {
       setName(biz.name);
       setDescription(biz.description);
       setCategory(biz.category);
-      setCountryOfOrigin(biz.countryOfOrigin);
       setAddress(biz.address);
       setCity(biz.city);
       setState(biz.state);
@@ -73,7 +76,7 @@ export default function EditBusinessScreen() {
       setWebsite(biz.website || '');
       setExistingPhotos(biz.photos || []);
     } catch (e: any) {
-      setError(e.message || 'Failed to load business');
+      setError(getUserMessage(e, 'loadBusiness', 'Failed to load business details.'));
     }
     setLoading(false);
   };
@@ -114,11 +117,11 @@ export default function EditBusinessScreen() {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSave = async () => {
+  const doSave = useCallback(async () => {
     if (!id || !user) return;
     const businessHostCountry = hostCountry;
     const validationError = validateBusinessForm({
-      name, description, countryOfOrigin, address, city, state, zipCode, phone, website,
+      name, description, address, city, state, zipCode, phone, website,
     }, businessHostCountry);
     if (validationError) {
       Alert.alert('Validation Error', validationError);
@@ -136,7 +139,6 @@ export default function EditBusinessScreen() {
         name,
         description,
         category,
-        countryOfOrigin,
         address,
         city,
         state,
@@ -153,11 +155,13 @@ export default function EditBusinessScreen() {
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to update business');
+      Alert.alert('Error', getUserMessage(e, 'updateBusiness', 'Failed to update business. Please try again.'));
     } finally {
       setSaving(false);
     }
-  };
+  }, [id, user, hostCountry, name, description, address, city, state, zipCode, phone, website, category, existingPhotos, newImages]);
+
+  const handleSave = useSubmitGuard(doSave, 5000);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorView message={error} />;
@@ -167,14 +171,14 @@ export default function EditBusinessScreen() {
   return (
     <>
       <Stack.Screen options={{ headerTitle: 'Edit Business' }} />
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Edit Business</Text>
+      <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(bottom, 20) + 20 }]} keyboardShouldPersistTaps="handled">
+          <Text style={[styles.title, { color: colors.onSurface }]}>Edit Business</Text>
 
-          <Input label="Business Name *" placeholder="Enter business name" value={name} onChangeText={setName} />
-          <Input label="Description *" placeholder="Describe your business" value={description} onChangeText={setDescription} multiline numberOfLines={4} />
+          <Input label="Business Name" placeholder="Enter business name" value={name} onChangeText={setName} required />
+          <Input label="Description" placeholder="Describe your business" value={description} onChangeText={setDescription} multiline numberOfLines={4} required />
 
-          <Text style={styles.label}>Category *</Text>
+          <Text style={[styles.label, { color: colors.onSurface }]}>Category <Text style={{ color: colors.error }}>*</Text></Text>
           <View style={styles.chips}>
             {BUSINESS_CATEGORIES.map((cat) => (
               <CategoryChip
@@ -186,38 +190,46 @@ export default function EditBusinessScreen() {
             ))}
           </View>
 
-          <Text style={styles.label}>Photos (up to 3)</Text>
+          <Text style={[styles.label, { color: colors.onSurface }]}>Photos (up to 3)</Text>
           <View style={styles.imageRow}>
             {existingPhotos.map((uri, i) => (
               <View key={`existing-${i}`} style={styles.imageWrapper}>
-                <Image source={{ uri }} style={styles.thumbnail} />
-                <TouchableOpacity style={styles.removeBtn} onPress={() => removeExistingPhoto(i)}>
-                  <MaterialIcons name="close" size={16} color={Colors.textWhite} />
+                <Image source={{ uri }} style={[styles.thumbnail, { borderRadius: radii.md }]} />
+                <TouchableOpacity
+                  style={[styles.removeBtn, { backgroundColor: colors.tertiary, borderRadius: radii.full }]}
+                  onPress={() => removeExistingPhoto(i)}
+                >
+                  <MaterialIcons name="close" size={16} color={'#FFFFFF'} />
                 </TouchableOpacity>
               </View>
             ))}
             {newImages.map((img, i) => (
               <View key={`new-${i}`} style={styles.imageWrapper}>
-                <Image source={{ uri: img.uri }} style={styles.thumbnail} />
-                <TouchableOpacity style={styles.removeBtn} onPress={() => removeNewImage(i)}>
-                  <MaterialIcons name="close" size={16} color={Colors.textWhite} />
+                <Image source={{ uri: img.uri }} style={[styles.thumbnail, { borderRadius: radii.md }]} />
+                <TouchableOpacity
+                  style={[styles.removeBtn, { backgroundColor: colors.tertiary, borderRadius: radii.full }]}
+                  onPress={() => removeNewImage(i)}
+                >
+                  <MaterialIcons name="close" size={16} color={'#FFFFFF'} />
                 </TouchableOpacity>
               </View>
             ))}
             {totalPhotos < 3 && (
-              <TouchableOpacity style={styles.addImageBtn} onPress={pickImage}>
-                <MaterialIcons name="add-a-photo" size={28} color={Colors.textLight} />
-                <Text style={styles.addImageText}>Add</Text>
+              <TouchableOpacity
+                style={[styles.addImageBtn, { borderRadius: radii.md, borderColor: colors.outline }]}
+                onPress={pickImage}
+              >
+                <MaterialIcons name="add-a-photo" size={28} color={colors.onSurfaceVariant} />
+                <Text style={[styles.addImageText, { color: colors.onSurfaceVariant }]}>Add</Text>
               </TouchableOpacity>
             )}
           </View>
 
-          <Input label="Country of Origin *" placeholder="e.g. Nigeria, Ethiopia" value={countryOfOrigin} onChangeText={setCountryOfOrigin} />
-          <Input label="Street Address *" placeholder="Enter street address" value={address} onChangeText={setAddress} />
-          <Input label="City *" placeholder="Enter city" value={city} onChangeText={setCity} />
-          <Input label={`${countryConfig.addressFields.regionLabel} *`} placeholder={countryConfig.addressFields.regionPlaceholder} value={state} onChangeText={setState} />
-          <Input label={`${countryConfig.addressFields.postalCodeLabel} *`} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} />
-          <Input label="Phone *" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={setAddress} required />
+          <Input label="City" placeholder="Enter city" value={city} onChangeText={setCity} required />
+          <Input label={countryConfig.addressFields.regionLabel} placeholder={countryConfig.addressFields.regionPlaceholder} value={state} onChangeText={setState} required />
+          <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
+          <Input label="Phone" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" required />
           <Input label="Website" placeholder="https://..." value={website} onChangeText={setWebsite} autoCapitalize="none" />
 
           <Button title={saving ? 'Saving...' : 'Save Changes'} onPress={handleSave} loading={saving} style={{ marginTop: 16 }} />
@@ -228,23 +240,22 @@ export default function EditBusinessScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: 'bold', color: Colors.text, marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '600', color: Colors.text, marginBottom: 8 },
+  container: { flex: 1 },
+  scroll: { padding: 20 },
+  title: { ...Typography.displaySmall, marginBottom: 24 },
+  label: { ...Typography.titleSmall, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 },
   imageRow: { flexDirection: 'row', gap: 10, marginBottom: 20, flexWrap: 'wrap' },
   imageWrapper: { position: 'relative' },
-  thumbnail: { width: 90, height: 90, borderRadius: 10 },
+  thumbnail: { width: 90, height: 90 },
   removeBtn: {
     position: 'absolute', top: -6, right: -6,
-    backgroundColor: Colors.accent, borderRadius: 12,
     width: 24, height: 24, justifyContent: 'center', alignItems: 'center',
   },
   addImageBtn: {
-    width: 90, height: 90, borderRadius: 10, borderWidth: 2,
-    borderColor: Colors.border, borderStyle: 'dashed',
+    width: 90, height: 90, borderWidth: 2,
+    borderStyle: 'dashed',
     justifyContent: 'center', alignItems: 'center',
   },
-  addImageText: { fontSize: 12, color: Colors.textLight, marginTop: 4 },
+  addImageText: { ...Typography.bodySmall, marginTop: 4 },
 });

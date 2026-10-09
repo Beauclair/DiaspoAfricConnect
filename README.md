@@ -46,7 +46,7 @@ Built with React Native, Expo SDK 57, and Firebase.
 - Detailed business profiles with photos, contact info, and languages spoken
 - Review and rating system with star picker
 - Add your own business with photo uploads (up to 3 images)
-- Map integration ready (Google Maps API)
+- Tappable address opens device map app for directions
 
 ### Business Owner Dashboard
 - **My Businesses** screen listing all businesses you own
@@ -187,7 +187,6 @@ All Firebase operations are encapsulated in service modules (`src/services/`):
 | Auth | Firebase Auth | (via firebase) |
 | Database | Cloud Firestore | (via firebase) |
 | Storage | Firebase Storage | (via firebase) |
-| Maps | react-native-maps | 2.3 |
 | Crash Reporting | Sentry | 6.5 |
 | OTA Updates | expo-updates | 0.27 |
 | Image Picker | expo-image-picker | 16.0 |
@@ -756,7 +755,6 @@ All sensitive configuration is stored in `app.json` under `expo.extra` and acces
 | `firebaseStorageBucket` | `app.json > extra` | Storage bucket |
 | `firebaseMessagingSenderId` | `app.json > extra` | FCM sender ID |
 | `firebaseAppId` | `app.json > extra` | Firebase app ID |
-| `googleMapsApiKey` | `app.json > ios/android config` | Google Maps |
 | Sentry DSN | `app/_layout.tsx` | Crash reporting |
 
 For CI/CD, use EAS Secrets:

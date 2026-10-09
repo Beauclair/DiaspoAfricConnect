@@ -1,7 +1,8 @@
 import { Timestamp } from 'firebase/firestore';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { getDb } from '../config/firebase';
-import { Business, ImmigrationGuide, Lawyer } from '../types';
+import { Business, LegalGuide, Lawyer } from '../types';
+import { logger } from '../utils/logger';
 
 const sampleBusinesses: Omit<Business, 'id'>[] = [
   {
@@ -188,9 +189,10 @@ const sampleBusinesses: Omit<Business, 'id'>[] = [
   },
 ];
 
-const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
+const sampleGuides: Omit<LegalGuide, 'id'>[] = [
   {
     title: 'Family-Based Green Card: Complete Guide',
+    legalCategory: 'immigration',
     category: 'greencard',
     hostCountry: 'US',
     summary: 'Step-by-step process for obtaining a green card through family sponsorship, including immediate relatives and preference categories.',
@@ -211,11 +213,17 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
       'Medical examination (I-693)', 'Police clearance certificates',
     ],
     estimatedTimeline: '6-24 months',
-    estimatedCost: '$1,760-$2,500',
+    estimatedCost: '$1,225 (I-130) + $1,440 (I-485) = ~$2,665+',
+    sources: [
+      { label: 'USCIS — Family-Based Green Cards', url: 'https://www.uscis.gov/family/family-of-us-citizens' },
+      { label: 'USCIS — Form I-130', url: 'https://www.uscis.gov/i-130' },
+      { label: 'USCIS — Form I-485', url: 'https://www.uscis.gov/i-485' },
+    ],
     lastUpdated: Timestamp.now(),
   },
   {
     title: 'H-1B Work Visa: What You Need to Know',
+    legalCategory: 'immigration',
     category: 'visa',
     hostCountry: 'US',
     summary: 'Guide to the H-1B specialty occupation visa, including the lottery process, employer requirements, and application timeline.',
@@ -235,10 +243,15 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
     ],
     estimatedTimeline: '3-6 months',
     estimatedCost: '$2,500-$5,000',
+    sources: [
+      { label: 'USCIS — H-1B Specialty Occupations', url: 'https://www.uscis.gov/working-in-the-united-states/h-1b-specialty-occupations' },
+      { label: 'DOL — Labor Condition Application', url: 'https://www.dol.gov/agencies/eta/foreign-labor/wages/lca' },
+    ],
     lastUpdated: Timestamp.now(),
   },
   {
     title: 'Path to US Citizenship: Naturalization',
+    legalCategory: 'immigration',
     category: 'citizenship',
     hostCountry: 'US',
     summary: 'Complete guide to becoming a US citizen through naturalization, including eligibility requirements, the application process, and the citizenship test.',
@@ -258,11 +271,16 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
       'Marriage/divorce certificates (if applicable)', 'Selective Service registration (males 18-31)',
     ],
     estimatedTimeline: '8-14 months',
-    estimatedCost: '$725-$1,200',
+    estimatedCost: '$710-$760 (filing fee)',
+    sources: [
+      { label: 'USCIS — Naturalization', url: 'https://www.uscis.gov/citizenship/learn-about-citizenship/citizenship-and-naturalization' },
+      { label: 'USCIS — Form N-400', url: 'https://www.uscis.gov/n-400' },
+    ],
     lastUpdated: Timestamp.now(),
   },
   {
     title: 'Asylum in the US: Protection for Persecuted Individuals',
+    legalCategory: 'immigration',
     category: 'asylum',
     hostCountry: 'US',
     summary: 'Understanding the asylum process for individuals fleeing persecution based on race, religion, nationality, political opinion, or social group.',
@@ -284,10 +302,15 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
     ],
     estimatedTimeline: '6 months - 4+ years',
     estimatedCost: 'Free (filing fee waived)',
+    sources: [
+      { label: 'USCIS — Asylum', url: 'https://www.uscis.gov/humanitarian/refugees-and-asylum/asylum' },
+      { label: 'USCIS — Form I-589', url: 'https://www.uscis.gov/i-589' },
+    ],
     lastUpdated: Timestamp.now(),
   },
   {
     title: 'Express Entry: Permanent Residence in Canada',
+    legalCategory: 'immigration',
     category: 'permanent-residence',
     hostCountry: 'CA',
     summary: 'How to apply for Canadian permanent residence through Express Entry, including CRS scores, draws, and the Federal Skilled Worker Program.',
@@ -308,11 +331,16 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
       'Medical exam results (IMM 1017)', 'Proof of funds', 'Digital photo',
     ],
     estimatedTimeline: '6-12 months',
-    estimatedCost: 'CAD $1,365-$2,500',
+    estimatedCost: 'CAD $1,365 (PR processing) + additional costs',
+    sources: [
+      { label: 'IRCC — Express Entry', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html' },
+      { label: 'IRCC — Comprehensive Ranking System', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/eligibility/criteria-comprehensive-ranking-system.html' },
+    ],
     lastUpdated: Timestamp.now(),
   },
   {
     title: 'UK Skilled Worker Visa: Complete Guide',
+    legalCategory: 'immigration',
     category: 'work-permit',
     hostCountry: 'UK',
     summary: 'How to obtain a Skilled Worker visa to work in the UK, including sponsorship, salary thresholds, and the points-based system.',
@@ -332,11 +360,16 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
       'TB test results (if from listed country)', 'Qualification certificates',
     ],
     estimatedTimeline: '3-8 weeks',
-    estimatedCost: '£625-£1,423 + £1,035/year IHS',
+    estimatedCost: '£719-£1,639 + £1,035/year IHS',
+    sources: [
+      { label: 'UK Gov — Skilled Worker Visa', url: 'https://www.gov.uk/skilled-worker-visa' },
+      { label: 'UK Gov — Immigration Health Surcharge', url: 'https://www.gov.uk/healthcare-immigration-application' },
+    ],
     lastUpdated: Timestamp.now(),
   },
   {
     title: 'Titre de Séjour: Residence Permit in France',
+    legalCategory: 'immigration',
     category: 'carte-de-sejour',
     hostCountry: 'FR',
     summary: 'Guide to obtaining and renewing a titre de séjour (residence permit) in France, covering salarié, vie privée et familiale, and talent categories.',
@@ -358,10 +391,15 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
     ],
     estimatedTimeline: '2-6 months',
     estimatedCost: '€225-€269',
+    sources: [
+      { label: 'Service-Public.fr — Carte de séjour', url: 'https://www.service-public.fr/particuliers/vosdroits/N110' },
+      { label: 'OFII — Accueil des étrangers', url: 'https://www.ofii.fr' },
+    ],
     lastUpdated: Timestamp.now(),
   },
   {
     title: 'EU Blue Card: Working in Germany',
+    legalCategory: 'immigration',
     category: 'aufenthaltstitel',
     hostCountry: 'DE',
     summary: 'How to obtain an EU Blue Card for highly qualified employment in Germany, including salary requirements and the path to permanent residence.',
@@ -382,6 +420,814 @@ const sampleGuides: Omit<ImmigrationGuide, 'id'>[] = [
     ],
     estimatedTimeline: '4-12 weeks',
     estimatedCost: '€100-€140',
+    sources: [
+      { label: 'BAMF — EU Blue Card', url: 'https://www.bamf.de/EN/Themen/MigrationAufenthalt/ZuwijkandererAufenthalt/Arbeit/BlaueKarteEU/blaue-karte-eu-node.html' },
+      { label: 'Make it in Germany — Blue Card', url: 'https://www.make-it-in-germany.com/en/visa-residence/types/eu-blue-card' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  // ── Deportation Defense ──────────────────────────────────────────
+  {
+    title: 'Fighting a Removal Order in the US',
+    legalCategory: 'deportation-defense',
+    category: 'removal-defense',
+    hostCountry: 'US',
+    summary: 'Know your rights and defense options when facing deportation or removal proceedings in the United States.',
+    content: 'Receiving a Notice to Appear (NTA) in immigration court can be terrifying, but having a removal order does not mean you will automatically be deported. There are several forms of relief available depending on your circumstances, including cancellation of removal, asylum, withholding of removal, and Convention Against Torture (CAT) protection.\n\nAfrican immigrants facing removal often have strong cases for relief, particularly those fleeing political persecution, gender-based violence, or ethnic conflict. An experienced deportation defense attorney can identify the best strategy and represent you before the immigration judge.',
+    steps: [
+      'Contact a deportation defense attorney immediately upon receiving an NTA',
+      'Gather all immigration documents, IDs, and evidence of ties to the US',
+      'Attend the master calendar hearing — never miss a court date',
+      'Work with your attorney to identify available forms of relief',
+      'Prepare evidence and witness declarations for the merits hearing',
+      'Attend the individual (merits) hearing before the immigration judge',
+      'If denied, evaluate whether to appeal to the Board of Immigration Appeals (BIA)',
+    ],
+    requiredDocuments: [
+      'Notice to Appear (NTA)', 'Passport and all immigration documents',
+      'Evidence of continuous presence in the US', 'Tax returns and pay stubs',
+      'Letters from community, employer, and family members',
+      'Evidence of hardship to qualifying relatives (if applicable)',
+      'Country condition reports for your home country',
+      'Criminal record (if any) and evidence of rehabilitation',
+    ],
+    estimatedTimeline: '6 months - 3+ years',
+    estimatedCost: '$5,000-$15,000',
+    sources: [
+      { label: 'DOJ — EOIR Immigration Courts', url: 'https://www.justice.gov/eoir' },
+      { label: 'USCIS — Removal Proceedings', url: 'https://www.uscis.gov/laws-and-policy/other-resources/questions-and-answers/questions-and-answers-removal-proceedings' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Deportation Defence in the UK: Your Rights',
+    legalCategory: 'deportation-defense',
+    category: 'removal-appeal',
+    hostCountry: 'UK',
+    summary: 'Understanding your rights when facing deportation from the UK, including how to appeal and seek legal aid.',
+    content: 'If the Home Office has issued a deportation order against you, you may have the right to appeal to the First-tier Tribunal (Immigration and Asylum Chamber). Grounds for appeal include human rights claims under Article 8 (right to private and family life) and asylum-related protections.\n\nMany African nationals in the UK have successfully challenged removal by demonstrating long residence, family ties with British citizens or settled persons, and risks they would face upon return. Legal aid may be available for asylum and human rights appeals through the Legal Aid Agency.',
+    steps: [
+      'Seek legal advice immediately — contact a solicitor or legal aid organisation',
+      'Lodge an appeal with the First-tier Tribunal within the deadline (usually 14 days)',
+      'Apply for legal aid if eligible (asylum and human rights cases)',
+      'Gather evidence of your ties to the UK and risks in your home country',
+      'Attend the tribunal hearing with your legal representative',
+      'If unsuccessful, consider applying for permission to appeal to the Upper Tribunal',
+    ],
+    requiredDocuments: [
+      'Home Office deportation decision letter', 'BRP (Biometric Residence Permit) or passport',
+      'Evidence of family life in the UK (birth certificates, tenancy agreements)',
+      'Letters of support from family, employer, and community',
+      'Country of origin expert reports or condition evidence',
+      'Medical or psychological evidence (if applicable)',
+      'Legal aid application form (CIV MEANS 7 / CIV MERITS)',
+    ],
+    estimatedTimeline: '3-18 months',
+    estimatedCost: '£0 (legal aid) - £10,000+',
+    sources: [
+      { label: 'UK Gov — Deportation', url: 'https://www.gov.uk/government/publications/deportation' },
+      { label: 'HM Courts — Immigration and Asylum Tribunal', url: 'https://www.gov.uk/courts-tribunals/first-tier-tribunal-immigration-and-asylum' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Removal Defence in Canada: Know Your Rights',
+    legalCategory: 'deportation-defense',
+    category: 'removal-hearing',
+    hostCountry: 'CA',
+    summary: 'Your rights when facing a removal order in Canada, including the Immigration and Refugee Board process and available remedies.',
+    content: 'If the Canada Border Services Agency (CBSA) has issued a removal order against you, it does not mean you will be immediately deported. The Immigration and Refugee Board (IRB) conducts admissibility hearings, and you may have options to stay in Canada depending on your circumstances.\n\nAfrican immigrants facing removal in Canada may be eligible for a Pre-Removal Risk Assessment (PRRA), humanitarian and compassionate (H&C) consideration, or a stay of removal through the Federal Court. If you fear persecution, torture, or cruel treatment in your home country, these protections exist to keep you safe. Legal aid is available in most provinces for immigration and refugee cases.',
+    steps: [
+      'Contact an immigration lawyer or Legal Aid immediately upon receiving a removal order',
+      'Attend all hearings before the Immigration Division of the IRB — never miss a date',
+      'Determine whether you can appeal to the Immigration Appeal Division (IAD)',
+      'Apply for a Pre-Removal Risk Assessment (PRRA) if you face danger in your home country',
+      'Consider an application on humanitarian and compassionate (H&C) grounds',
+      'If removal is imminent, seek a stay of removal from the Federal Court',
+      'Gather evidence of establishment in Canada and risks upon return',
+    ],
+    requiredDocuments: [
+      'Removal order from CBSA', 'Passport and all immigration documents',
+      'Evidence of establishment in Canada (tax returns, employment records, community ties)',
+      'Country condition reports for your home country',
+      'Letters of support from family, employer, and community',
+      'Medical or psychological reports (if applicable)',
+      'Legal aid application forms for your province',
+      'Children\'s birth certificates or school records (if applicable)',
+    ],
+    estimatedTimeline: '3 months - 2+ years',
+    estimatedCost: '$0 (legal aid) - CAD $10,000+',
+    sources: [
+      { label: 'IRB — Immigration Division', url: 'https://irb.gc.ca/en/immigration-division/Pages/index.aspx' },
+      { label: 'IRCC — Pre-Removal Risk Assessment', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/claim-protection-inside-canada/after-application/refusal/pre-removal-risk-assessment.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Contester une OQTF en France : Vos Droits',
+    legalCategory: 'deportation-defense',
+    category: 'oqtf-recours',
+    hostCountry: 'FR',
+    summary: 'Comment contester une Obligation de Quitter le Territoire Français (OQTF) et connaître vos droits face à une mesure d\'éloignement.',
+    content: 'Si vous recevez une Obligation de Quitter le Territoire Français (OQTF), vous disposez d\'un délai pour quitter la France volontairement (généralement 30 jours) ou pour contester la décision devant le tribunal administratif. Il est crucial d\'agir rapidement car les délais de recours sont courts.\n\nLes ressortissants africains en situation irrégulière ou dont le titre de séjour a expiré peuvent avoir des motifs solides pour contester l\'OQTF, notamment des liens familiaux en France (conjoint français, enfants scolarisés), des risques en cas de retour dans le pays d\'origine, ou des vices de procédure dans la décision préfectorale. L\'aide juridictionnelle est accessible pour les recours contre les OQTF.',
+    steps: [
+      'Contactez immédiatement un avocat spécialisé en droit des étrangers',
+      'Déposez un recours devant le tribunal administratif dans les délais (48h si OQTF sans délai, 30 jours si OQTF avec délai)',
+      'Demandez l\'aide juridictionnelle si vos ressources sont insuffisantes',
+      'Rassemblez les preuves de vos liens avec la France (famille, travail, intégration)',
+      'Préparez les preuves des risques en cas de retour dans votre pays d\'origine',
+      'Assistez à l\'audience devant le tribunal administratif',
+      'En cas de rejet, évaluez la possibilité d\'un appel devant la Cour administrative d\'appel',
+    ],
+    requiredDocuments: [
+      'Décision d\'OQTF de la préfecture', 'Passeport ou pièce d\'identité',
+      'Justificatifs de résidence en France (quittances de loyer, factures)',
+      'Preuves de liens familiaux (actes de mariage, de naissance des enfants)',
+      'Attestations scolaires des enfants', 'Bulletins de salaire ou contrat de travail',
+      'Certificats médicaux (si problèmes de santé)',
+      'Témoignages et lettres de soutien de la communauté',
+    ],
+    estimatedTimeline: '2 semaines - 12 mois',
+    estimatedCost: '€0 (aide juridictionnelle) - €3,000+',
+    sources: [
+      { label: 'Service-Public.fr — OQTF', url: 'https://www.service-public.fr/particuliers/vosdroits/F18362' },
+      { label: 'Légifrance — CESEDA art. L611-1', url: 'https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042776356' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Abschiebungsschutz in Deutschland: Ihre Rechte',
+    legalCategory: 'deportation-defense',
+    category: 'duldung',
+    hostCountry: 'DE',
+    summary: 'Rechte und Schutzmöglichkeiten bei drohender Abschiebung aus Deutschland, einschließlich Duldung und Abschiebungsverbote.',
+    content: 'Wenn Ihnen in Deutschland die Abschiebung droht, gibt es verschiedene rechtliche Möglichkeiten, diese zu verhindern oder aufzuschieben. Eine Duldung (vorübergehende Aussetzung der Abschiebung) kann erteilt werden, wenn die Abschiebung aus rechtlichen oder tatsächlichen Gründen unmöglich ist — etwa wegen fehlender Reisedokumente, Krankheit oder familiärer Bindungen.\n\nAfrikaner in Deutschland können möglicherweise ein Abschiebungsverbot nach § 60 AufenthG geltend machen, wenn ihnen im Herkunftsland Folter, unmenschliche Behandlung oder eine erhebliche Gefahr für Leib und Leben droht. Darüber hinaus kann eine Aufenthaltserlaubnis für gut integrierte Geduldete nach § 25a/25b AufenthG beantragt werden, wenn Sie sich seit mehreren Jahren in Deutschland aufhalten und gut integriert sind.',
+    steps: [
+      'Kontaktieren Sie sofort einen Fachanwalt für Ausländerrecht oder eine Beratungsstelle',
+      'Beantragen Sie eine Duldung bei der Ausländerbehörde, falls noch nicht geschehen',
+      'Prüfen Sie, ob ein Abschiebungsverbot nach § 60 AufenthG geltend gemacht werden kann',
+      'Sammeln Sie Beweise für Ihre Integration (Sprachzertifikate, Arbeit, Ehrenamt)',
+      'Legen Sie Widerspruch oder Klage gegen die Abschiebungsandrohung beim Verwaltungsgericht ein',
+      'Beantragen Sie ggf. einstweiligen Rechtsschutz (Eilantrag) beim Verwaltungsgericht',
+      'Prüfen Sie nach langjähriger Duldung die Möglichkeit einer Aufenthaltserlaubnis nach § 25a/25b AufenthG',
+    ],
+    requiredDocuments: [
+      'Abschiebungsandrohung oder Abschiebungsanordnung', 'Reisepass oder Passersatzpapiere',
+      'Duldungsbescheinigung (falls vorhanden)', 'Meldebescheinigung',
+      'Nachweise der Integration (Sprachzertifikate, Arbeitsvertrag, Schulzeugnisse der Kinder)',
+      'Ärztliche Atteste (bei gesundheitlichen Abschiebungshindernissen)',
+      'Länderinformationen zum Herkunftsland',
+      'Unterstützungsschreiben von Gemeinde, Arbeitgeber oder Kirchengemeinde',
+    ],
+    estimatedTimeline: '1-24 Monate',
+    estimatedCost: '€0 (Beratungshilfe/Prozesskostenhilfe) - €5,000+',
+    sources: [
+      { label: 'BAMF — Aufenthaltsrecht', url: 'https://www.bamf.de/DE/Themen/MigrationAufenthalt/migrationaufenthalt-node.html' },
+      { label: 'Gesetze im Internet — § 60 AufenthG', url: 'https://www.gesetze-im-internet.de/aufenthg_2004/__60.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  // ── Family Law ──────────────────────────────────────────────────
+  {
+    title: 'Divorce in the US: A Guide for Immigrants',
+    legalCategory: 'family-law',
+    category: 'divorce',
+    hostCountry: 'US',
+    summary: 'Navigating divorce proceedings in the United States as an immigrant, including custody, support, and immigration status implications.',
+    content: 'Going through a divorce is difficult for anyone, but immigrants face additional challenges including potential impacts on immigration status, cultural stigma, and language barriers. If you entered the US through a marriage-based green card, a divorce generally does not cause you to lose your permanent residence if you already have an unconditional (10-year) green card.\n\nIf you have a conditional (2-year) green card, you can file a waiver of the joint filing requirement (Form I-751 waiver) to remove conditions without your spouse. Survivors of domestic violence may also qualify for VAWA (Violence Against Women Act) protections regardless of gender.',
+    steps: [
+      'Consult a family law attorney who understands immigration implications',
+      'Determine residency requirements for the state where you plan to file',
+      'File a divorce petition with the appropriate family court',
+      'Address child custody, child support, and property division',
+      'If on a conditional green card, file I-751 waiver with USCIS',
+      'Attend mediation sessions if required by the court',
+      'Attend the final divorce hearing and obtain the decree',
+    ],
+    requiredDocuments: [
+      'Marriage certificate', 'Identification (green card, passport, or state ID)',
+      'Financial disclosures (bank statements, tax returns, pay stubs)',
+      'Property and debt documentation', 'Children\'s birth certificates (if applicable)',
+      'Evidence of domestic violence (if seeking VAWA protections)',
+      'Prenuptial or postnuptial agreements (if any)',
+    ],
+    estimatedTimeline: '3-18 months',
+    estimatedCost: '$1,500-$10,000+',
+    sources: [
+      { label: 'USCIS — Form I-751 Waiver', url: 'https://www.uscis.gov/i-751' },
+      { label: 'USCIS — VAWA', url: 'https://www.uscis.gov/humanitarian/battered-spouse-children-and-parents' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Divorce et Garde d\'Enfants en France',
+    legalCategory: 'family-law',
+    category: 'custody',
+    hostCountry: 'FR',
+    summary: 'Guide pour naviguer le divorce et les questions de garde d\'enfants en France en tant que ressortissant étranger.',
+    content: 'En France, le divorce peut être prononcé par consentement mutuel (sans juge depuis 2017 si pas d\'enfant mineur demandant une audition) ou par voie contentieuse. Les ressortissants étrangers résidant en France ont les mêmes droits que les citoyens français devant les tribunaux de la famille.\n\nLa garde des enfants (autorité parentale) est généralement partagée entre les deux parents. Le juge aux affaires familiales prend sa décision dans l\'intérêt supérieur de l\'enfant. Pour les familles de la diaspora africaine, il est important de noter que les décisions de justice françaises peuvent ne pas être automatiquement reconnues dans votre pays d\'origine.',
+    steps: [
+      'Consulter un avocat spécialisé en droit de la famille',
+      'Choisir le type de divorce (consentement mutuel ou contentieux)',
+      'Déposer la requête en divorce auprès du tribunal judiciaire',
+      'Participer à l\'audience de conciliation (divorce contentieux)',
+      'Négocier les termes de la garde et de la pension alimentaire',
+      'Obtenir le jugement de divorce',
+      'Mettre à jour votre titre de séjour si nécessaire',
+    ],
+    requiredDocuments: [
+      'Acte de mariage (copie intégrale)', 'Livret de famille',
+      'Pièce d\'identité (passeport ou titre de séjour)', 'Justificatif de domicile',
+      'Bulletins de salaire (3 derniers mois)', 'Avis d\'imposition',
+      'Actes de naissance des enfants',
+      'Convention parentale proposée (si consentement mutuel)',
+    ],
+    estimatedTimeline: '2-12 mois',
+    estimatedCost: '€1,500-€5,000+',
+    sources: [
+      { label: 'Service-Public.fr — Divorce', url: 'https://www.service-public.fr/particuliers/vosdroits/N159' },
+      { label: 'Service-Public.fr — Autorité parentale', url: 'https://www.service-public.fr/particuliers/vosdroits/N18775' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Family Law for Immigrants in Canada: Divorce and Custody',
+    legalCategory: 'family-law',
+    category: 'divorce-custody',
+    hostCountry: 'CA',
+    summary: 'Navigating divorce, child custody, and support in Canada as an immigrant, including sponsorship breakdown and provincial family court processes.',
+    content: 'Family law in Canada is governed provincially, and each province has its own family court system. Immigrants facing divorce need to understand that a divorce can affect pending sponsorship applications — but if you already have permanent residence, a divorce alone does not revoke your PR status.\n\nIf you were sponsored by your spouse and the relationship has broken down, you may still retain your PR status. However, if your PR is still conditional (within the first two years under some programs), you should consult an immigration lawyer alongside your family lawyer. For child custody, Canadian courts always prioritize the best interests of the child, considering factors like stability, parenting ability, and the child\'s relationship with each parent. African families may face cultural misunderstandings in court, so it is helpful to work with a lawyer who understands your community.',
+    steps: [
+      'Consult a family lawyer — many offer free initial consultations',
+      'Determine if you meet residency requirements (one year in the province for divorce)',
+      'File for divorce at the provincial Superior Court or Family Court',
+      'Address child custody, access, child support, and spousal support',
+      'If sponsored, consult an immigration lawyer about the impact on your PR status',
+      'Attend mandatory mediation or family dispute resolution (required in some provinces)',
+      'Obtain the divorce order and update your immigration documents if needed',
+    ],
+    requiredDocuments: [
+      'Marriage certificate', 'Separation agreement (if any)',
+      'Permanent residence card or immigration documents',
+      'Financial disclosure (income tax returns, pay stubs, bank statements)',
+      'Children\'s birth certificates', 'Parenting plan proposal',
+      'Property valuation documents (home, vehicles, investments)',
+      'Sponsorship breakdown declaration (if applicable)',
+    ],
+    estimatedTimeline: '4-18 months',
+    estimatedCost: 'CAD $2,000-$15,000+',
+    sources: [
+      { label: 'Justice Canada — Family Law', url: 'https://www.justice.gc.ca/eng/fl-df/index.html' },
+      { label: 'IRCC — Sponsorship Breakdown', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/family-sponsorship.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Divorce and Custody for Immigrants in the UK',
+    legalCategory: 'family-law',
+    category: 'divorce-uk',
+    hostCountry: 'UK',
+    summary: 'A guide to divorce, child arrangements, and financial settlements in England and Wales for immigrant families.',
+    content: 'Since April 2022, England and Wales have introduced no-fault divorce, making it possible to divorce without blaming your spouse. As an immigrant, going through a divorce may affect your immigration status — particularly if your visa is dependent on your spouse (e.g., spouse visa). If your relationship breaks down within the first two years, you may be able to apply to stay under the domestic violence provisions.\n\nChild arrangements (formerly called custody) are decided based on the welfare of the child. The court considers the child\'s wishes and feelings, physical and emotional needs, and the impact of any change. African families in the UK should be aware that taking a child abroad without the other parent\'s consent (or a court order) can constitute child abduction under the Hague Convention. Legal aid is available for cases involving domestic abuse.',
+    steps: [
+      'Seek advice from a family solicitor — many offer fixed-fee initial consultations',
+      'Apply for divorce online through the government portal (gov.uk)',
+      'Address child arrangements (who the child lives with and spends time with)',
+      'Negotiate a financial settlement (property, pensions, maintenance)',
+      'If on a spouse visa, consult an immigration solicitor about your status',
+      'Apply for legal aid if there is domestic abuse (use the MARAC referral or evidence)',
+      'Obtain the conditional order and then the final order (decree absolute)',
+    ],
+    requiredDocuments: [
+      'Marriage certificate (original)', 'Passport and BRP (Biometric Residence Permit)',
+      'Financial disclosure (Form E) — income, assets, debts, pensions',
+      'Children\'s birth certificates', 'Evidence of domestic abuse (if applicable)',
+      'Tenancy agreement or mortgage documents', 'Bank statements (12 months)',
+      'Immigration status documents and visa details',
+    ],
+    estimatedTimeline: '6-18 months',
+    estimatedCost: '£593 (court fee) + £1,000-£10,000+ (solicitor)',
+    sources: [
+      { label: 'UK Gov — Get a Divorce', url: 'https://www.gov.uk/divorce' },
+      { label: 'UK Gov — Child Arrangements', url: 'https://www.gov.uk/looking-after-children-divorce' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Scheidung und Sorgerecht in Deutschland für Ausländer',
+    legalCategory: 'family-law',
+    category: 'scheidung',
+    hostCountry: 'DE',
+    summary: 'Ratgeber für Scheidung, Sorgerecht und Unterhalt in Deutschland für ausländische Staatsangehörige, einschließlich Auswirkungen auf den Aufenthaltsstatus.',
+    content: 'In Deutschland muss vor einer Scheidung ein Trennungsjahr eingehalten werden (§ 1566 BGB). Für ausländische Staatsangehörige ist besonders wichtig zu wissen, dass eine Scheidung Auswirkungen auf das Aufenthaltsrecht haben kann — insbesondere wenn der Aufenthaltstitel vom Ehepartner abhängt.\n\nNach § 31 AufenthG kann ein eigenständiges Aufenthaltsrecht gewährt werden, wenn die Ehe mindestens drei Jahre in Deutschland bestanden hat. Bei häuslicher Gewalt kann diese Frist entfallen (Härtefallregelung). Das Sorgerecht (elterliche Sorge) wird in Deutschland grundsätzlich gemeinsam ausgeübt. Bei Trennung kann ein Elternteil das alleinige Sorgerecht beim Familiengericht beantragen, wenn das Kindeswohl dies erfordert. Afrikanische Familien sollten beachten, dass das Verbringen eines Kindes ins Ausland ohne Zustimmung beider Elternteile strafbar sein kann.',
+    steps: [
+      'Lassen Sie sich von einem Fachanwalt für Familienrecht beraten',
+      'Halten Sie das Trennungsjahr ein (getrennte Haushalte)',
+      'Beantragen Sie Verfahrenskostenhilfe, wenn Sie ein geringes Einkommen haben',
+      'Reichen Sie den Scheidungsantrag beim Familiengericht ein',
+      'Klären Sie Sorgerecht, Umgangsrecht und Unterhalt',
+      'Prüfen Sie mit einem Ausländerrechtler die Auswirkungen auf Ihren Aufenthaltsstatus',
+      'Nehmen Sie am Scheidungstermin vor dem Familiengericht teil',
+    ],
+    requiredDocuments: [
+      'Heiratsurkunde (beglaubigte Kopie)', 'Aufenthaltstitel oder Reisepass',
+      'Meldebescheinigung (Nachweis getrennter Wohnungen)',
+      'Einkommensnachweise (Gehaltsabrechnungen, Steuerbescheide)',
+      'Geburtsurkunden der Kinder', 'Vermögensaufstellung (Immobilien, Konten, Versorgungsansprüche)',
+      'Nachweis häuslicher Gewalt (wenn zutreffend — Polizeiberichte, ärztliche Atteste)',
+      'Antrag auf Verfahrenskostenhilfe (wenn zutreffend)',
+    ],
+    estimatedTimeline: '12-24 Monate',
+    estimatedCost: '€0 (Verfahrenskostenhilfe) - €5,000+',
+    sources: [
+      { label: 'BMJV — Familienrecht', url: 'https://www.bmj.de/DE/themen/familie_und_partnerschaft/familienrecht/familienrecht_node.html' },
+      { label: 'Gesetze im Internet — § 31 AufenthG', url: 'https://www.gesetze-im-internet.de/aufenthg_2004/__31.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  // ── Criminal Defense ────────────────────────────────────────────
+  {
+    title: 'DUI/DWI Defense: What Immigrants Need to Know',
+    legalCategory: 'criminal-defense',
+    category: 'dui',
+    hostCountry: 'US',
+    summary: 'Understanding DUI charges and their immigration consequences for non-citizens in the United States.',
+    content: 'A DUI (Driving Under the Influence) charge is serious for anyone, but for immigrants it can have devastating consequences beyond the criminal penalties. While a simple first-offense DUI is generally not considered a deportable offense, multiple DUIs, aggravating factors (such as injury, a minor in the vehicle, or an extremely high BAC), or a DUI combined with other offenses can trigger removal proceedings.\n\nFor those on a visa or with pending immigration applications, a DUI conviction can affect visa renewals, adjustment of status, naturalization, and admissibility. It is critical to hire a criminal defense attorney who understands immigration law, often called a "crimmigration" attorney, to minimize both criminal and immigration consequences.',
+    steps: [
+      'Exercise your right to remain silent — do not discuss immigration status with police',
+      'Contact a criminal defense attorney with immigration experience immediately',
+      'Attend all court hearings — failure to appear can result in a bench warrant',
+      'Discuss plea options carefully, considering immigration consequences',
+      'Complete any required DUI education programs or community service',
+      'Notify your immigration attorney if you have pending applications',
+      'Keep all records of case disposition and completion of sentence',
+    ],
+    requiredDocuments: [
+      'Arrest report and citation', 'Bail/bond documents',
+      'Immigration documents (visa, green card, EAD)',
+      'Driver\'s licence', 'Insurance information',
+      'Chemical test results (breathalyser or blood test)',
+      'Court notices and hearing dates',
+      'Character reference letters',
+    ],
+    estimatedTimeline: '2-12 months',
+    estimatedCost: '$3,000-$15,000',
+    sources: [
+      { label: 'USCIS — Effect of Criminal Convictions', url: 'https://www.uscis.gov/policy-manual/volume-12-part-f-chapter-5' },
+      { label: 'NHTSA — Impaired Driving', url: 'https://www.nhtsa.gov/risky-driving/drunk-driving' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Strafverteidigung in Deutschland: Rechte für Ausländer',
+    legalCategory: 'criminal-defense',
+    category: 'assault-defense',
+    hostCountry: 'DE',
+    summary: 'Ihre Rechte bei strafrechtlichen Anschuldigungen in Deutschland als ausländischer Staatsangehöriger, einschließlich der Auswirkungen auf den Aufenthaltsstatus.',
+    content: 'Wenn Sie als ausländischer Staatsangehöriger in Deutschland einer Straftat beschuldigt werden, haben Sie die gleichen Verteidigungsrechte wie deutsche Staatsbürger — einschließlich des Rechts auf einen Anwalt, eines Dolmetschers und der Unschuldsvermutung. Eine strafrechtliche Verurteilung kann jedoch schwerwiegende Folgen für Ihren Aufenthaltstitel haben.\n\nNach § 53 AufenthG kann eine Verurteilung zu einer Freiheitsstrafe die Ausweisung zur Folge haben. Bei Verurteilungen über 3 Jahre droht in der Regel die Ausweisung. Auch geringere Strafen können die Verlängerung des Aufenthaltstitels oder die Einbürgerung gefährden. Ein Fachanwalt für Strafrecht mit Kenntnissen im Ausländerrecht ist daher unerlässlich.',
+    steps: [
+      'Schweigen Sie gegenüber der Polizei — Sie haben das Recht, die Aussage zu verweigern',
+      'Verlangen Sie einen Anwalt und bei Bedarf einen Dolmetscher',
+      'Beauftragen Sie einen Fachanwalt für Strafrecht',
+      'Besprechen Sie mögliche Auswirkungen auf Ihren Aufenthaltsstatus',
+      'Nehmen Sie alle Gerichtstermine wahr',
+      'Arbeiten Sie mit Ihrem Anwalt an der Verteidigungsstrategie',
+      'Informieren Sie die Ausländerbehörde wenn nötig nach Abschluss des Verfahrens',
+    ],
+    requiredDocuments: [
+      'Anklageschrift oder Strafbefehl', 'Aufenthaltstitel oder Reisepass',
+      'Meldebescheinigung', 'Arbeitsvertrag oder Immatrikulationsbescheinigung',
+      'Polizeiliche Unterlagen zum Vorfall',
+      'Charakterreferenzen (Arbeitgeber, Gemeinde)',
+      'Nachweis der Integration (Sprachzertifikate, Vereinsmitgliedschaften)',
+    ],
+    estimatedTimeline: '2-18 Monate',
+    estimatedCost: '€2,000-€15,000+',
+    sources: [
+      { label: 'BMJV — Strafrecht', url: 'https://www.bmj.de/DE/themen/strafrecht/strafrecht_node.html' },
+      { label: 'Gesetze im Internet — § 53 AufenthG', url: 'https://www.gesetze-im-internet.de/aufenthg_2004/__53.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Criminal Charges in Canada: A Guide for Immigrants',
+    legalCategory: 'criminal-defense',
+    category: 'criminal-charges',
+    hostCountry: 'CA',
+    summary: 'Understanding criminal charges and their immigration consequences for non-citizens in Canada, including inadmissibility and removal risks.',
+    content: 'Being charged with a criminal offence in Canada can have serious consequences for immigrants beyond the criminal penalties. Under the Immigration and Refugee Protection Act (IRPA), a conviction for a serious offence can make you inadmissible to Canada, leading to a removal order even if you have permanent residence.\n\nFor permanent residents, a conviction for an offence punishable by a maximum term of at least 10 years, or a conviction with an actual sentence of more than 6 months, can result in a finding of serious criminality — which removes your right of appeal to the Immigration Appeal Division. Temporary residents face even stricter consequences. African immigrants in Canada should seek a criminal defence lawyer who understands immigration law to negotiate pleas that minimize immigration consequences.',
+    steps: [
+      'Exercise your right to silence — do not make statements to police without a lawyer',
+      'Contact a criminal defence lawyer with immigration experience (duty counsel is available at court)',
+      'Apply for legal aid if you cannot afford a lawyer (each province has its own legal aid system)',
+      'Discuss potential immigration consequences of any conviction or plea deal',
+      'Attend all court appearances — failing to appear results in a bench warrant',
+      'If convicted, consult an immigration lawyer about inadmissibility and removal risk',
+      'Keep all court documents, including the final disposition and proof of sentence completion',
+    ],
+    requiredDocuments: [
+      'Police report and charge documents (Information or Indictment)',
+      'Release conditions (bail or recognizance)',
+      'Immigration documents (PR card, work permit, study permit)',
+      'Criminal record check (if prior offences)', 'Employment records and letters of reference',
+      'Character reference letters from community members',
+      'Legal aid application (if applicable)',
+    ],
+    estimatedTimeline: '2-18 months',
+    estimatedCost: '$0 (legal aid) - CAD $15,000+',
+    sources: [
+      { label: 'Justice Canada — Criminal Law', url: 'https://www.justice.gc.ca/eng/cj-jp/index.html' },
+      { label: 'IRCC — Criminal Inadmissibility', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/inadmissibility/overcome-criminal-convictions.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Criminal Defence for Immigrants in the UK',
+    legalCategory: 'criminal-defense',
+    category: 'criminal-defence-uk',
+    hostCountry: 'UK',
+    summary: 'Understanding criminal charges and their immigration consequences in England and Wales, including automatic deportation rules for foreign nationals.',
+    content: 'If you are a foreign national facing criminal charges in the UK, you need to understand both the criminal process and the immigration consequences. Under the UK Borders Act 2007, foreign nationals sentenced to 12 months or more in prison face automatic deportation — the Home Office must make a deportation order unless certain exceptions apply (such as human rights claims or asylum).\n\nEven sentences under 12 months can trigger deportation if the Home Office considers it "conducive to the public good." African nationals in the UK should be aware that a caution, a guilty plea, or even an out-of-court disposal can affect future immigration applications, visa renewals, and naturalisation. Legal aid is available for criminal cases at the police station and in the magistrates\' court, and for Crown Court cases through the Crown Court means test.',
+    steps: [
+      'At the police station, request the duty solicitor (free, available 24/7)',
+      'Exercise your right to an interpreter if English is not your first language',
+      'Do not discuss your immigration status with the police — speak to your solicitor first',
+      'Apply for legal aid through your solicitor for court proceedings',
+      'Discuss the immigration consequences of any potential plea or conviction with your lawyer',
+      'Attend all court hearings — failure to attend may result in a warrant for your arrest',
+      'If convicted, seek immigration advice immediately about potential deportation',
+    ],
+    requiredDocuments: [
+      'Charge sheet and police station paperwork', 'Bail conditions',
+      'BRP (Biometric Residence Permit) or passport',
+      'Visa or immigration status documents',
+      'Employment records and payslips', 'Character references from community, employer, or faith leaders',
+      'Legal aid application form (if not already assigned duty solicitor)',
+      'Previous court orders or convictions (if any)',
+    ],
+    estimatedTimeline: '1-18 months',
+    estimatedCost: '£0 (legal aid) - £10,000+',
+    sources: [
+      { label: 'UK Gov — UK Borders Act 2007', url: 'https://www.legislation.gov.uk/ukpga/2007/30/section/32' },
+      { label: 'UK Gov — Legal Aid', url: 'https://www.gov.uk/legal-aid' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Défense Pénale en France pour les Étrangers',
+    legalCategory: 'criminal-defense',
+    category: 'defense-penale',
+    hostCountry: 'FR',
+    summary: 'Vos droits face à des poursuites pénales en France en tant que ressortissant étranger, et les conséquences sur votre titre de séjour.',
+    content: 'En France, toute personne poursuivie pénalement dispose des mêmes droits de défense, quelle que soit sa nationalité : droit à un avocat dès la garde à vue, droit à un interprète, présomption d\'innocence. Cependant, pour les ressortissants étrangers, une condamnation pénale peut avoir des conséquences graves sur le droit au séjour.\n\nUne condamnation inscrite au casier judiciaire (bulletin n°2) peut entraîner le refus de renouvellement du titre de séjour, une Obligation de Quitter le Territoire (OQTF), voire une Interdiction du Territoire Français (ITF) prononcée par le juge pénal. Les membres de la diaspora africaine doivent savoir que l\'aide juridictionnelle est accessible à toute personne résidant en France, y compris en situation irrégulière pour les affaires pénales. Il est essentiel de consulter un avocat qui comprend les enjeux d\'immigration liés à votre affaire.',
+    steps: [
+      'Lors de la garde à vue, demandez immédiatement un avocat et un interprète',
+      'Ne faites aucune déclaration sur votre statut migratoire sans conseil juridique',
+      'Demandez l\'aide juridictionnelle si vos ressources sont insuffisantes',
+      'Discutez avec votre avocat des conséquences possibles sur votre titre de séjour',
+      'Assistez à toutes les audiences du tribunal correctionnel',
+      'En cas de condamnation, évaluez immédiatement les conséquences sur votre droit au séjour',
+      'Faites appel dans les 10 jours si la condamnation est disproportionnée',
+    ],
+    requiredDocuments: [
+      'Procès-verbal de garde à vue ou convocation au tribunal',
+      'Titre de séjour ou passeport', 'Justificatif de domicile',
+      'Bulletins de salaire ou attestation d\'emploi',
+      'Attestations de bonne conduite (employeur, voisins, associations)',
+      'Casier judiciaire (bulletin n°3)',
+      'Dossier d\'aide juridictionnelle (formulaire Cerfa n°15626)',
+    ],
+    estimatedTimeline: '1-18 mois',
+    estimatedCost: '€0 (aide juridictionnelle) - €10,000+',
+    sources: [
+      { label: 'Service-Public.fr — Garde à vue', url: 'https://www.service-public.fr/particuliers/vosdroits/F14837' },
+      { label: 'Légifrance — Code de procédure pénale', url: 'https://www.legifrance.gouv.fr/codes/id/LEGITEXT000006071154/' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  // ── Personal Injury ─────────────────────────────────────────────
+  {
+    title: 'Car Accident Claims: A Guide for Immigrants in the US',
+    legalCategory: 'personal-injury',
+    category: 'car-accident',
+    hostCountry: 'US',
+    summary: 'How to protect your rights and pursue compensation after a car accident in the US, regardless of immigration status.',
+    content: 'If you have been injured in a car accident in the United States, you have the right to seek compensation regardless of your immigration status. Undocumented immigrants, visa holders, green card holders, and citizens all have equal rights to file personal injury claims and receive fair compensation for medical bills, lost wages, and pain and suffering.\n\nInsurance companies may try to take advantage of immigrants who are unfamiliar with the US legal system or afraid to assert their rights. An experienced personal injury attorney can handle negotiations with insurers and, if necessary, file a lawsuit on your behalf — typically on a contingency fee basis (no upfront cost).',
+    steps: [
+      'Call 911 and seek medical attention immediately after the accident',
+      'Document the scene — take photos of vehicles, injuries, and road conditions',
+      'Exchange information with the other driver (insurance, licence, contact)',
+      'File a police report and obtain a copy',
+      'Contact a personal injury attorney for a free consultation',
+      'Follow all medical treatment plans and keep records of expenses',
+      'Your attorney negotiates a settlement or files a lawsuit if needed',
+    ],
+    requiredDocuments: [
+      'Police accident report', 'Medical records and bills',
+      'Photos of the accident scene and injuries',
+      'Insurance policy information', 'Pay stubs or proof of lost income',
+      'Witness contact information and statements',
+      'Repair estimates for vehicle damage',
+    ],
+    estimatedTimeline: '3-18 months',
+    estimatedCost: 'Free (contingency fee — attorney paid from settlement)',
+    sources: [
+      { label: 'NHTSA — Traffic Safety', url: 'https://www.nhtsa.gov/road-safety' },
+      { label: 'ABA — Personal Injury', url: 'https://www.americanbar.org/groups/public_education/resources/law_issues_for_consumers/injury/' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Workplace Injury Claims in Canada',
+    legalCategory: 'personal-injury',
+    category: 'workplace-injury',
+    hostCountry: 'CA',
+    summary: 'Understanding your rights after a workplace injury in Canada, including WSIB claims and employer obligations.',
+    content: 'All workers in Canada are protected by workplace health and safety laws, regardless of immigration status. If you are injured on the job, you are entitled to benefits through your province\'s workers\' compensation board (e.g., WSIB in Ontario, WorkSafeBC in British Columbia). These benefits cover medical treatment, wage replacement, and rehabilitation.\n\nAfrican immigrant workers, particularly those in industries like construction, warehousing, and food processing, face higher injury rates. Employers are required by law to report workplace injuries. If your employer refuses to report the injury, pressures you to work while hurt, or threatens your immigration status, these actions are illegal and you can seek help from a lawyer or community legal clinic.',
+    steps: [
+      'Report the injury to your employer immediately (or as soon as possible)',
+      'Seek medical attention and tell the doctor it was a workplace injury',
+      'File a workers\' compensation claim with your provincial board (e.g., WSIB Form 6)',
+      'Keep copies of all medical records, receipts, and correspondence',
+      'Follow the treatment plan prescribed by your healthcare provider',
+      'If your claim is denied, contact a workers\' compensation lawyer or legal clinic',
+      'Return to work when medically cleared — your employer must accommodate restrictions',
+    ],
+    requiredDocuments: [
+      'Worker\'s incident report (Form 6 in Ontario)', 'Medical reports and treatment records',
+      'Employer\'s accident report (Form 7)', 'Pay stubs showing pre-injury earnings',
+      'Photos of the workplace hazard or injury',
+      'Witness statements from co-workers',
+      'SIN (Social Insurance Number) and identification',
+      'Immigration status documents (work permit, PR card)',
+    ],
+    estimatedTimeline: '1-12 months',
+    estimatedCost: 'Free (workers\' compensation) or contingency fee for lawsuits',
+    sources: [
+      { label: 'WSIB Ontario', url: 'https://www.wsib.ca/en' },
+      { label: 'CCOHS — Workers\' Rights', url: 'https://www.ccohs.ca/oshanswers/legisl/rights.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Personal Injury Claims in the UK: A Guide for Immigrants',
+    legalCategory: 'personal-injury',
+    category: 'personal-injury-uk',
+    hostCountry: 'UK',
+    summary: 'How to pursue a personal injury claim in England and Wales, including no-win-no-fee solicitors and the claims process.',
+    content: 'If you have been injured in the UK due to someone else\'s negligence — whether in a road traffic accident, at work, in a public place, or through medical negligence — you have the right to claim compensation regardless of your immigration status. The UK operates a "no win, no fee" system (Conditional Fee Agreements) where solicitors take on your case at no upfront cost and only charge if you win.\n\nAfrican immigrants in the UK should know that employers have a legal duty to ensure workplace safety under the Health and Safety at Work Act 1974. If you are injured at work, your employer cannot fire you for making a claim — this would be automatic unfair dismissal. You generally have three years from the date of injury to start a claim (the limitation period). NHS treatment is free, but you can claim for additional private treatment, lost earnings, and pain and suffering.',
+    steps: [
+      'Seek medical attention immediately and ensure your injuries are documented',
+      'Report the incident — to the police (road accidents), your employer (workplace), or the premises (public places)',
+      'Gather evidence: photos of injuries and the scene, witness details, CCTV footage',
+      'Contact a personal injury solicitor for a free initial consultation',
+      'Your solicitor sends a letter of claim to the other party\'s insurer',
+      'Attend a medical examination arranged by your solicitor',
+      'Your solicitor negotiates a settlement or issues court proceedings if needed',
+    ],
+    requiredDocuments: [
+      'Medical records and GP notes', 'Accident report (workplace accident book, police report)',
+      'Photos of injuries and the accident scene',
+      'Witness contact details and statements',
+      'Payslips showing lost earnings',
+      'Receipts for expenses related to the injury (travel, medication)',
+      'Insurance details of the other party (if road accident)',
+    ],
+    estimatedTimeline: '6-18 months',
+    estimatedCost: '£0 (no win, no fee — solicitor paid from compensation)',
+    sources: [
+      { label: 'UK Gov — Make a Court Claim for Money', url: 'https://www.gov.uk/make-court-claim-for-money' },
+      { label: 'HSE — Health and Safety at Work Act', url: 'https://www.hse.gov.uk/legislation/hswa.htm' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Accident et Préjudice Corporel en France : Vos Droits',
+    legalCategory: 'personal-injury',
+    category: 'prejudice-corporel',
+    hostCountry: 'FR',
+    summary: 'Comment obtenir une indemnisation après un accident en France, que ce soit un accident de la route, du travail ou de la vie courante.',
+    content: 'En France, toute personne victime d\'un accident corporel a droit à une indemnisation intégrale de ses préjudices, quelle que soit sa nationalité ou sa situation administrative. Le système français est particulièrement protecteur pour les victimes d\'accidents de la route grâce à la loi Badinter de 1985, qui garantit l\'indemnisation de toutes les victimes non-conductrices.\n\nPour les accidents du travail, la Sécurité sociale prend en charge les frais médicaux et verse des indemnités journalières. Si l\'employeur a commis une faute inexcusable, la victime peut obtenir une indemnisation complémentaire. Les membres de la diaspora africaine travaillant dans le BTP, la logistique ou la restauration sont particulièrement exposés aux risques professionnels. N\'hésitez pas à faire valoir vos droits : un avocat spécialisé en dommages corporels peut intervenir en honoraires de résultat (pas de frais si vous ne gagnez pas).',
+    steps: [
+      'Faites constater vos blessures par un médecin et obtenez un certificat médical initial',
+      'Déclarez l\'accident (à la police pour un accident de la route, à l\'employeur et la CPAM pour un accident du travail)',
+      'Conservez tous les justificatifs : arrêts de travail, frais médicaux, photos des blessures',
+      'Consultez un avocat spécialisé en préjudice corporel pour évaluer vos droits',
+      'Votre avocat engage la procédure d\'indemnisation amiable ou judiciaire',
+      'Assistez à l\'expertise médicale contradictoire pour évaluer vos préjudices',
+      'Négociez l\'offre d\'indemnisation de l\'assurance ou portez l\'affaire devant le tribunal',
+    ],
+    requiredDocuments: [
+      'Certificat médical initial (CMI) décrivant les blessures',
+      'Procès-verbal de police ou rapport d\'accident',
+      'Arrêts de travail et bulletins de salaire',
+      'Factures et justificatifs de frais médicaux',
+      'Photos des blessures et du lieu de l\'accident',
+      'Témoignages de témoins',
+      'Attestation d\'assurance (si accident de la route)',
+    ],
+    estimatedTimeline: '6-24 mois',
+    estimatedCost: '€0 (honoraires de résultat) ou aide juridictionnelle',
+    sources: [
+      { label: 'Légifrance — Loi Badinter', url: 'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000693454/' },
+      { label: 'Ameli.fr — Accident du travail', url: 'https://www.ameli.fr/assure/droits-demarches/maladie-accident-hospitalisation/accident/accident-travail' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Personenschäden in Deutschland: Rechte für Ausländer nach Unfällen',
+    legalCategory: 'personal-injury',
+    category: 'personenschaden',
+    hostCountry: 'DE',
+    summary: 'Ihre Rechte nach einem Unfall in Deutschland als ausländischer Staatsangehöriger, einschließlich Schadensersatz und Schmerzensgeld.',
+    content: 'In Deutschland haben alle Unfallopfer — unabhängig von ihrer Staatsangehörigkeit oder ihrem Aufenthaltsstatus — Anspruch auf Schadensersatz und Schmerzensgeld, wenn ein anderer den Unfall verschuldet hat. Dies gilt für Verkehrsunfälle, Arbeitsunfälle, Unfälle im öffentlichen Raum und ärztliche Behandlungsfehler.\n\nBei Verkehrsunfällen haftet die Kfz-Haftpflichtversicherung des Unfallverursachers. Sie können Schmerzensgeld, Verdienstausfall, Behandlungskosten und Sachschäden geltend machen. Bei Arbeitsunfällen greift die gesetzliche Unfallversicherung (Berufsgenossenschaft), die Behandlungskosten und Verletztengeld übernimmt. Afrikanische Arbeitnehmer in Branchen wie Bau, Pflege und Logistik sollten wissen: Jeder Arbeitsunfall muss dem Arbeitgeber gemeldet werden, und der Arbeitgeber ist verpflichtet, die Berufsgenossenschaft zu informieren.',
+    steps: [
+      'Rufen Sie den Rettungsdienst (112) und lassen Sie Ihre Verletzungen dokumentieren',
+      'Melden Sie den Unfall — Polizei (Verkehrsunfall), Arbeitgeber (Arbeitsunfall), Hausverwaltung (Unfall im Gebäude)',
+      'Sichern Sie Beweise: Fotos, Zeugenangaben, Unfallbericht',
+      'Gehen Sie zum Durchgangsarzt (D-Arzt) bei Arbeitsunfällen',
+      'Beauftragen Sie einen Fachanwalt für Verkehrsrecht oder Schadensersatzrecht',
+      'Ihr Anwalt fordert Schadensersatz von der gegnerischen Versicherung',
+      'Bei Ablehnung oder unzureichendem Angebot kann Klage beim Zivilgericht erhoben werden',
+    ],
+    requiredDocuments: [
+      'Polizeilicher Unfallbericht oder Unfallanzeige beim Arbeitgeber',
+      'Ärztliche Befunde und Behandlungsdokumentation',
+      'Fotos der Verletzungen und des Unfallortes',
+      'Gehaltsabrechnungen (Nachweis des Verdienstausfalls)',
+      'Versicherungsdaten des Unfallverursachers',
+      'Zeugenaussagen', 'Aufenthaltstitel oder Reisepass',
+      'Quittungen für unfallbedingte Ausgaben (Medikamente, Transport)',
+    ],
+    estimatedTimeline: '3-24 Monate',
+    estimatedCost: '€0 (Rechtsschutzversicherung oder Prozesskostenhilfe) - €5,000+',
+    sources: [
+      { label: 'DGUV — Berufsgenossenschaft', url: 'https://www.dguv.de/en/index.jsp' },
+      { label: 'ADAC — Verkehrsunfall', url: 'https://www.adac.de/verkehr/recht/verkehrsunfall/' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  // ── Housing ─────────────────────────────────────────────────────
+  {
+    title: 'Eviction Defense: Know Your Tenant Rights in the US',
+    legalCategory: 'housing',
+    category: 'eviction-defense',
+    hostCountry: 'US',
+    summary: 'Understanding your rights as a tenant facing eviction in the United States, including legal defenses and available resources.',
+    content: 'Facing eviction is one of the most stressful experiences, and immigrant tenants are often unaware of their rights. In the United States, all tenants — regardless of immigration status — have legal protections against illegal eviction. A landlord cannot change the locks, shut off utilities, or remove your belongings without a court order. This is called a "self-help eviction" and is illegal in every state.\n\nCommon defenses against eviction include the landlord\'s failure to maintain habitable conditions, retaliation for reporting code violations, discrimination based on national origin or race (Fair Housing Act), and procedural errors in the eviction notice. Many cities have free legal aid programs specifically for tenants facing eviction, and some jurisdictions now guarantee a right to counsel in eviction proceedings.',
+    steps: [
+      'Read the eviction notice carefully — note the reason and deadline',
+      'Do not move out immediately; you have the right to a court hearing',
+      'Contact a legal aid organization or tenant rights group in your area',
+      'Gather evidence: lease, rent receipts, photos of property conditions, communications with landlord',
+      'Attend the court hearing — failure to appear usually results in a default judgment',
+      'Present your defenses at the hearing',
+      'If you lose, ask about the timeline for moving and explore appeal options',
+    ],
+    requiredDocuments: [
+      'Lease or rental agreement', 'Eviction notice from landlord',
+      'Rent payment receipts or bank statements showing payments',
+      'Photos of property conditions (if habitability is an issue)',
+      'Communications with landlord (texts, emails, letters)',
+      'Records of complaints to code enforcement or housing authority',
+      'Income documentation (for legal aid eligibility)',
+    ],
+    estimatedTimeline: '2 weeks - 3 months',
+    estimatedCost: '$0 (legal aid) - $3,000+',
+    sources: [
+      { label: 'HUD — Tenant Rights', url: 'https://www.hud.gov/topics/rental_assistance/tenantrights' },
+      { label: 'DOJ — Fair Housing Act', url: 'https://www.justice.gov/crt/fair-housing-act-1' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Tenant Rights and Housing Disputes in the UK',
+    legalCategory: 'housing',
+    category: 'tenant-rights',
+    hostCountry: 'UK',
+    summary: 'A guide for tenants in the UK facing housing issues including disrepair, unfair eviction, and deposit disputes.',
+    content: 'Tenants in the UK have strong legal protections under the Housing Act 1988 (as amended), the Homes (Fitness for Human Habitation) Act 2018, and other legislation. If you rent privately, your landlord must follow strict procedures to evict you — serving a valid Section 21 (no-fault) or Section 8 (fault-based) notice and obtaining a court order. Recent reforms are phasing out Section 21 "no-fault" evictions.\n\nAfrican tenants in the UK may face additional challenges including discrimination (illegal under the Equality Act 2010), right-to-rent checks, and language barriers when dealing with landlords or councils. If your home is in disrepair, your landlord is legally obligated to fix it. Local councils have a duty to help if you are at risk of homelessness, and Shelter and Citizens Advice can provide free housing advice.',
+    steps: [
+      'Document the issue thoroughly — take photos, save messages with your landlord',
+      'Report the issue to your landlord in writing (email or letter)',
+      'If the landlord does not act, contact your local council\'s environmental health team (for disrepair)',
+      'Seek free advice from Shelter, Citizens Advice, or a local Law Centre',
+      'If facing eviction, check whether the notice is valid and the correct procedure was followed',
+      'Apply to the council as homeless or threatened with homelessness if you may lose your home',
+      'Attend any court hearing — legal aid may be available for housing possession cases',
+    ],
+    requiredDocuments: [
+      'Tenancy agreement (AST or other)', 'Eviction notice (Section 21 or Section 8)',
+      'Deposit protection certificate and prescribed information',
+      'Photos and videos of disrepair or housing conditions',
+      'Correspondence with landlord (emails, texts, letters)',
+      'Gas safety certificate (landlord must provide annually)',
+      'EPC (Energy Performance Certificate)',
+      'Immigration status documents (for right-to-rent checks)',
+    ],
+    estimatedTimeline: '2 weeks - 6 months',
+    estimatedCost: '£0 (legal aid/free advice) - £5,000+',
+    sources: [
+      { label: 'Shelter England', url: 'https://england.shelter.org.uk/housing_advice' },
+      { label: 'UK Gov — Private Renting', url: 'https://www.gov.uk/private-renting' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Tenant Rights in Canada: A Guide for Immigrants',
+    legalCategory: 'housing',
+    category: 'tenant-rights-ca',
+    hostCountry: 'CA',
+    summary: 'Understanding your tenant rights in Canada, including provincial protections against unfair eviction and how to resolve disputes with landlords.',
+    content: 'Tenant rights in Canada are governed by provincial and territorial legislation, and all tenants — regardless of immigration status — are protected. In Ontario, the Residential Tenancies Act and the Landlord and Tenant Board (LTB) govern disputes. In British Columbia, the Residential Tenancy Branch handles complaints. In Quebec, the Tribunal administratif du logement (formerly Régie du logement) resolves housing disputes.\n\nAfrican immigrant tenants should know that landlords cannot evict you without following the legal process — they must give proper written notice and, in most cases, get an order from the tribunal. Rent increases are regulated in most provinces (except Alberta and parts of other provinces for newer buildings). Discrimination based on race, national origin, or immigration status is illegal under human rights legislation. If you face housing discrimination, you can file a complaint with your provincial human rights commission.',
+    steps: [
+      'Know your province\'s residential tenancy laws and your rights as a tenant',
+      'Always keep a copy of your lease and all receipts for rent payments',
+      'If you receive an eviction notice, check whether it is valid under provincial law',
+      'Contact your provincial tenant board or tribunal for information and to file disputes',
+      'Seek help from a community legal clinic — many offer free services for tenants',
+      'Attend the tribunal hearing — landlords cannot evict without a tribunal order',
+      'If you experience discrimination, file a complaint with the provincial human rights commission',
+    ],
+    requiredDocuments: [
+      'Lease or rental agreement', 'Eviction notice (if received)',
+      'Rent receipts or bank statements showing payments',
+      'Photos of property conditions (if maintenance issues)',
+      'Communications with landlord (emails, texts, letters)',
+      'Income documents (for legal aid eligibility)',
+      'Immigration status documents', 'Records of any complaints to bylaw enforcement',
+    ],
+    estimatedTimeline: '2 weeks - 6 months',
+    estimatedCost: '$0 (legal clinics and tribunals are free) - CAD $2,000+',
+    sources: [
+      { label: 'Ontario LTB', url: 'https://tribunalsontario.ca/ltb/' },
+      { label: 'Justice Canada — Tenant Rights', url: 'https://www.justice.gc.ca/eng/fl-df/index.html' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Droits des Locataires en France : Guide pour les Étrangers',
+    legalCategory: 'housing',
+    category: 'droits-locataires',
+    hostCountry: 'FR',
+    summary: 'Vos droits en tant que locataire en France, y compris les protections contre l\'expulsion, les logements insalubres et la discrimination.',
+    content: 'En France, les locataires bénéficient d\'une protection juridique forte grâce à la loi du 6 juillet 1989. Le bailleur ne peut pas vous expulser sans respecter une procédure stricte : il doit d\'abord donner congé avec un préavis de 6 mois avant la fin du bail (3 mois pour un meublé), et uniquement pour des motifs légitimes (vente, reprise pour habitation, motif légitime et sérieux).\n\nLa trêve hivernale (du 1er novembre au 31 mars) interdit toute expulsion, même avec une décision de justice. Les locataires étrangers ont exactement les mêmes droits que les locataires français. Si votre logement est insalubre ou indécent, le propriétaire est tenu de faire les travaux — vous pouvez saisir la mairie ou le tribunal judiciaire. L\'ADIL (Agence Départementale d\'Information sur le Logement) offre des conseils gratuits, et l\'aide juridictionnelle est disponible pour les litiges locatifs.',
+    steps: [
+      'Conservez toujours une copie de votre bail et de vos quittances de loyer',
+      'En cas de congé donné par le bailleur, vérifiez la validité du motif et du délai',
+      'Contactez l\'ADIL de votre département pour des conseils gratuits',
+      'En cas de logement insalubre, signalez-le à la mairie (service hygiène et santé)',
+      'Si le propriétaire ne fait pas les travaux, envoyez une mise en demeure par lettre recommandée',
+      'Saisissez la commission départementale de conciliation pour un règlement amiable',
+      'En dernier recours, portez l\'affaire devant le tribunal judiciaire (aide juridictionnelle disponible)',
+    ],
+    requiredDocuments: [
+      'Bail de location (contrat signé)', 'Quittances de loyer',
+      'État des lieux d\'entrée et de sortie',
+      'Photos des problèmes du logement (insalubrité, humidité)',
+      'Correspondances avec le propriétaire (courriers, emails)',
+      'Congé du bailleur (si expulsion menacée)',
+      'Justificatif de domicile et pièce d\'identité',
+      'Dossier d\'aide juridictionnelle (si nécessaire)',
+    ],
+    estimatedTimeline: '2 semaines - 12 mois',
+    estimatedCost: '€0 (ADIL/aide juridictionnelle) - €3,000+',
+    sources: [
+      { label: 'Service-Public.fr — Logement', url: 'https://www.service-public.fr/particuliers/vosdroits/N19808' },
+      { label: 'ADIL — Information logement', url: 'https://www.anil.org/lanil-et-les-adil/' },
+    ],
+    lastUpdated: Timestamp.now(),
+  },
+  {
+    title: 'Mietrecht in Deutschland: Rechte für ausländische Mieter',
+    legalCategory: 'housing',
+    category: 'mietrecht',
+    hostCountry: 'DE',
+    summary: 'Ihre Rechte als Mieter in Deutschland, einschließlich Kündigungsschutz, Mietpreisbremse und Mängelbeseitigung.',
+    content: 'Das deutsche Mietrecht gehört zu den mieterfreundlichsten in Europa. Alle Mieter — unabhängig von Staatsangehörigkeit oder Aufenthaltsstatus — genießen den gleichen gesetzlichen Schutz. Der Vermieter kann einen unbefristeten Mietvertrag nur unter strengen Voraussetzungen kündigen: Eigenbedarf, erhebliche Vertragsverletzungen oder wirtschaftliche Verwertung des Grundstücks.\n\nDie Kündigungsfrist beträgt mindestens 3 Monate und verlängert sich nach 5 bzw. 8 Jahren Mietdauer auf 6 bzw. 9 Monate. In vielen Städten gilt die Mietpreisbremse, die Mieterhöhungen bei Neuvermietung begrenzt. Bei Mängeln der Mietwohnung (Schimmel, Heizungsausfall, undichte Fenster) haben Sie das Recht auf Mängelbeseitigung und ggf. auf Mietminderung. Der Deutsche Mieterbund und örtliche Mietervereine bieten günstige Rechtsberatung. Afrikanische Mieter, die Diskriminierung bei der Wohnungssuche erfahren, können sich an die Antidiskriminierungsstelle des Bundes wenden.',
+    steps: [
+      'Prüfen Sie Ihren Mietvertrag sorgfältig — unwirksame Klauseln sind häufig',
+      'Melden Sie Mängel sofort schriftlich an den Vermieter (per Einschreiben)',
+      'Setzen Sie dem Vermieter eine angemessene Frist zur Mängelbeseitigung',
+      'Bei Kündigung durch den Vermieter: Prüfen Sie die Kündigungsfrist und den Grund',
+      'Legen Sie Widerspruch gegen die Kündigung ein, wenn Sie eine Härte geltend machen können',
+      'Wenden Sie sich an den Mieterverein für Rechtsberatung',
+      'Wenn nötig, klagen Sie vor dem Amtsgericht (Prozesskostenhilfe möglich)',
+    ],
+    requiredDocuments: [
+      'Mietvertrag', 'Kündigungsschreiben des Vermieters (falls vorhanden)',
+      'Mietquittungen oder Kontoauszüge', 'Fotos und Dokumentation von Mängeln',
+      'Schriftverkehr mit dem Vermieter (Briefe, E-Mails)',
+      'Protokoll der Wohnungsübergabe',
+      'Einkommensnachweise (für Prozesskostenhilfe)',
+      'Aufenthaltstitel oder Reisepass',
+    ],
+    estimatedTimeline: '2 Wochen - 12 Monate',
+    estimatedCost: '€0 (Prozesskostenhilfe) - €3,000+',
+    sources: [
+      { label: 'BMJ — Mietrecht', url: 'https://www.bmj.de/DE/themen/bauen_wohnen/mietrecht/mietrecht_node.html' },
+      { label: 'Deutscher Mieterbund', url: 'https://www.mieterbund.de/' },
+    ],
     lastUpdated: Timestamp.now(),
   },
 ];
@@ -390,7 +1236,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Adebayo Okonkwo',
     firm: 'Okonkwo Immigration Law',
-    specializations: ['greencard', 'visa', 'family'],
+    specializations: ['immigration', 'family-law'],
     hostCountry: 'US',
     languagesSpoken: ['English', 'Yoruba', 'Igbo'],
     city: 'Washington',
@@ -406,7 +1252,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Amina Diallo',
     firm: 'Diallo & Associates',
-    specializations: ['asylum', 'citizenship', 'family'],
+    specializations: ['immigration', 'deportation-defense', 'family-law'],
     hostCountry: 'US',
     languagesSpoken: ['English', 'French', 'Wolof'],
     city: 'Silver Spring',
@@ -421,7 +1267,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Samuel Mensah',
     firm: 'Mensah Legal Group',
-    specializations: ['visa', 'work-permit', 'greencard'],
+    specializations: ['immigration', 'criminal-defense'],
     hostCountry: 'US',
     languagesSpoken: ['English', 'Twi'],
     city: 'Arlington',
@@ -437,7 +1283,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Fatima Hassan',
     firm: 'Hassan & Partners Immigration',
-    specializations: ['asylum', 'visa', 'family'],
+    specializations: ['immigration', 'deportation-defense', 'personal-injury'],
     hostCountry: 'US',
     languagesSpoken: ['English', 'Somali', 'Arabic'],
     city: 'Minneapolis',
@@ -452,7 +1298,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Chidi Nwosu',
     firm: 'Nwosu Immigration Services',
-    specializations: ['permanent-residence', 'work-permit', 'family'],
+    specializations: ['immigration', 'family-law', 'housing'],
     hostCountry: 'CA',
     languagesSpoken: ['English', 'Igbo', 'French'],
     city: 'Toronto',
@@ -467,7 +1313,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Abena Asante',
     firm: 'Asante & Co Solicitors',
-    specializations: ['indefinite-leave', 'work-permit', 'family'],
+    specializations: ['immigration', 'family-law', 'housing'],
     hostCountry: 'UK',
     languagesSpoken: ['English', 'Twi'],
     city: 'London',
@@ -483,7 +1329,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Moussa Diop',
     firm: 'Cabinet Diop Avocats',
-    specializations: ['carte-de-sejour', 'asylum', 'family'],
+    specializations: ['immigration', 'deportation-defense', 'criminal-defense'],
     hostCountry: 'FR',
     languagesSpoken: ['French', 'Wolof', 'English'],
     city: 'Paris',
@@ -498,7 +1344,7 @@ const sampleLawyers: Omit<Lawyer, 'id'>[] = [
   {
     name: 'Kwame Boateng',
     firm: 'Boateng Rechtsanwalt',
-    specializations: ['aufenthaltstitel', 'work-permit', 'asylum'],
+    specializations: ['immigration', 'criminal-defense', 'personal-injury'],
     hostCountry: 'DE',
     languagesSpoken: ['German', 'English', 'Twi'],
     city: 'Berlin',
@@ -525,11 +1371,11 @@ export async function seedDatabase() {
       return photos && photos.length > 0;
     });
     if (hasPhotos) {
-      console.log('Database already seeded with photos, skipping...');
+      logger.log('Database already seeded with photos, skipping...');
       return;
     }
     // Old seed data without photos — delete and re-seed
-    console.log('Replacing old seed data with updated version (with photos)...');
+    logger.log('Replacing old seed data with updated version (with photos)...');
     for (const d of seedDocs) {
       await deleteDoc(doc(db, 'businesses', d.id));
     }
@@ -537,24 +1383,24 @@ export async function seedDatabase() {
 
   // Skip if there are non-seed businesses but no seed businesses (user has real data)
   if (businessSnap.size > 0 && seedDocs.length === 0) {
-    console.log('Database has user data, skipping seed...');
+    logger.log('Database has user data, skipping seed...');
     return;
   }
 
-  console.log('Seeding database...');
+  logger.log('Seeding database...');
 
   for (const biz of sampleBusinesses) {
     await addDoc(collection(db, 'businesses'), biz);
   }
-  console.log(`Seeded ${sampleBusinesses.length} businesses`);
+  logger.log(`Seeded ${sampleBusinesses.length} businesses`);
 
   // Only seed guides and lawyers if they don't exist yet
-  const guideSnap = await getDocs(collection(db, 'immigrationGuides'));
+  const guideSnap = await getDocs(collection(db, 'legalGuides'));
   if (guideSnap.size === 0) {
     for (const guide of sampleGuides) {
-      await addDoc(collection(db, 'immigrationGuides'), guide);
+      await addDoc(collection(db, 'legalGuides'), guide);
     }
-    console.log(`Seeded ${sampleGuides.length} immigration guides`);
+    logger.log(`Seeded ${sampleGuides.length} legal guides`);
   }
 
   const lawyerSnap = await getDocs(collection(db, 'lawyers'));
@@ -562,42 +1408,58 @@ export async function seedDatabase() {
     for (const lawyer of sampleLawyers) {
       await addDoc(collection(db, 'lawyers'), lawyer);
     }
-    console.log(`Seeded ${sampleLawyers.length} lawyers`);
+    logger.log(`Seeded ${sampleLawyers.length} lawyers`);
   }
 
-  console.log('Database seeding complete!');
+  logger.log('Database seeding complete!');
 }
 
 export async function migrateExistingData() {
   const db = getDb();
-  const collections = ['businesses', 'immigrationGuides', 'lawyers'];
-  for (const col of collections) {
-    const snapshot = await getDocs(collection(db, col));
-    let migrated = 0;
-    for (const d of snapshot.docs) {
-      if (!d.data().hostCountry) {
-        await updateDoc(doc(db, col, d.id), { hostCountry: 'US' });
-        migrated++;
+
+  // ── Migrate legalGuides: seed if empty (old data was in immigrationGuides) ──
+  try {
+    const legalGuideSnap = await getDocs(collection(db, 'legalGuides'));
+    if (legalGuideSnap.size === 0) {
+      logger.log('Migrating: seeding legalGuides collection...');
+      for (const guide of sampleGuides) {
+        await addDoc(collection(db, 'legalGuides'), guide);
       }
+      logger.log(`Seeded ${sampleGuides.length} legal guides`);
     }
-    if (migrated > 0) console.log(`Migrated ${migrated} ${col} documents to hostCountry: US`);
+  } catch (e) {
+    logger.log('legalGuides migration skipped (permissions or already done)');
   }
 
-  // Update seed businesses that have no photos with placeholder images
-  const photoMap: Record<string, string[]> = {};
-  for (const biz of sampleBusinesses) {
-    if (biz.photos.length > 0) {
-      photoMap[biz.name] = biz.photos;
+  // ── Migrate lawyers owned by current user ──
+  // Only update lawyers the current user owns — Firestore rules enforce ownership.
+  try {
+    const lawyerSnap = await getDocs(collection(db, 'lawyers'));
+    const oldImmigrationKeys = new Set([
+      'visa', 'greencard', 'permanent-residence', 'indefinite-leave',
+      'carte-de-sejour', 'aufenthaltstitel', 'asylum', 'citizenship',
+      'work-permit', 'family', 'student', 'other',
+    ]);
+    let lawyersMigrated = 0;
+    for (const d of lawyerSnap.docs) {
+      const data = d.data();
+      const specs: string[] = data.specializations ?? [];
+      if (specs.some((s) => oldImmigrationKeys.has(s))) {
+        const newSpecs = Array.from(new Set(specs.map((s) => {
+          if (s === 'family') return 'family-law';
+          if (oldImmigrationKeys.has(s)) return 'immigration';
+          return s;
+        })));
+        try {
+          await updateDoc(doc(db, 'lawyers', d.id), { specializations: newSpecs });
+          lawyersMigrated++;
+        } catch {
+          // Skip docs the current user doesn't own
+        }
+      }
     }
+    if (lawyersMigrated > 0) logger.log(`Migrated ${lawyersMigrated} lawyers to new LegalCategory specializations`);
+  } catch (e) {
+    logger.log('Lawyer migration skipped');
   }
-  const bizSnap = await getDocs(collection(db, 'businesses'));
-  let photoUpdates = 0;
-  for (const d of bizSnap.docs) {
-    const data = d.data();
-    if ((!data.photos || data.photos.length === 0) && photoMap[data.name]) {
-      await updateDoc(doc(db, 'businesses', d.id), { photos: photoMap[data.name] });
-      photoUpdates++;
-    }
-  }
-  if (photoUpdates > 0) console.log(`Updated ${photoUpdates} businesses with placeholder photos`);
 }

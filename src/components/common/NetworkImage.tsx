@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { Image, ImageStyle } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
+import { useTheme } from '../../theme';
+import { logger } from '../../utils/logger';
 
 interface NetworkImageProps {
   uri: string;
   style?: StyleProp<ImageStyle>;
   placeholderIcon?: string;
   iconSize?: number;
+  accessibilityLabel?: string;
 }
 
 /**
@@ -20,14 +22,23 @@ export default function NetworkImage({
   style,
   placeholderIcon = 'storefront',
   iconSize = 40,
+  accessibilityLabel: a11yLabel,
 }: NetworkImageProps) {
+  const { colors } = useTheme();
   const [failed, setFailed] = useState(false);
 
   if (failed || !uri) {
-    if (!uri) console.warn('NetworkImage: no URI provided');
+    if (!uri) logger.warn('NetworkImage: no URI provided');
     return (
-      <View style={[styles.placeholder, style as StyleProp<ViewStyle>]}>
-        <MaterialIcons name={placeholderIcon as any} size={iconSize} color={Colors.textLight} />
+      <View
+        style={[
+          styles.placeholder,
+          { backgroundColor: colors.outline },
+          style as StyleProp<ViewStyle>,
+        ]}
+        accessibilityLabel={a11yLabel || 'Image unavailable'}
+      >
+        <MaterialIcons name={placeholderIcon as any} size={iconSize} color={colors.onSurfaceVariant} />
       </View>
     );
   }
@@ -38,8 +49,9 @@ export default function NetworkImage({
       style={style}
       contentFit="cover"
       transition={200}
+      accessibilityLabel={a11yLabel}
       onError={(e) => {
-        console.warn('NetworkImage load failed:', uri.substring(0, 80), e);
+        logger.warn('NetworkImage load failed:', uri.substring(0, 80), e);
         setFailed(true);
       }}
     />
@@ -48,7 +60,6 @@ export default function NetworkImage({
 
 const styles = StyleSheet.create({
   placeholder: {
-    backgroundColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },

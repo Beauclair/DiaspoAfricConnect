@@ -1,15 +1,17 @@
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../src/constants/colors';
+import { useTheme } from '../../src/theme';
 
 export default function BusinessLayout() {
+  const { colors } = useTheme();
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.primary }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top']}>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: Colors.primary },
-          headerTintColor: Colors.textWhite,
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerStyle: { backgroundColor: colors.surface },
+          headerTintColor: colors.primary,
+          headerTitleStyle: { fontWeight: 'bold', color: colors.onSurface },
         }}
       />
     </SafeAreaView>

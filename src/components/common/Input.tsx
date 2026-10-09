@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { TextInput, View, Text, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
-import { Colors } from '../../constants/colors';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolateColor,
+} from 'react-native-reanimated';
+import { useTheme } from '../../theme';
 
 interface InputProps {
   label?: string;
@@ -13,23 +19,86 @@ interface InputProps {
   multiline?: boolean;
   numberOfLines?: number;
   error?: string;
+  /** Show a red asterisk before the label to indicate a required field. */
+  required?: boolean;
   style?: ViewStyle;
   rightIcon?: React.ReactNode;
   onRightIconPress?: () => void;
 }
 
 export default function Input({
-  label, placeholder, value, onChangeText, secureTextEntry, keyboardType,
-  autoCapitalize, multiline, numberOfLines, error, style, rightIcon, onRightIconPress,
+  label,
+  placeholder,
+  value,
+  onChangeText,
+  secureTextEntry,
+  keyboardType,
+  autoCapitalize,
+  multiline,
+  numberOfLines,
+  error,
+  required,
+  style,
+  rightIcon,
+  onRightIconPress,
 }: InputProps) {
+  const { colors, radii, typography } = useTheme();
+  const [focused, setFocused] = useState(false);
+  const focusAnim = useSharedValue(0);
+
+  const handleFocus = useCallback(() => {
+    setFocused(true);
+    focusAnim.value = withTiming(1, { duration: 200 });
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setFocused(false);
+    focusAnim.value = withTiming(0, { duration: 200 });
+  }, []);
+
+  const borderColor = error
+    ? colors.error
+    : focused
+    ? colors.primary
+    : colors.outlineVariant;
+
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputWrapper, error && styles.inputError]}>
+      {label && (
+        <Text
+          style={[
+            typography.labelMedium,
+            {
+              color: error ? colors.error : focused ? colors.primary : colors.onSurfaceVariant,
+              marginBottom: 6,
+            },
+          ]}
+        >
+          {label}
+          {required && <Text style={{ color: colors.error }}> *</Text>}
+        </Text>
+      )}
+      <View
+        style={[
+          styles.inputWrapper,
+          {
+            backgroundColor: colors.surfaceContainerLow,
+            borderColor,
+            borderRadius: radii.md,
+            borderWidth: focused || error ? 2 : 1,
+          },
+        ]}
+      >
         <TextInput
-          style={[styles.input, multiline && styles.multiline, rightIcon ? styles.inputWithIcon : null]}
+          style={[
+            styles.input,
+            typography.bodyLarge,
+            { color: colors.onSurface },
+            multiline && styles.multiline,
+            rightIcon ? styles.inputWithIcon : null,
+          ]}
           placeholder={placeholder}
-          placeholderTextColor={Colors.textLight}
+          placeholderTextColor={colors.onSurfaceDisabled}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry}
@@ -38,6 +107,8 @@ export default function Input({
           accessibilityLabel={label || placeholder}
           multiline={multiline}
           numberOfLines={numberOfLines}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
         />
         {rightIcon && (
           <TouchableOpacity
@@ -50,7 +121,11 @@ export default function Input({
           </TouchableOpacity>
         )}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && (
+        <Text style={[typography.bodySmall, { color: colors.error, marginTop: 4 }]}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 }
@@ -59,26 +134,14 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: 6,
-  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    backgroundColor: Colors.card,
   },
   input: {
     flex: 1,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: Colors.text,
+    paddingVertical: 14,
   },
   inputWithIcon: {
     paddingRight: 4,
@@ -87,16 +150,8 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
   },
-  inputError: {
-    borderColor: Colors.error,
-  },
   iconBtn: {
     paddingHorizontal: 12,
     paddingVertical: 10,
-  },
-  error: {
-    color: Colors.error,
-    fontSize: 12,
-    marginTop: 4,
   },
 });

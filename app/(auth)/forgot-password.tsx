@@ -1,18 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { Colors } from '../../src/constants/colors';
+import { useTheme } from '../../src/theme';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
 import { resetPassword } from '../../src/services/authService';
+import { useSubmitGuard } from '../../src/hooks';
+import { getUserMessage } from '../../src/utils/errorMessages';
+import { trackEvent } from '../../src/config/analytics';
+import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
 
 export default function ForgotPasswordScreen() {
+  const { colors, typography } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleReset = async () => {
+  const doReset = useCallback(async () => {
     if (!email) {
       setError('Please enter your email');
       return;
@@ -22,20 +27,23 @@ export default function ForgotPasswordScreen() {
     setMessage('');
     try {
       await resetPassword(email);
+      trackEvent(AnalyticsEvents.PASSWORD_RESET_REQUESTED, { email_provided: true });
       setMessage('Password reset email sent. Check your inbox.');
     } catch (e: any) {
-      setError(e.message || 'Failed to send reset email');
+      setError(getUserMessage(e, 'resetPassword', 'Failed to send reset email. Please try again.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [email]);
+
+  const handleReset = useSubmitGuard(doReset, 10000);
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text style={styles.title}>Reset Password</Text>
-          <Text style={styles.subtitle}>Enter your email and we'll send you a reset link</Text>
+          <Text style={[styles.title, { color: colors.primary }]}>Reset Password</Text>
+          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>Enter your email and we'll send you a reset link</Text>
         </View>
 
         <View style={styles.form}>
@@ -48,8 +56,8 @@ export default function ForgotPasswordScreen() {
             autoCapitalize="none"
           />
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {message ? <Text style={styles.success}>{message}</Text> : null}
+          {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
+          {message ? <Text style={[styles.success, { color: colors.success }]}>{message}</Text> : null}
 
           <Button title="Send Reset Link" onPress={handleReset} loading={loading} />
 
@@ -68,7 +76,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scroll: {
     flexGrow: 1,
@@ -82,11 +89,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.primary,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.textLight,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -94,12 +99,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   error: {
-    color: Colors.error,
     textAlign: 'center',
     marginBottom: 16,
   },
   success: {
-    color: Colors.success,
     textAlign: 'center',
     marginBottom: 16,
   },

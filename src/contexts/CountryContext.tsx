@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HostCountryCode, CountryConfig, getCountryConfig } from '../constants/countries';
+import { logger } from '../utils/logger';
+import { trackEvent } from '../config/analytics';
+import { AnalyticsEvents } from '../constants/analyticsEvents';
 
 // Lazy-import authService to avoid crashing at module load time
 let _getUserProfile: ((uid: string) => Promise<any>) | null = null;
@@ -13,7 +16,7 @@ async function loadAuthService() {
       _getUserProfile = mod.getUserProfile;
       _updateUserProfile = mod.updateUserProfile;
     } catch (e) {
-      console.error('CountryContext: Failed to load authService:', e);
+      logger.error('CountryContext: Failed to load authService:', e);
     }
   }
 }
@@ -55,30 +58,34 @@ export function CountryProvider({ children, user = null }: CountryProviderProps)
             setHostCountryState(profile.hostCountry);
             AsyncStorage.setItem(STORAGE_KEY, profile.hostCountry);
           }
-        }).catch((e: any) => console.error('CountryContext: getUserProfile error:', e));
+        }).catch((e: any) => logger.error('CountryContext: getUserProfile error:', e));
       }
-    }).catch((e: any) => console.error('CountryContext: loadAuthService error:', e));
+    }).catch((e: any) => logger.error('CountryContext: loadAuthService error:', e));
   }, [user]);
 
   const setHostCountry = useCallback(async (code: HostCountryCode) => {
+    const prev = hostCountry;
     setHostCountryState(code);
     await AsyncStorage.setItem(STORAGE_KEY, code);
+    if (prev !== code) {
+      trackEvent(AnalyticsEvents.COUNTRY_CHANGED, { from: prev, to: code });
+    }
     if (user) {
       await loadAuthService();
       if (_updateUserProfile) {
         await _updateUserProfile(user.uid, { hostCountry: code });
       }
     }
-  }, [user]);
+  }, [user, hostCountry]);
+
+  const countryConfig = useMemo(() => getCountryConfig(hostCountry), [hostCountry]);
+  const value = useMemo(
+    () => ({ hostCountry, countryConfig, setHostCountry }),
+    [hostCountry, countryConfig, setHostCountry],
+  );
 
   return (
-    <CountryContext.Provider
-      value={{
-        hostCountry,
-        countryConfig: getCountryConfig(hostCountry),
-        setHostCountry,
-      }}
-    >
+    <CountryContext.Provider value={value}>
       {children}
     </CountryContext.Provider>
   );

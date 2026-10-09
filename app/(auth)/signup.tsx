@@ -1,30 +1,44 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../../src/constants/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTheme } from '../../src/theme';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
+import AnimatedPress from '../../src/components/common/AnimatedPressable';
 import { signUp } from '../../src/services/authService';
 import { isValidEmail, isStrongPassword } from '../../src/utils/validation';
 import { HOST_COUNTRIES, HostCountryCode } from '../../src/constants/countries';
+import { useSubmitGuard } from '../../src/hooks';
+import { getUserMessage } from '../../src/utils/errorMessages';
+import { trackEvent } from '../../src/config/analytics';
+import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
 
 const HOST_COUNTRY_LIST = Object.values(HOST_COUNTRIES);
 
 export default function SignupScreen() {
+  const { colors, typography, spacing, radii } = useTheme();
+  const insets = useSafeAreaInsets();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
   const [hostCountry, setHostCountry] = useState<HostCountryCode>('US');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSignup = async () => {
+  const doSignup = useCallback(async () => {
     if (!displayName || !email || !password || !confirmPassword) {
       setError('Please fill in all fields');
+      return;
+    }
+    if (!agreedToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy');
       return;
     }
     if (!isValidEmail(email)) {
@@ -44,125 +58,208 @@ export default function SignupScreen() {
     setError('');
     try {
       await signUp(email, password, displayName, hostCountry);
-      router.replace('/(tabs)/home');
+      trackEvent(AnalyticsEvents.SIGN_UP, { method: 'email', host_country: hostCountry });
+      router.replace('/(auth)/verify-email');
     } catch (e: any) {
-      setError(e.message || 'Signup failed');
+      setError(getUserMessage(e, 'signup', 'Signup failed. Please try again.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [displayName, email, password, confirmPassword, hostCountry, agreedToTerms]);
+
+  const handleSignup = useSubmitGuard(doSignup, 5000);
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text style={styles.title}>Join the Community</Text>
-          <Text style={styles.subtitle}>Create your DiaspoAfricConnect account</Text>
-        </View>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
+        keyboardShouldPersistTaps="handled"
+        style={{ backgroundColor: colors.background }}
+      >
+        {/* Header */}
+        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
+          <LinearGradient
+            colors={['#1B6B2E', '#2E7D32']}
+            style={styles.logoBg}
+          >
+            <MaterialIcons name="people" size={36} color="#FFFFFF" />
+          </LinearGradient>
+          <Text style={[typography.displayMedium, { color: colors.onSurface, marginTop: 20 }]}>
+            Join the Community
+          </Text>
+          <Text style={[typography.bodyLarge, { color: colors.onSurfaceVariant, marginTop: 6 }]}>
+            Create your DiaspoAfricConnect account
+          </Text>
+        </Animated.View>
 
-        <View style={styles.form}>
+        {/* Form */}
+        <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.form}>
           <Input
-            label="Full Name *"
+            label="Full Name"
             placeholder="Enter your name"
             value={displayName}
             onChangeText={setDisplayName}
+            required
           />
           <Input
-            label="Email *"
+            label="Email"
             placeholder="Enter your email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            required
           />
           <Input
-            label="Password *"
+            label="Password"
             placeholder="Create a password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
-            rightIcon={<MaterialIcons name={showPassword ? 'visibility-off' : 'visibility'} size={22} color={Colors.textLight} />}
+            rightIcon={<MaterialIcons name={showPassword ? 'visibility-off' : 'visibility'} size={22} color={colors.onSurfaceVariant} />}
             onRightIconPress={() => setShowPassword(!showPassword)}
+            required
           />
           <Input
-            label="Confirm Password *"
+            label="Confirm Password"
             placeholder="Confirm your password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
+            required
           />
 
-          <Text style={styles.countryLabel}>Where do you live? *</Text>
+          <Text style={[typography.labelMedium, { color: colors.onSurface, marginBottom: 8 }]}>
+            Where do you live?
+          </Text>
           <View style={styles.countryGrid}>
-            {HOST_COUNTRY_LIST.map((c) => (
-              <TouchableOpacity
-                key={c.code}
-                style={[styles.countryChip, hostCountry === c.code && styles.countryChipSelected]}
-                onPress={() => setHostCountry(c.code)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: hostCountry === c.code }}
-                accessibilityLabel={c.name}
-              >
-                <Text style={styles.countryFlag}>{c.flag}</Text>
-                <Text style={[styles.countryName, hostCountry === c.code && styles.countryNameSelected]}>
-                  {c.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {HOST_COUNTRY_LIST.map((c) => {
+              const isAvailable = c.code === 'US';
+              return (
+                <AnimatedPress
+                  key={c.code}
+                  onPress={isAvailable ? () => setHostCountry(c.code) : undefined}
+                  disabled={!isAvailable}
+                  pressScale={isAvailable ? 0.95 : 1}
+                  style={[
+                    styles.countryChip,
+                    {
+                      borderRadius: radii.full,
+                      borderWidth: 1.5,
+                      borderColor: isAvailable
+                        ? hostCountry === c.code ? colors.primary : colors.outlineVariant
+                        : colors.outlineVariant,
+                      backgroundColor: isAvailable
+                        ? hostCountry === c.code ? colors.primaryContainer : colors.surfaceContainerLow
+                        : colors.surfaceContainerLow,
+                      opacity: isAvailable ? 1 : 0.4,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: hostCountry === c.code, disabled: !isAvailable }}
+                  accessibilityLabel={isAvailable ? c.name : `${c.name} — coming soon`}
+                >
+                  <Text style={styles.countryFlag}>{c.flag}</Text>
+                  <Text
+                    style={[
+                      typography.labelMedium,
+                      { color: hostCountry === c.code ? colors.primary : colors.onSurface },
+                    ]}
+                  >
+                    {c.name}
+                  </Text>
+                  {!isAvailable && (
+                    <Text style={[typography.labelSmall, { color: colors.onSurfaceVariant, marginLeft: 4, fontSize: 9 }]}>
+                      Soon
+                    </Text>
+                  )}
+                </AnimatedPress>
+              );
+            })}
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {/* Legal consent */}
+          <Pressable
+            onPress={() => setAgreedToTerms(!agreedToTerms)}
+            style={styles.legalRow}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: agreedToTerms }}
+          >
+            <MaterialIcons
+              name={agreedToTerms ? 'check-box' : 'check-box-outline-blank'}
+              size={22}
+              color={agreedToTerms ? colors.primary : colors.onSurfaceVariant}
+            />
+            <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, flex: 1, marginLeft: 8, lineHeight: 18 }]}>
+              I agree to the{' '}
+              <Text
+                style={{ color: colors.primary, textDecorationLine: 'underline' }}
+                onPress={() => router.push('/legal/terms-of-service')}
+              >
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text
+                style={{ color: colors.primary, textDecorationLine: 'underline' }}
+                onPress={() => router.push('/legal/privacy-policy')}
+              >
+                Privacy Policy
+              </Text>
+            </Text>
+          </Pressable>
 
-          <Button title="Create Account" onPress={handleSignup} loading={loading} />
+          {error ? (
+            <View style={[styles.errorBox, { backgroundColor: colors.errorContainer, borderRadius: radii.md }]}>
+              <MaterialIcons name="error-outline" size={18} color={colors.error} />
+              <Text style={[typography.bodySmall, { color: colors.error, marginLeft: 8, flex: 1 }]}>{error}</Text>
+            </View>
+          ) : null}
+
+          <Button title="Create Account" onPress={handleSignup} loading={loading} disabled={!agreedToTerms} icon="person-add" size="lg" />
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.outlineVariant }]} />
+            <Text style={[typography.labelSmall, { color: colors.onSurfaceVariant, marginHorizontal: 12 }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.outlineVariant }]} />
+          </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+            <Text style={[typography.bodyMedium, { color: colors.onSurfaceVariant }]}>Already have an account? </Text>
             <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.footerLink}>Sign In</Text>
+              <Text style={[typography.labelLarge, { color: colors.primary }]}>Sign In</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity onPress={() => router.replace('/(tabs)/home')} style={styles.guestLink}>
-            <Text style={styles.guestLinkText}>Continue without an account</Text>
+            <Text style={[typography.bodyMedium, { color: colors.onSurfaceVariant }]}>
+              Continue without an account
+            </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 28,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.primary,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.textLight,
-    marginTop: 8,
+  logoBg: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   form: {
     width: '100%',
-  },
-  countryLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: 8,
   },
   countryGrid: {
     flexDirection: 'row',
@@ -174,54 +271,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
-  },
-  countryChipSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '12',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   countryFlag: {
     fontSize: 18,
   },
-  countryName: {
-    fontSize: 13,
-    color: Colors.text,
-  },
-  countryNameSelected: {
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  error: {
-    color: Colors.error,
-    textAlign: 'center',
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
     marginBottom: 16,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    color: Colors.textLight,
-    fontSize: 14,
-  },
-  footerLink: {
-    color: Colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
   },
   guestLink: {
     alignItems: 'center',
     marginTop: 16,
-  },
-  guestLinkText: {
-    color: Colors.textLight,
-    fontSize: 14,
-    textDecorationLine: 'underline',
   },
 });

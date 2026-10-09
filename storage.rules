@@ -1,10 +1,19 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Anyone can view uploaded images; only authenticated users can upload
+    // ── Public reads for all images ────────────────────────────────────
     match /{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+    }
+
+    // ── Business photos ────────────────────────────────────────────────
+    // Path: /businesses/{uid}/{businessId}/{fileName}
+    // Only the owning user can write into their own UID folder.
+    match /businesses/{uid}/{businessId}/{fileName} {
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 10 * 1024 * 1024        // 10 MB
+                   && request.resource.contentType.matches('image/.*'); // images only
     }
   }
 }

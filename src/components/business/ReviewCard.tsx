@@ -1,40 +1,90 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
+import { useTheme } from '../../theme';
 import { Review } from '../../types';
 
 interface ReviewCardProps {
   review: Review;
+  currentUserId?: string;
+  entityType?: 'business' | 'lawyer';
+  onEdit?: (review: Review) => void;
+  onDelete?: (review: Review) => void;
 }
 
-export default function ReviewCard({ review }: ReviewCardProps) {
+export default function ReviewCard({ review, currentUserId, entityType = 'business', onEdit, onDelete }: ReviewCardProps) {
+  const { colors, typography } = useTheme();
+  const isOwn = currentUserId && review.userId === currentUserId;
+
   const stars = Array.from({ length: 5 }, (_, i) => (
     <MaterialIcons
       key={i}
       name={i < review.rating ? 'star' : 'star-border'}
       size={16}
-      color={Colors.star}
+      color={colors.star}
     />
   ));
 
+  const handleMore = () => {
+    Alert.alert('Review', undefined, [
+      { text: 'Edit', onPress: () => onEdit?.(review) },
+      { text: 'Delete', style: 'destructive', onPress: () => {
+        Alert.alert('Delete Review', 'Are you sure you want to delete your review?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => onDelete?.(review) },
+        ]);
+      }},
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   return (
-    <View style={styles.card}>
+    <View
+      style={[styles.card, { borderBottomColor: colors.outline }]}
+      accessibilityLabel={`${review.userName}, ${review.rating} out of 5 stars, ${review.comment}`}
+    >
       <View style={styles.header}>
-        <Text style={styles.name}>{review.userName}</Text>
-        <View style={styles.stars}>{stars}</View>
+        <Text style={[styles.name, { color: colors.onSurface, ...typography.titleMedium }]}>
+          {review.userName}
+        </Text>
+        <View style={styles.headerRight}>
+          <View style={styles.stars} accessibilityLabel={`${review.rating} out of 5 stars`}>{stars}</View>
+          {isOwn && (
+            <TouchableOpacity
+              onPress={handleMore}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Review options"
+            >
+              <MaterialIcons name="more-vert" size={20} color={colors.onSurfaceVariant} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-      <Text style={styles.comment}>{review.comment}</Text>
-      <Text style={styles.date}>
-        {review.createdAt?.toDate?.()?.toLocaleDateString() ?? ''}
+      <Text style={[styles.comment, { color: colors.onSurface, ...typography.bodyMedium }]}>
+        {review.comment}
       </Text>
+      <View style={styles.dateLine}>
+        <Text style={[styles.date, { color: colors.onSurfaceVariant, ...typography.bodySmall }]}>
+          {review.createdAt?.toDate?.()?.toLocaleDateString() ?? ''}
+        </Text>
+        {review.updatedAt && (
+          <Text style={[styles.edited, { color: colors.onSurfaceVariant, ...typography.bodySmall }]}>
+            {' · edited'}
+          </Text>
+        )}
+      </View>
       {review.ownerResponse ? (
-        <View style={styles.responseContainer}>
+        <View style={[styles.responseContainer, { borderLeftColor: colors.primary }]}>
           <View style={styles.responseHeader}>
-            <MaterialIcons name="storefront" size={14} color={Colors.primary} />
-            <Text style={styles.responseLabel}>Owner response</Text>
+            <MaterialIcons name={entityType === 'lawyer' ? 'gavel' : 'storefront'} size={14} color={colors.primary} />
+            <Text style={[styles.responseLabel, { color: colors.primary, ...typography.bodySmall, fontWeight: '600' }]}>
+              {entityType === 'lawyer' ? 'Attorney response' : 'Owner response'}
+            </Text>
           </View>
-          <Text style={styles.responseText}>{review.ownerResponse}</Text>
+          <Text style={[styles.responseText, { color: colors.onSurface, ...typography.labelMedium }]}>
+            {review.ownerResponse}
+          </Text>
         </View>
       ) : null}
     </View>
@@ -45,38 +95,38 @@ const styles = StyleSheet.create({
   card: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  name: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.text,
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
+  name: {},
   stars: {
     flexDirection: 'row',
   },
   comment: {
-    fontSize: 14,
-    color: Colors.text,
     marginTop: 6,
-    lineHeight: 20,
   },
-  date: {
-    fontSize: 12,
-    color: Colors.textLight,
+  dateLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 6,
+  },
+  date: {},
+  edited: {
+    fontStyle: 'italic',
   },
   responseContainer: {
     marginTop: 10,
     marginLeft: 16,
     paddingLeft: 12,
     borderLeftWidth: 2,
-    borderLeftColor: Colors.primary,
   },
   responseHeader: {
     flexDirection: 'row',
@@ -84,14 +134,6 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 4,
   },
-  responseLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  responseText: {
-    fontSize: 13,
-    color: Colors.text,
-    lineHeight: 18,
-  },
+  responseLabel: {},
+  responseText: {},
 });

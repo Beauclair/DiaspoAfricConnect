@@ -10,8 +10,11 @@ export interface User {
   hostCountry?: HostCountryCode;
   languagesSpoken?: string[];
   savedBusinesses?: string[];
+  expoPushToken?: string;
   createdAt: Timestamp;
 }
+
+export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
 
 export interface Business {
   id: string;
@@ -36,24 +39,30 @@ export interface Business {
   averageRating: number;
   reviewCount: number;
   isVerified: boolean;
+  verificationStatus: VerificationStatus;
+  phoneVerified?: boolean;
+  claimedPhone?: string;
   createdAt: Timestamp;
 }
 
 export interface Review {
   id: string;
-  businessId: string;
+  businessId?: string;
+  lawyerId?: string;
   userId: string;
   userName: string;
   rating: number;
   comment: string;
   ownerResponse?: string;
   ownerResponseAt?: Timestamp;
+  updatedAt?: Timestamp;
   createdAt: Timestamp;
 }
 
-export interface ImmigrationGuide {
+export interface LegalGuide {
   id: string;
   title: string;
+  legalCategory: LegalCategory;
   category: ImmigrationCategory;
   hostCountry: HostCountryCode;
   summary: string;
@@ -62,6 +71,8 @@ export interface ImmigrationGuide {
   requiredDocuments: string[];
   estimatedTimeline: string;
   estimatedCost: string;
+  /** Official government or legal-authority URLs this guide's content is based on. */
+  sources?: { label: string; url: string }[];
   lastUpdated: Timestamp;
 }
 
@@ -69,7 +80,7 @@ export interface Lawyer {
   id: string;
   name: string;
   firm: string;
-  specializations: ImmigrationCategory[];
+  specializations: LegalCategory[];
   hostCountry: HostCountryCode;
   languagesSpoken: string[];
   city: string;
@@ -81,8 +92,25 @@ export interface Lawyer {
   averageRating: number;
   reviewCount: number;
   consultationFee?: string;
+  verificationStatus: VerificationStatus;
+  barAssociationNumber?: string;
   ownerId: string;
   createdAt: Timestamp;
+}
+
+export interface VerificationRequest {
+  id: string;
+  entityType: 'business' | 'lawyer';
+  entityId: string;
+  entityName: string;
+  submittedBy: string;
+  submittedAt: Timestamp;
+  status: VerificationStatus;
+  phone: string;
+  barAssociationNumber?: string;
+  reviewedBy?: string;
+  reviewedAt?: Timestamp;
+  rejectionReason?: string;
 }
 
 export type BusinessCategory =
@@ -95,6 +123,14 @@ export type BusinessCategory =
   | 'education'
   | 'entertainment'
   | 'other';
+
+export type LegalCategory =
+  | 'immigration'
+  | 'deportation-defense'
+  | 'family-law'
+  | 'criminal-defense'
+  | 'personal-injury'
+  | 'housing';
 
 export type ImmigrationCategory =
   | 'visa'
@@ -110,9 +146,16 @@ export type ImmigrationCategory =
   | 'student'
   | 'other';
 
+export interface PaginatedResult<T> {
+  data: T[];
+  /** Opaque Firestore cursor — pass back to the service to fetch the next page. */
+  lastDoc: unknown;
+  hasMore: boolean;
+}
+
 export type RootTabParamList = {
   home: undefined;
   business: undefined;
-  immigration: undefined;
+  legal: undefined;
   profile: undefined;
 };
