@@ -44,7 +44,7 @@ export default function TermsOfServiceScreen() {
       contentContainerStyle={{ padding: spacing.xxl, paddingBottom: insets.bottom + 40 }}
     >
       <Text style={[typography.bodySmall, { color: colors.onSurfaceDisabled, marginBottom: 20 }]}>
-        Last updated: June 2025
+        Last updated: October 9, 2026
       </Text>
 
       <Section title="1. Acceptance of Terms">
@@ -152,7 +152,7 @@ export default function TermsOfServiceScreen() {
         <P>
           If you have questions about these Terms of Service, please contact us at:
         </P>
-        <P>📧 support@diaspoafricconnect.com</P>
+        <P>📧 infos@weskillupcenter.com</P>
       </Section>
     </ScrollView>
   );
