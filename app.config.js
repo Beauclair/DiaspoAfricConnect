@@ -88,9 +88,7 @@ const config = {
     url: `https://u.expo.dev/${process.env.EXPO_PROJECT_ID}`,
   },
 
-  runtimeVersion: {
-    policy: 'appVersion',
-  },
+  runtimeVersion: '1.0.0',
 
   extra: {
     eas: {

@@ -1,0 +1,9 @@
+# EAS Build ignore — keep build archive small and avoid symlink issues
+.agents/
+.claude/
+.firebase/
+.git/
+public/
+scripts/
+firebase-debug.log
+*.log
