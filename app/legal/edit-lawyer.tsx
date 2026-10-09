@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, TouchableOpacity } from 'react-native';
 import { router, Stack, useLocalSearchParams, Redirect } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
+import PickerSelect from '../../src/components/common/PickerSelect';
 import CategoryChip from '../../src/components/common/CategoryChip';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 import ErrorView from '../../src/components/common/ErrorView';
 import { getLawyerById, updateLawyer } from '../../src/services/legalService';
+import { uploadLawyerPhoto } from '../../src/services/storageService';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useCountry } from '../../src/contexts/CountryContext';
 import { LegalCategory } from '../../src/types';
-import { LEGAL_CATEGORIES } from '../../src/constants/countries';
+import { LEGAL_CATEGORIES, COMMON_LANGUAGES } from '../../src/constants/countries';
 import { isValidEmail, isValidPhone, isValidURL } from '../../src/utils/validation';
 import { useSubmitGuard } from '../../src/hooks';
 import { getUserMessage } from '../../src/utils/errorMessages';
@@ -35,9 +39,12 @@ export default function EditLawyerScreen() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
-  const [languages, setLanguages] = useState('');
+  const [languages, setLanguages] = useState<string[]>([]);
   const [consultationFee, setConsultationFee] = useState('');
   const [barAssociationNumber, setBarAssociationNumber] = useState('');
+  const [existingPhotoURL, setExistingPhotoURL] = useState('');
+  const [newImage, setNewImage] = useState<{ uri: string; base64: string } | null>(null);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
 
   useEffect(() => {
     loadLawyer();
@@ -70,9 +77,10 @@ export default function EditLawyerScreen() {
       setPhone(lawyer.phone);
       setEmail(lawyer.email);
       setWebsite(lawyer.website || '');
-      setLanguages((lawyer.languagesSpoken || []).join(', '));
+      setLanguages(lawyer.languagesSpoken || []);
       setConsultationFee(lawyer.consultationFee || '');
       setBarAssociationNumber(lawyer.barAssociationNumber || '');
+      setExistingPhotoURL(lawyer.photoURL || '');
     } catch (e: any) {
       setError(getUserMessage(e, 'loadLawyer', 'Failed to load attorney details.'));
     }
@@ -83,6 +91,41 @@ export default function EditLawyerScreen() {
     setSpecializations((prev) =>
       prev.includes(key) ? prev.filter((s) => s !== key) : [...prev, key]
     );
+  };
+
+  const toggleLanguage = (lang: string) => {
+    setLanguages((prev) =>
+      prev.includes(lang) ? prev.filter((l) => l !== lang) : [...prev, lang]
+    );
+  };
+
+  const pickProfileImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photo library.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      if (asset.base64) {
+        setNewImage({ uri: asset.uri, base64: asset.base64 });
+        setPhotoRemoved(false);
+      } else {
+        Alert.alert('Error', 'Could not read image data. Please try another photo.');
+      }
+    }
+  };
+
+  const removePhoto = () => {
+    setNewImage(null);
+    setPhotoRemoved(true);
   };
 
   const validate = (): string | null => {
@@ -119,9 +162,7 @@ export default function EditLawyerScreen() {
         state: state.trim(),
         phone: phone.trim(),
         email: email.trim(),
-        languagesSpoken: languages.trim()
-          ? languages.split(',').map((l) => l.trim()).filter(Boolean)
-          : [],
+        languagesSpoken: languages,
       };
       if (website.trim()) updateData.website = website.trim();
       else updateData.website = '';
@@ -129,6 +170,18 @@ export default function EditLawyerScreen() {
       else updateData.consultationFee = '';
       if (barAssociationNumber.trim()) updateData.barAssociationNumber = barAssociationNumber.trim();
       else updateData.barAssociationNumber = '';
+
+      // Handle photo changes
+      if (newImage) {
+        try {
+          const photoURL = await uploadLawyerPhoto(id, newImage.base64);
+          updateData.photoURL = photoURL;
+        } catch {
+          // Photo upload failed — save other changes anyway
+        }
+      } else if (photoRemoved) {
+        updateData.photoURL = '';
+      }
 
       await updateLawyer(id, updateData as any);
       trackEvent(AnalyticsEvents.LAWYER_EDITED, { lawyer_id: id });
@@ -141,7 +194,7 @@ export default function EditLawyerScreen() {
     } finally {
       setSaving(false);
     }
-  }, [id, user, name, firm, specializations, city, state, phone, email, website, languages, consultationFee, barAssociationNumber]);
+  }, [id, user, name, firm, specializations, city, state, phone, email, website, languages, consultationFee, barAssociationNumber, newImage, photoRemoved]);
 
   const handleSave = useSubmitGuard(doSave, 5000);
 
@@ -175,6 +228,42 @@ export default function EditLawyerScreen() {
           <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
             Update your attorney profile information
           </Text>
+
+          {/* Profile photo picker */}
+          <View style={styles.photoPicker}>
+            <TouchableOpacity
+              style={[
+                styles.photoCircle,
+                { borderColor: (newImage || (existingPhotoURL && !photoRemoved)) ? colors.primary : colors.outline },
+              ]}
+              onPress={pickProfileImage}
+              accessibilityRole="button"
+              accessibilityLabel={newImage || existingPhotoURL ? 'Change profile photo' : 'Add profile photo'}
+            >
+              {newImage ? (
+                <Image source={{ uri: newImage.uri }} style={styles.photoImage} />
+              ) : existingPhotoURL && !photoRemoved ? (
+                <Image source={{ uri: existingPhotoURL }} style={styles.photoImage} />
+              ) : (
+                <>
+                  <MaterialIcons name="camera-alt" size={28} color={colors.onSurfaceVariant} />
+                  <Text style={[styles.photoPlaceholderText, { color: colors.onSurfaceVariant }]}>
+                    Add Photo
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+            {(newImage || (existingPhotoURL && !photoRemoved)) && (
+              <TouchableOpacity
+                style={[styles.photoRemoveBtn, { backgroundColor: colors.tertiary }]}
+                onPress={removePhoto}
+                accessibilityRole="button"
+                accessibilityLabel="Remove profile photo"
+              >
+                <MaterialIcons name="close" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
 
           <Input
             label="Full Name"
@@ -211,11 +300,12 @@ export default function EditLawyerScreen() {
             onChangeText={setCity}
             required
           />
-          <Input
+          <PickerSelect
             label={countryConfig.addressFields.regionLabel}
             placeholder={countryConfig.addressFields.regionPlaceholder}
             value={state}
-            onChangeText={setState}
+            options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
+            onValueChange={setState}
             required
           />
           <Input
@@ -242,12 +332,18 @@ export default function EditLawyerScreen() {
             onChangeText={setWebsite}
             autoCapitalize="none"
           />
-          <Input
-            label="Languages Spoken"
-            placeholder="e.g. English, French, Swahili"
-            value={languages}
-            onChangeText={setLanguages}
-          />
+          <Text style={[styles.label, { color: colors.onSurface }]}>Languages Spoken</Text>
+          <Text style={[styles.hint, { color: colors.onSurfaceVariant }]}>Select all languages you speak</Text>
+          <View style={styles.chips}>
+            {COMMON_LANGUAGES.map((lang) => (
+              <CategoryChip
+                key={lang}
+                label={lang}
+                selected={languages.includes(lang)}
+                onPress={() => toggleLanguage(lang)}
+              />
+            ))}
+          </View>
           <Input
             label="Consultation Fee"
             placeholder="e.g. $150/hr, Free initial consultation"
@@ -278,6 +374,19 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   title: { fontSize: 22, fontWeight: 'bold' },
   subtitle: { fontSize: 14, marginTop: 6, marginBottom: 20, lineHeight: 20 },
+  photoPicker: { alignItems: 'center', marginBottom: 20, position: 'relative' },
+  photoCircle: {
+    width: 100, height: 100, borderRadius: 50,
+    borderWidth: 2, borderStyle: 'dashed',
+    justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
+  },
+  photoImage: { width: 100, height: 100, borderRadius: 50 },
+  photoPlaceholderText: { fontSize: 11, marginTop: 2 },
+  photoRemoveBtn: {
+    position: 'absolute', top: 0, right: '33%',
+    width: 24, height: 24, borderRadius: 12,
+    justifyContent: 'center', alignItems: 'center',
+  },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
   hint: { fontSize: 12, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 },

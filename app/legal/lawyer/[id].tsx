@@ -11,6 +11,7 @@ import Button from '../../../src/components/common/Button';
 import LoadingSpinner from '../../../src/components/common/LoadingSpinner';
 import ErrorView from '../../../src/components/common/ErrorView';
 import VerificationBadge from '../../../src/components/common/VerificationBadge';
+import NetworkImage from '../../../src/components/common/NetworkImage';
 import ReviewCard from '../../../src/components/business/ReviewCard';
 import { getLawyerById, deleteLawyer } from '../../../src/services/legalService';
 import { LEGAL_CATEGORIES } from '../../../src/constants/countries';
@@ -280,11 +281,21 @@ export default function LawyerDetailScreen() {
       >
         {/* Profile header */}
         <View style={[styles.profileHeader, { backgroundColor: colors.primary }]}>
-          <View style={[styles.avatarLarge, { backgroundColor: colors.onPrimary + '20' }]}>
-            <Text style={[styles.avatarLargeText, { color: colors.onPrimary }]}>
-              {lawyer.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-            </Text>
-          </View>
+          {lawyer.photoURL ? (
+            <NetworkImage
+              uri={lawyer.photoURL}
+              style={styles.avatarLargePhoto}
+              placeholderIcon="person"
+              iconSize={36}
+              accessibilityLabel={`${lawyer.name} photo`}
+            />
+          ) : (
+            <View style={[styles.avatarLarge, { backgroundColor: colors.onPrimary + '20' }]}>
+              <Text style={[styles.avatarLargeText, { color: colors.onPrimary }]}>
+                {lawyer.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+              </Text>
+            </View>
+          )}
           <Text style={[styles.name, { color: colors.onPrimary }]}>{lawyer.name}</Text>
           <Text style={[styles.firm, { color: colors.onPrimary + 'CC' }]}>{lawyer.firm}</Text>
           <View style={styles.headerMeta}>
@@ -618,6 +629,9 @@ const styles = StyleSheet.create({
   avatarLarge: {
     width: 80, height: 80, borderRadius: 40,
     justifyContent: 'center', alignItems: 'center', marginBottom: 12,
+  },
+  avatarLargePhoto: {
+    width: 80, height: 80, borderRadius: 40, marginBottom: 12,
   },
   avatarLargeText: { fontSize: 30, fontWeight: 'bold' },
   name: { ...Typography.headlineSmall, fontWeight: '700' },

@@ -127,6 +127,26 @@ export async function uploadBusinessPhotos(
 }
 
 /**
+ * Upload a single profile photo for a lawyer/attorney.
+ *
+ * Storage path: lawyers/{uid}/{lawyerId}/photo_{timestamp}.jpg
+ * Storage rules enforce that {uid} == request.auth.uid.
+ *
+ * @param lawyerId Firestore document ID
+ * @param base64Data Raw base64 string
+ */
+export async function uploadLawyerPhoto(
+  lawyerId: string,
+  base64Data: string
+): Promise<string> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('Not authenticated — cannot upload photo');
+
+  const path = `lawyers/${uid}/${lawyerId}/photo_${Date.now()}.jpg`;
+  return uploadImage(base64Data, path);
+}
+
+/**
  * Fix existing files in Storage that have application/octet-stream content type.
  * Changes them to image/jpeg so they render correctly in <Image>.
  */

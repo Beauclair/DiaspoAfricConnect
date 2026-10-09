@@ -19,6 +19,7 @@ export interface CountryConfig {
     postalCodeRegex: RegExp;
     postalCodeKeyboardType: 'numeric' | 'default';
   };
+  regions: { code: string; name: string }[];
   immigrationSubCategories: { key: string; label: string; icon: string }[];
   legalSystemLabel: string;
 }
@@ -41,6 +42,25 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^\d{5}(-\d{4})?$/,
       postalCodeKeyboardType: 'numeric',
     },
+    regions: [
+      { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+      { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+      { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'DC', name: 'District of Columbia' },
+      { code: 'FL', name: 'Florida' }, { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' },
+      { code: 'ID', name: 'Idaho' }, { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' },
+      { code: 'IA', name: 'Iowa' }, { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' },
+      { code: 'LA', name: 'Louisiana' }, { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' },
+      { code: 'MA', name: 'Massachusetts' }, { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' },
+      { code: 'MS', name: 'Mississippi' }, { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' },
+      { code: 'NE', name: 'Nebraska' }, { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' },
+      { code: 'NJ', name: 'New Jersey' }, { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' },
+      { code: 'NC', name: 'North Carolina' }, { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' },
+      { code: 'OK', name: 'Oklahoma' }, { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' },
+      { code: 'RI', name: 'Rhode Island' }, { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' },
+      { code: 'TN', name: 'Tennessee' }, { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' },
+      { code: 'VT', name: 'Vermont' }, { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' },
+      { code: 'WV', name: 'West Virginia' }, { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' },
+    ],
     immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'greencard', label: 'Green Card', icon: 'credit-card' },
@@ -70,6 +90,15 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d$/,
       postalCodeKeyboardType: 'default',
     },
+    regions: [
+      { code: 'AB', name: 'Alberta' }, { code: 'BC', name: 'British Columbia' },
+      { code: 'MB', name: 'Manitoba' }, { code: 'NB', name: 'New Brunswick' },
+      { code: 'NL', name: 'Newfoundland and Labrador' }, { code: 'NS', name: 'Nova Scotia' },
+      { code: 'NT', name: 'Northwest Territories' }, { code: 'NU', name: 'Nunavut' },
+      { code: 'ON', name: 'Ontario' }, { code: 'PE', name: 'Prince Edward Island' },
+      { code: 'QC', name: 'Quebec' }, { code: 'SK', name: 'Saskatchewan' },
+      { code: 'YT', name: 'Yukon' },
+    ],
     immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'permanent-residence', label: 'Permanent Residence', icon: 'credit-card' },
@@ -99,6 +128,18 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i,
       postalCodeKeyboardType: 'default',
     },
+    regions: [
+      { code: 'LDN', name: 'Greater London' }, { code: 'WMD', name: 'West Midlands' },
+      { code: 'GTM', name: 'Greater Manchester' }, { code: 'WYK', name: 'West Yorkshire' },
+      { code: 'KEN', name: 'Kent' }, { code: 'ESS', name: 'Essex' },
+      { code: 'LAN', name: 'Lancashire' }, { code: 'HAM', name: 'Hampshire' },
+      { code: 'SRY', name: 'Surrey' }, { code: 'MSY', name: 'Merseyside' },
+      { code: 'SYK', name: 'South Yorkshire' }, { code: 'HRT', name: 'Hertfordshire' },
+      { code: 'TWR', name: 'Tyne and Wear' }, { code: 'NTT', name: 'Nottinghamshire' },
+      { code: 'BST', name: 'Bristol' }, { code: 'DEV', name: 'Devon' },
+      { code: 'NFK', name: 'Norfolk' }, { code: 'DBY', name: 'Derbyshire' },
+      { code: 'OXF', name: 'Oxfordshire' }, { code: 'CAM', name: 'Cambridgeshire' },
+    ],
     immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'indefinite-leave', label: 'Indefinite Leave', icon: 'credit-card' },
@@ -128,6 +169,17 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^\d{5}$/,
       postalCodeKeyboardType: 'numeric',
     },
+    regions: [
+      { code: 'IDF', name: 'Île-de-France' }, { code: 'ARA', name: 'Auvergne-Rhône-Alpes' },
+      { code: 'NAQ', name: 'Nouvelle-Aquitaine' }, { code: 'OCC', name: 'Occitanie' },
+      { code: 'HDF', name: 'Hauts-de-France' }, { code: 'PAC', name: "Provence-Alpes-Côte d'Azur" },
+      { code: 'GES', name: 'Grand Est' }, { code: 'PDL', name: 'Pays de la Loire' },
+      { code: 'BFC', name: 'Bourgogne-Franche-Comté' }, { code: 'BRE', name: 'Bretagne' },
+      { code: 'NOR', name: 'Normandie' }, { code: 'CVL', name: 'Centre-Val de Loire' },
+      { code: 'COR', name: 'Corse' }, { code: 'GUA', name: 'Guadeloupe' },
+      { code: 'MTQ', name: 'Martinique' }, { code: 'GUF', name: 'Guyane' },
+      { code: 'REU', name: 'La Réunion' }, { code: 'MAY', name: 'Mayotte' },
+    ],
     immigrationSubCategories: [
       { key: 'visa', label: 'Visas', icon: 'card-travel' },
       { key: 'carte-de-sejour', label: 'Carte de Séjour', icon: 'credit-card' },
@@ -157,6 +209,16 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
       postalCodeRegex: /^\d{5}$/,
       postalCodeKeyboardType: 'numeric',
     },
+    regions: [
+      { code: 'BW', name: 'Baden-Württemberg' }, { code: 'BY', name: 'Bayern' },
+      { code: 'BE', name: 'Berlin' }, { code: 'BB', name: 'Brandenburg' },
+      { code: 'HB', name: 'Bremen' }, { code: 'HH', name: 'Hamburg' },
+      { code: 'HE', name: 'Hessen' }, { code: 'MV', name: 'Mecklenburg-Vorpommern' },
+      { code: 'NI', name: 'Niedersachsen' }, { code: 'NW', name: 'Nordrhein-Westfalen' },
+      { code: 'RP', name: 'Rheinland-Pfalz' }, { code: 'SL', name: 'Saarland' },
+      { code: 'SN', name: 'Sachsen' }, { code: 'ST', name: 'Sachsen-Anhalt' },
+      { code: 'SH', name: 'Schleswig-Holstein' }, { code: 'TH', name: 'Thüringen' },
+    ],
     immigrationSubCategories: [
       { key: 'visa', label: 'Visa', icon: 'card-travel' },
       { key: 'aufenthaltstitel', label: 'Aufenthaltstitel', icon: 'credit-card' },
@@ -182,4 +244,12 @@ export const LEGAL_CATEGORIES: { key: LegalCategory; label: string; icon: string
   { key: 'criminal-defense', label: 'Criminal Defense', icon: 'gavel', description: 'DUI, charges, expungement' },
   { key: 'personal-injury', label: 'Personal Injury', icon: 'local-hospital', description: 'Accidents, workplace injuries' },
   { key: 'housing', label: 'Housing Rights', icon: 'home', description: 'Evictions, lease disputes' },
+];
+
+export const COMMON_LANGUAGES = [
+  'English', 'French', 'Spanish', 'Arabic', 'Swahili',
+  'Portuguese', 'Wolof', 'Hausa', 'Yoruba', 'Igbo',
+  'Amharic', 'Somali', 'Lingala', 'Bambara', 'Twi',
+  'Zulu', 'German', 'Italian', 'Dutch', 'Mandarin',
+  'Pidgin English', 'Creole', 'Tigrinya', 'Oromo', 'Malagasy',
 ];

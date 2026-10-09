@@ -1,52 +1,57 @@
-# Plan: Email Verification on Sign Up
+# Add "Nearby Businesses" Location Feature
 
-## Problem
-Users can create accounts with fake emails. No verification step exists.
+## Current State
+- `expo-location` is **already installed** (v18.0.0) and **configured** in `app.config.js` with permission text
+- `Business` type already has `coordinates: { latitude: number; longitude: number }` field
+- Businesses are currently saved with hardcoded `coordinates: { latitude: 0, longitude: 0 }`
+- Business detail screen already links to Maps for directions (address-based)
+- All queries currently filter by `hostCountry` only — no proximity sorting
 
-## Approach
-Use Firebase's built-in `sendEmailVerification()` to require email verification before users can access the app.
+## What We'll Add
 
-## Flow
+### 1. Location utility — `src/utils/location.ts` (new file)
+- `getCurrentLocation()` — wraps `expo-location` to request permission and return `{ latitude, longitude }`
+- `getDistanceKm(lat1, lon1, lat2, lon2)` — Haversine formula to compute distance between two points
+- `sortByDistance(businesses, userLat, userLon)` — sorts a list of businesses by distance and adds a `distance` field
 
-### Sign Up
-1. Account is created normally (Firebase requires a signed-in user to send verification)
-2. `sendEmailVerification(user)` is called immediately after account creation
-3. User is redirected to a new **Verify Email** screen instead of home
+### 2. Geocode business address at creation — `app/business/add.tsx`
+- After submitting the business, use `expo-location`'s `geocodeAsync()` to convert the address → coordinates
+- Update the business doc with real coordinates (instead of `0, 0`)
+- This is best-effort: if geocoding fails, coordinates stay `0, 0` — no blocker
 
-### Verify Email Screen (`app/(auth)/verify-email.tsx`)
-- Shows a mail icon, the user's email, and instructions to check their inbox
-- **"Resend Email"** button (with cooldown to prevent spam)
-- **"I've Verified My Email"** button → calls `user.reload()` then checks `user.emailVerified`
-  - If verified → navigate to home
-  - If not → show error "Email not yet verified"
-- **"Sign Out"** link to go back to login
+### 3. "Near Me" toggle on business list — `app/(tabs)/business.tsx`
+- Add a "Near Me" chip/toggle button near the search bar
+- When tapped:
+  1. Request location permission
+  2. Get user's current coordinates
+  3. After fetching businesses, sort them client-side by distance
+  4. Show distance badge on each BusinessCard (e.g., "2.3 km")
+- When toggled off: revert to default `createdAt` order
 
-### Login Gate
-- In `app/_layout.tsx` (`InnerLayout`): after auth resolves, if `user` exists but `user.emailVerified === false`, redirect to the verify-email screen
-- This catches returning users who haven't verified yet
+### 4. Distance badge on BusinessCard — `src/components/business/BusinessCard.tsx`
+- Accept optional `distance?: number` prop
+- If provided, show a small "📍 2.3 km" badge next to the location text
 
-### Login Screen
-- After successful sign-in, check `user.emailVerified` — if false, redirect to verify-email instead of home
+### 5. Update privacy policy — `public/privacy-policy.html`
+- Re-add section 1.5 "Location" with accurate description
+- Re-add "Show nearby businesses" row in usage table
+- Re-add section 5.3 "Location" in Your Rights
+- Deploy to Firebase Hosting
 
-## Files to Change
+## What We Won't Do (keep it simple)
+- No map view (would need `react-native-maps` — big dependency)
+- No server-side geoqueries (would need GeoFirestore or Firestore GeoHash — complex)
+- No background location — foreground only, on demand
+- All sorting is client-side on the already-fetched page of businesses
 
-1. **`src/services/authService.ts`**
-   - Import `sendEmailVerification` from Firebase Auth
-   - Call it at the end of `signUp()` after profile creation
-   - Add `resendVerificationEmail()` helper
+## Files Changed
+| File | Change |
+|------|--------|
+| `src/utils/location.ts` | **New** — location helpers |
+| `app/business/add.tsx` | Geocode address → real coordinates on submit |
+| `app/(tabs)/business.tsx` | "Near Me" toggle + distance sorting |
+| `src/components/business/BusinessCard.tsx` | Optional distance badge |
+| `public/privacy-policy.html` | Re-add location sections |
 
-2. **`app/(auth)/verify-email.tsx`** (NEW)
-   - Verification pending screen with resend + check buttons
-   - Styled consistently with login/signup screens
-
-3. **`app/(auth)/_layout.tsx`**
-   - Add `verify-email` route to the Stack
-
-4. **`app/(auth)/signup.tsx`**
-   - Change redirect from `/(tabs)/home` to `/(auth)/verify-email`
-
-5. **`app/(auth)/login.tsx`**
-   - After successful login, check `emailVerified` — route to verify-email if false
-
-6. **`app/_layout.tsx`**
-   - In `InnerLayout`, add effect: if `user && !user.emailVerified`, redirect to verify-email
+## Effort: ~30 minutes
+Low effort because `expo-location` is already installed/configured, the `coordinates` field already exists in the data model, and all sorting is client-side.

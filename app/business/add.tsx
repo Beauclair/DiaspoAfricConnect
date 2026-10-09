@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme, Typography } from '../../src/theme';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
+import PickerSelect from '../../src/components/common/PickerSelect';
 import CategoryChip from '../../src/components/common/CategoryChip';
 import { addBusiness } from '../../src/services/businessService';
 import { uploadBusinessPhotos } from '../../src/services/storageService';
@@ -19,6 +20,7 @@ import { useSubmitGuard } from '../../src/hooks';
 import { getUserMessage } from '../../src/utils/errorMessages';
 import { trackEvent } from '../../src/config/analytics';
 import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
+import { geocodeAddress } from '../../src/utils/location';
 
 export default function AddBusinessScreen() {
   const { user } = useAuth();
@@ -84,6 +86,10 @@ export default function AddBusinessScreen() {
     if (!user) return;
     setLoading(true);
     try {
+      // Geocode address into real coordinates (best-effort)
+      const fullAddress = `${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`;
+      const coords = await geocodeAddress(fullAddress);
+
       const businessData: Record<string, any> = {
         name,
         description,
@@ -93,7 +99,7 @@ export default function AddBusinessScreen() {
         city,
         state,
         zipCode,
-        coordinates: { latitude: 0, longitude: 0 },
+        coordinates: coords ?? { latitude: 0, longitude: 0 },
         phone: phone.trim(),
         languagesSpoken: [],
         photos: [],
@@ -172,7 +178,14 @@ export default function AddBusinessScreen() {
 
           <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={setAddress} required />
           <Input label="City" placeholder="Enter city" value={city} onChangeText={setCity} required />
-          <Input label={countryConfig.addressFields.regionLabel} placeholder={countryConfig.addressFields.regionPlaceholder} value={state} onChangeText={setState} required />
+          <PickerSelect
+            label={countryConfig.addressFields.regionLabel}
+            placeholder={countryConfig.addressFields.regionPlaceholder}
+            value={state}
+            options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
+            onValueChange={setState}
+            required
+          />
           <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
           <Input label="Phone" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" required />
           <Input label="Website" placeholder="https://..." value={website} onChangeText={setWebsite} autoCapitalize="none" />

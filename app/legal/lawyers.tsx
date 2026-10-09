@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/theme';
@@ -9,6 +9,7 @@ import Card from '../../src/components/common/Card';
 import CategoryChip from '../../src/components/common/CategoryChip';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 import ErrorView from '../../src/components/common/ErrorView';
+import NetworkImage from '../../src/components/common/NetworkImage';
 import { useCountry } from '../../src/contexts/CountryContext';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { requireAuth } from '../../src/utils/authGuard';
@@ -32,11 +33,21 @@ function LawyerCard({ lawyer, onPress }: { lawyer: Lawyer; onPress: () => void }
     <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
     <Card style={styles.lawyerCard}>
       <View style={styles.lawyerHeader}>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.avatarText, { color: colors.onPrimary }]}>
-            {lawyer.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-          </Text>
-        </View>
+        {lawyer.photoURL ? (
+          <NetworkImage
+            uri={lawyer.photoURL}
+            style={styles.avatarPhoto}
+            placeholderIcon="person"
+            iconSize={22}
+            accessibilityLabel={`${lawyer.name} photo`}
+          />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.avatarText, { color: colors.onPrimary }]}>
+              {lawyer.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+            </Text>
+          </View>
+        )}
         <View style={styles.lawyerInfo}>
           <Text style={[styles.lawyerName, { color: colors.onSurface }]}>{lawyer.name}</Text>
           <Text style={[styles.firmName, { color: colors.onSurfaceVariant }]}>{lawyer.firm}</Text>
@@ -138,10 +149,12 @@ export default function LawyerDirectoryScreen() {
     }
   }, [hostCountry, selectedArea, loadingMore]);
 
-  useEffect(() => {
-    trackScreen('LawyerDirectory');
-    loadLawyers();
-  }, [loadLawyers]);
+  useFocusEffect(
+    useCallback(() => {
+      trackScreen('LawyerDirectory');
+      loadLawyers();
+    }, [loadLawyers])
+  );
 
   const handleSearch = async (text: string) => {
     setSearch(text);
@@ -273,6 +286,9 @@ const styles = StyleSheet.create({
   avatar: {
     width: 48, height: 48, borderRadius: 24,
     justifyContent: 'center', alignItems: 'center', marginRight: 12,
+  },
+  avatarPhoto: {
+    width: 48, height: 48, borderRadius: 24, marginRight: 12,
   },
   avatarText: { fontSize: 18, fontWeight: 'bold' },
   lawyerInfo: { flex: 1 },

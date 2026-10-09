@@ -12,9 +12,11 @@ import { Business } from '../../types';
 interface BusinessCardProps {
   business: Business;
   onPress: () => void;
+  /** Formatted distance string, e.g. "2.3 km". Shown when provided. */
+  distance?: string;
 }
 
-export default function BusinessCard({ business, onPress }: BusinessCardProps) {
+export default function BusinessCard({ business, onPress, distance }: BusinessCardProps) {
   const { colors, radii, typography, shadows, spacing } = useTheme();
 
   return (
@@ -70,9 +72,15 @@ export default function BusinessCard({ business, onPress }: BusinessCardProps) {
         <View style={styles.metaRow}>
           <Badge label={business.category.charAt(0).toUpperCase() + business.category.slice(1)} variant="primary" size="sm" />
           <MaterialIcons name="location-on" size={13} color={colors.onSurfaceVariant} />
-          <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+          <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, flex: 1 }]} numberOfLines={1}>
             {business.city}, {business.state}
           </Text>
+          {distance ? (
+            <View style={styles.distanceBadge}>
+              <MaterialIcons name="near-me" size={11} color={colors.primary} />
+              <Text style={[typography.labelSmall, { color: colors.primary }]}>{distance}</Text>
+            </View>
+          ) : null}
         </View>
 
         <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, marginTop: 6 }]}>
@@ -136,5 +144,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     gap: 2,
+  },
+  distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
 });

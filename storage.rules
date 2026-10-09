@@ -15,5 +15,14 @@ service firebase.storage {
                    && request.resource.size < 10 * 1024 * 1024        // 10 MB
                    && request.resource.contentType.matches('image/.*'); // images only
     }
+
+    // ── Attorney profile photos ───────────────────────────────────────
+    // Path: /lawyers/{uid}/{lawyerId}/{fileName}
+    match /lawyers/{uid}/{lawyerId}/{fileName} {
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 10 * 1024 * 1024        // 10 MB
+                   && request.resource.contentType.matches('image/.*'); // images only
+    }
   }
 }

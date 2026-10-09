@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme, Typography } from '../../src/theme';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
+import PickerSelect from '../../src/components/common/PickerSelect';
 import CategoryChip from '../../src/components/common/CategoryChip';
 import LoadingSpinner from '../../src/components/common/LoadingSpinner';
 import ErrorView from '../../src/components/common/ErrorView';
@@ -227,7 +228,14 @@ export default function EditBusinessScreen() {
 
           <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={setAddress} required />
           <Input label="City" placeholder="Enter city" value={city} onChangeText={setCity} required />
-          <Input label={countryConfig.addressFields.regionLabel} placeholder={countryConfig.addressFields.regionPlaceholder} value={state} onChangeText={setState} required />
+          <PickerSelect
+            label={countryConfig.addressFields.regionLabel}
+            placeholder={countryConfig.addressFields.regionPlaceholder}
+            value={state}
+            options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
+            onValueChange={setState}
+            required
+          />
           <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
           <Input label="Phone" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" required />
           <Input label="Website" placeholder="https://..." value={website} onChangeText={setWebsite} autoCapitalize="none" />

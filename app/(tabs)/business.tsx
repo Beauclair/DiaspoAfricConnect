@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ import { getUserMessage } from '../../src/utils/errorMessages';
 import { BUSINESS_CATEGORIES } from '../../src/constants/categories';
 import { trackEvent, trackScreen } from '../../src/config/analytics';
 import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
+import { getCurrentLocation, getDistanceKm, formatDistance } from '../../src/utils/location';
 
 export default function BusinessListScreen() {
   const { user } = useAuth();
@@ -37,6 +38,29 @@ export default function BusinessListScreen() {
   const hasLoadedOnce = useRef(false);
   const cursorRef = useRef<unknown>(null);
   const hasMoreRef = useRef(true);
+  const [nearMe, setNearMe] = useState(false);
+  const userCoordsRef = useRef<{ latitude: number; longitude: number } | null>(null);
+
+  /** Sort businesses by distance from the user and compute display distances. */
+  const withDistance = useCallback(
+    (list: Business[]): { sorted: Business[]; distances: Map<string, string> } => {
+      const distances = new Map<string, string>();
+      const loc = userCoordsRef.current;
+      if (!loc) return { sorted: list, distances };
+
+      const decorated = list.map((b) => {
+        const km = getDistanceKm(loc.latitude, loc.longitude, b.coordinates.latitude, b.coordinates.longitude);
+        const label = formatDistance(km);
+        if (label) distances.set(b.id, label);
+        return { b, km };
+      });
+      decorated.sort((a, b) => a.km - b.km);
+      return { sorted: decorated.map((d) => d.b), distances };
+    },
+    [],
+  );
+
+  const [distanceMap, setDistanceMap] = useState<Map<string, string>>(new Map());
 
   const loadBusinesses = useCallback(async () => {
     if (!hasLoadedOnce.current) setLoading(true);
@@ -47,7 +71,16 @@ export default function BusinessListScreen() {
       const page = selectedCategory
         ? await getBusinessesByCategory(selectedCategory, hostCountry)
         : await getBusinesses(hostCountry);
-      setBusinesses(page.data);
+
+      if (nearMe && userCoordsRef.current) {
+        const { sorted, distances } = withDistance(page.data);
+        setBusinesses(sorted);
+        setDistanceMap(distances);
+      } else {
+        setBusinesses(page.data);
+        setDistanceMap(new Map());
+      }
+
       cursorRef.current = page.lastDoc;
       hasMoreRef.current = page.hasMore;
       hasLoadedOnce.current = true;
@@ -57,7 +90,7 @@ export default function BusinessListScreen() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, hostCountry]);
+  }, [selectedCategory, hostCountry, nearMe, withDistance]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMoreRef.current || !cursorRef.current) return;
@@ -130,11 +163,31 @@ export default function BusinessListScreen() {
     }
   };
 
+  const handleNearMe = async () => {
+    if (nearMe) {
+      // Toggle off
+      setNearMe(false);
+      userCoordsRef.current = null;
+      setDistanceMap(new Map());
+      return;
+    }
+    // Toggle on — request location
+    const loc = await getCurrentLocation();
+    if (!loc) {
+      Alert.alert('Location unavailable', 'Please allow location access in your device settings to use Near Me.');
+      return;
+    }
+    userCoordsRef.current = loc;
+    setNearMe(true);
+    trackEvent('near_me_toggled', { enabled: true });
+  };
+
   const renderItem = ({ item, index }: { item: Business; index: number }) => (
     <Animated.View entering={FadeIn.delay(Math.min(index * 40, 160)).duration(250)}>
       <BusinessCard
         business={item}
         onPress={() => router.push({ pathname: '/business/[id]', params: { id: item.id } })}
+        distance={distanceMap.get(item.id)}
       />
     </Animated.View>
   );
@@ -169,6 +222,11 @@ export default function BusinessListScreen() {
         </View>
         <View style={{ paddingHorizontal: spacing.xxl, paddingTop: spacing.lg }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <CategoryChip
+              label={nearMe ? '📍 Near Me' : '📍 Near Me'}
+              selected={nearMe}
+              onPress={handleNearMe}
+            />
             {BUSINESS_CATEGORIES.map((cat) => (
               <CategoryChip
                 key={cat.key}
