@@ -27,7 +27,8 @@
       "channel": "production",
       "node": "22.15.0",
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },
