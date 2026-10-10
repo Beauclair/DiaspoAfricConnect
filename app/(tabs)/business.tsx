@@ -40,6 +40,7 @@ export default function BusinessListScreen() {
   const hasMoreRef = useRef(true);
   const [nearMe, setNearMe] = useState(false);
   const userCoordsRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  const nearMeCache = useRef<Business[] | null>(null);
 
   /** Sort businesses by distance from the user and compute display distances. */
   const withDistance = useCallback(
@@ -69,11 +70,19 @@ export default function BusinessListScreen() {
     hasMoreRef.current = true;
     try {
       if (nearMe && userCoordsRef.current) {
-        // Near Me: fetch ALL businesses so we can sort by distance properly
-        const all = selectedCategory
-          ? (await getBusinessesByCategory(selectedCategory, hostCountry)).data
-          : await getAllBusinessesForNearMe(hostCountry);
-        const { sorted, distances } = withDistance(all);
+        // Near Me: use cache if available, otherwise fetch all businesses
+        let all: Business[];
+        if (nearMeCache.current) {
+          all = nearMeCache.current;
+        } else {
+          all = await getAllBusinessesForNearMe(hostCountry);
+          nearMeCache.current = all;
+        }
+        // Apply category filter client-side if needed
+        const filtered = selectedCategory
+          ? all.filter((b) => b.category === selectedCategory)
+          : all;
+        const { sorted, distances } = withDistance(filtered);
         setBusinesses(sorted);
         setDistanceMap(distances);
         hasMoreRef.current = false; // All loaded — no pagination needed
@@ -169,19 +178,22 @@ export default function BusinessListScreen() {
 
   const handleNearMe = async () => {
     if (nearMe) {
-      // Toggle off
+      // Toggle off — keep cached coords & businesses for fast re-toggle
       setNearMe(false);
-      userCoordsRef.current = null;
       setDistanceMap(new Map());
       return;
     }
-    // Toggle on — request location
-    const loc = await getCurrentLocation();
-    if (!loc) {
-      Alert.alert('Location unavailable', 'Please allow location access in your device settings to use Near Me.');
-      return;
+    // Toggle on — reuse cached location if available
+    setLoading(true);
+    if (!userCoordsRef.current) {
+      const loc = await getCurrentLocation();
+      if (!loc) {
+        setLoading(false);
+        Alert.alert('Location unavailable', 'Please allow location access in your device settings to use Near Me.');
+        return;
+      }
+      userCoordsRef.current = loc;
     }
-    userCoordsRef.current = loc;
     setNearMe(true);
     trackEvent('near_me_toggled', { enabled: true });
   };
