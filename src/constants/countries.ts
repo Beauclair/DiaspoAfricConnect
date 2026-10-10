@@ -7,6 +7,7 @@ export interface CountryConfig {
   name: string;
   flag: string;
   currency: string;
+  useMiles: boolean;
   phoneFields: {
     placeholder: string;
     phoneRegex: RegExp;
@@ -30,6 +31,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
     name: 'United States',
     flag: '\u{1F1FA}\u{1F1F8}',
     currency: 'USD',
+    useMiles: true,
     phoneFields: {
       placeholder: '(555) 123-4567',
       phoneRegex: /^[\d\s()+-]{10,}$/,
@@ -78,6 +80,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
     name: 'Canada',
     flag: '\u{1F1E8}\u{1F1E6}',
     currency: 'CAD',
+    useMiles: false,
     phoneFields: {
       placeholder: '(514) 123-4567',
       phoneRegex: /^[\d\s()+-]{10,}$/,
@@ -116,6 +119,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
     name: 'United Kingdom',
     flag: '\u{1F1EC}\u{1F1E7}',
     currency: 'GBP',
+    useMiles: true,
     phoneFields: {
       placeholder: '020 7946 0958',
       phoneRegex: /^[\d\s()+-]{10,}$/,
@@ -157,6 +161,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
     name: 'France',
     flag: '\u{1F1EB}\u{1F1F7}',
     currency: 'EUR',
+    useMiles: false,
     phoneFields: {
       placeholder: '01 23 45 67 89',
       phoneRegex: /^[\d\s()+-]{10,}$/,
@@ -197,6 +202,7 @@ export const HOST_COUNTRIES: Record<HostCountryCode, CountryConfig> = {
     name: 'Germany',
     flag: '\u{1F1E9}\u{1F1EA}',
     currency: 'EUR',
+    useMiles: false,
     phoneFields: {
       placeholder: '030 1234567',
       phoneRegex: /^[\d\s()+-]{10,}$/,

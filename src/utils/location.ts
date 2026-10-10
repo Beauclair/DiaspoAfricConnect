@@ -67,8 +67,14 @@ function toRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
-/** Format a distance for display: "1.2 km" or "350 m". */
-export function formatDistance(km: number): string {
+const KM_TO_MILES = 0.621371;
+
+/** Format a distance for display, using miles (US/UK) or km based on useMiles flag. */
+export function formatDistance(km: number, useMiles = false): string {
   if (!isFinite(km)) return '';
+  if (useMiles) {
+    const miles = km * KM_TO_MILES;
+    return miles < 0.1 ? `${Math.round(miles * 5280)} ft` : `${miles.toFixed(1)} mi`;
+  }
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }

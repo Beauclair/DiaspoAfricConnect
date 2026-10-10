@@ -26,7 +26,7 @@ import { getCurrentLocation, getDistanceKm, formatDistance } from '../../src/uti
 
 export default function BusinessListScreen() {
   const { user } = useAuth();
-  const { hostCountry } = useCountry();
+  const { hostCountry, countryConfig } = useCountry();
   const { colors, typography, spacing, radii, shadows } = useTheme();
   const insets = useSafeAreaInsets();
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -49,16 +49,17 @@ export default function BusinessListScreen() {
       const loc = userCoordsRef.current;
       if (!loc) return { sorted: list, distances };
 
+      const useMiles = countryConfig?.useMiles ?? false;
       const decorated = list.map((b) => {
         const km = getDistanceKm(loc.latitude, loc.longitude, b.coordinates.latitude, b.coordinates.longitude);
-        const label = formatDistance(km);
+        const label = formatDistance(km, useMiles);
         if (label) distances.set(b.id, label);
         return { b, km };
       });
       decorated.sort((a, b) => a.km - b.km);
       return { sorted: decorated.map((d) => d.b), distances };
     },
-    [],
+    [countryConfig],
   );
 
   const [distanceMap, setDistanceMap] = useState<Map<string, string>>(new Map());
