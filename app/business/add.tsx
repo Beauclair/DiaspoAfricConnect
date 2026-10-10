@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, Stack, Redirect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -39,6 +39,8 @@ export default function AddBusinessScreen() {
   const [website, setWebsite] = useState('');
   const [images, setImages] = useState<{ uri: string; base64: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [verifiedCoords, setVerifiedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;
@@ -75,6 +77,42 @@ export default function AddBusinessScreen() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /** Reset verified location when address fields change. */
+  const handleAddressChange = (setter: (v: string) => void) => (value: string) => {
+    setter(value);
+    setVerifiedCoords(null);
+  };
+
+  const verifyLocation = async () => {
+    if (!address.trim() || !city.trim()) {
+      Alert.alert('Missing Address', 'Please enter at least a street address and city before verifying.');
+      return;
+    }
+    setVerifying(true);
+    try {
+      const fullAddress = `${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`;
+      const coords = await geocodeAddress(fullAddress);
+      if (coords) {
+        setVerifiedCoords(coords);
+      } else {
+        Alert.alert(
+          'Location Not Found',
+          'We could not find this address on the map. Please double-check the address and try again.',
+        );
+      }
+    } catch {
+      Alert.alert('Error', 'Failed to verify location. Please try again.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const getStaticMapUrl = (lat: number, lng: number) => {
+    // Use OpenStreetMap static map (free, no API key needed)
+    const zoom = 16;
+    return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${zoom}&size=600x300&markers=${lat},${lng},red-pushpin`;
+  };
+
   const doSubmit = useCallback(async () => {
     const validationError = validateBusinessForm({
       name, description, address, city, state, zipCode, phone, website,
@@ -86,9 +124,12 @@ export default function AddBusinessScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      // Geocode address into real coordinates (best-effort)
-      const fullAddress = `${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`;
-      const coords = await geocodeAddress(fullAddress);
+      // Use verified coordinates if available, otherwise geocode now
+      let coords = verifiedCoords;
+      if (!coords) {
+        const fullAddress = `${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`;
+        coords = await geocodeAddress(fullAddress);
+      }
 
       if (!coords) {
         Alert.alert(
@@ -132,7 +173,7 @@ export default function AddBusinessScreen() {
     } finally {
       setLoading(false);
     }
-  }, [name, description, address, city, state, zipCode, phone, website, category, hostCountry, user, images]);
+  }, [name, description, address, city, state, zipCode, phone, website, category, hostCountry, user, images, verifiedCoords]);
 
   const handleSubmit = useSubmitGuard(doSubmit, 5000);
 
@@ -183,17 +224,57 @@ export default function AddBusinessScreen() {
             )}
           </View>
 
-          <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={setAddress} required />
-          <Input label="City" placeholder="Enter city" value={city} onChangeText={setCity} required />
+          <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={handleAddressChange(setAddress)} required />
+          <Input label="City" placeholder="Enter city" value={city} onChangeText={handleAddressChange(setCity)} required />
           <PickerSelect
             label={countryConfig.addressFields.regionLabel}
             placeholder={countryConfig.addressFields.regionPlaceholder}
             value={state}
             options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
-            onValueChange={setState}
+            onValueChange={(v) => { setState(v); setVerifiedCoords(null); }}
             required
           />
-          <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
+          <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={handleAddressChange(setZipCode)} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
+
+          {/* Location verification */}
+          {verifiedCoords ? (
+            <View style={[styles.mapPreview, { borderColor: colors.outlineVariant, borderRadius: radii.lg }]}>
+              <Image
+                source={{ uri: getStaticMapUrl(verifiedCoords.latitude, verifiedCoords.longitude) }}
+                style={[styles.mapImage, { borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg }]}
+                resizeMode="cover"
+              />
+              <View style={[styles.mapInfo, { backgroundColor: colors.surfaceContainerLow, borderBottomLeftRadius: radii.lg, borderBottomRightRadius: radii.lg }]}>
+                <View style={styles.mapInfoRow}>
+                  <MaterialIcons name="check-circle" size={20} color={colors.primary} />
+                  <Text style={[Typography.bodyMedium, { color: colors.onSurface, marginLeft: 8, flex: 1 }]}>
+                    Location verified
+                  </Text>
+                </View>
+                <View style={styles.mapActions}>
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL(`https://www.google.com/maps?q=${verifiedCoords.latitude},${verifiedCoords.longitude}`)}
+                    style={styles.mapLink}
+                  >
+                    <MaterialIcons name="open-in-new" size={16} color={colors.primary} />
+                    <Text style={[Typography.bodySmall, { color: colors.primary, marginLeft: 4 }]}>View in Maps</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setVerifiedCoords(null)} style={styles.mapLink}>
+                    <MaterialIcons name="refresh" size={16} color={colors.onSurfaceVariant} />
+                    <Text style={[Typography.bodySmall, { color: colors.onSurfaceVariant, marginLeft: 4 }]}>Re-verify</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <Button
+              title={verifying ? 'Verifying...' : '📍 Verify Location on Map'}
+              onPress={verifyLocation}
+              loading={verifying}
+              variant="tonal"
+              style={{ marginBottom: 16 }}
+            />
+          )}
           <Input label="Phone" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" required />
           <Input label="Website" placeholder="https://..." value={website} onChangeText={setWebsite} autoCapitalize="none" />
 
@@ -224,4 +305,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   addImageText: { ...Typography.bodySmall, marginTop: 4 },
+  mapPreview: { borderWidth: 1, marginBottom: 16, overflow: 'hidden' },
+  mapImage: { width: '100%', height: 180 },
+  mapInfo: { padding: 12 },
+  mapInfoRow: { flexDirection: 'row', alignItems: 'center' },
+  mapActions: { flexDirection: 'row', gap: 16, marginTop: 8 },
+  mapLink: { flexDirection: 'row', alignItems: 'center' },
 });
