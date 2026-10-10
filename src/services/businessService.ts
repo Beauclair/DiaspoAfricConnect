@@ -92,14 +92,18 @@ export async function searchBusinesses(
   searchTerm: string,
   hostCountry?: HostCountryCode,
 ): Promise<PaginatedResult<Business>> {
-  // Client-side filter over one page — caps Firestore reads at PAGE_SIZE.
-  const page = await getBusinesses(hostCountry);
+  // Fetch all businesses for thorough client-side search.
+  const all = await getAllBusinessesForNearMe(hostCountry);
   const lower = searchTerm.toLowerCase();
-  const filtered = page.data.filter(
+  const filtered = all.filter(
     (b) =>
       b.name?.toLowerCase().includes(lower) ||
       b.description?.toLowerCase().includes(lower) ||
+      b.category?.toLowerCase().includes(lower) ||
+      b.address?.toLowerCase().includes(lower) ||
       b.city?.toLowerCase().includes(lower) ||
+      b.state?.toLowerCase().includes(lower) ||
+      b.zipCode?.toLowerCase().includes(lower) ||
       b.countryOfOrigin?.toLowerCase().includes(lower),
   );
   return { data: filtered, lastDoc: null, hasMore: false };
