@@ -11,7 +11,8 @@ export async function getCurrentLocation(): Promise<{ latitude: number; longitud
   return { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
 }
 
-/** Geocode an address string into coordinates. Returns null on failure. */
+/** Geocode an address string into coordinates. Returns null on failure.
+ *  Retries with a simplified address (city + state) when the full address fails. */
 export async function geocodeAddress(
   address: string,
 ): Promise<{ latitude: number; longitude: number } | null> {
@@ -21,8 +22,23 @@ export async function geocodeAddress(
       return { latitude: results[0].latitude, longitude: results[0].longitude };
     }
   } catch {
-    // Geocoding not available or failed — silently fall back
+    // Full address geocoding failed — try simplified version below
   }
+
+  // Retry with a simplified address: extract city + state from "street, city, state zip"
+  try {
+    const parts = address.split(',').map((p) => p.trim());
+    if (parts.length >= 2) {
+      const simplified = parts.slice(1).join(', '); // drop street, keep city/state/zip
+      const retry = await Location.geocodeAsync(simplified);
+      if (retry.length > 0) {
+        return { latitude: retry[0].latitude, longitude: retry[0].longitude };
+      }
+    }
+  } catch {
+    // Simplified geocoding also failed
+  }
+
   return null;
 }
 

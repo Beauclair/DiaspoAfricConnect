@@ -90,6 +90,13 @@ export default function AddBusinessScreen() {
       const fullAddress = `${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`;
       const coords = await geocodeAddress(fullAddress);
 
+      if (!coords) {
+        Alert.alert(
+          'Location Notice',
+          'We could not determine the exact location for this address. Your business will be saved but may not appear correctly in "Near Me" results. You can edit the address later to fix this.',
+        );
+      }
+
       const businessData: Record<string, any> = {
         name,
         description,

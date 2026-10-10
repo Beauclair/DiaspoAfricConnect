@@ -8,6 +8,7 @@ import { HostCountryCode } from '../constants/countries';
 
 const COLLECTION = 'businesses';
 const PAGE_SIZE = 20;
+const NEAR_ME_LIMIT = 500;
 
 export async function getBusinesses(
   hostCountry?: HostCountryCode,
@@ -29,6 +30,21 @@ export async function getBusinesses(
     lastDoc,
     hasMore: snapshot.docs.length === PAGE_SIZE,
   };
+}
+
+/** Fetch all businesses (up to NEAR_ME_LIMIT) for client-side distance sorting. */
+export async function getAllBusinessesForNearMe(
+  hostCountry?: HostCountryCode,
+): Promise<Business[]> {
+  const db = getDb();
+  const constraints: any[] = [];
+  if (hostCountry) constraints.push(where('hostCountry', '==', hostCountry));
+  constraints.push(orderBy('createdAt', 'desc'));
+  constraints.push(firestoreLimit(NEAR_ME_LIMIT));
+
+  const q = query(collection(db, COLLECTION), ...constraints);
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Business));
 }
 
 /** Fetch a limited number of recent businesses — avoids over-fetching for home screen. */

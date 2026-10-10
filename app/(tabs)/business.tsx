@@ -16,7 +16,7 @@ import AnimatedPress from '../../src/components/common/AnimatedPressable';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useCountry } from '../../src/contexts/CountryContext';
 import { requireAuth } from '../../src/utils/authGuard';
-import { getBusinesses, getBusinessesByCategory, searchBusinesses } from '../../src/services/businessService';
+import { getBusinesses, getBusinessesByCategory, searchBusinesses, getAllBusinessesForNearMe } from '../../src/services/businessService';
 import { Business, BusinessCategory } from '../../src/types';
 import { getUserMessage } from '../../src/utils/errorMessages';
 import { BUSINESS_CATEGORIES } from '../../src/constants/categories';
@@ -68,21 +68,25 @@ export default function BusinessListScreen() {
     cursorRef.current = null;
     hasMoreRef.current = true;
     try {
-      const page = selectedCategory
-        ? await getBusinessesByCategory(selectedCategory, hostCountry)
-        : await getBusinesses(hostCountry);
-
       if (nearMe && userCoordsRef.current) {
-        const { sorted, distances } = withDistance(page.data);
+        // Near Me: fetch ALL businesses so we can sort by distance properly
+        const all = selectedCategory
+          ? (await getBusinessesByCategory(selectedCategory, hostCountry)).data
+          : await getAllBusinessesForNearMe(hostCountry);
+        const { sorted, distances } = withDistance(all);
         setBusinesses(sorted);
         setDistanceMap(distances);
+        hasMoreRef.current = false; // All loaded — no pagination needed
       } else {
+        const page = selectedCategory
+          ? await getBusinessesByCategory(selectedCategory, hostCountry)
+          : await getBusinesses(hostCountry);
         setBusinesses(page.data);
         setDistanceMap(new Map());
+        cursorRef.current = page.lastDoc;
+        hasMoreRef.current = page.hasMore;
       }
 
-      cursorRef.current = page.lastDoc;
-      hasMoreRef.current = page.hasMore;
       hasLoadedOnce.current = true;
     } catch (e: any) {
       setBusinesses([]);
@@ -93,7 +97,7 @@ export default function BusinessListScreen() {
   }, [selectedCategory, hostCountry, nearMe, withDistance]);
 
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMoreRef.current || !cursorRef.current) return;
+    if (nearMe || loadingMore || !hasMoreRef.current || !cursorRef.current) return;
     setLoadingMore(true);
     try {
       const page = selectedCategory
@@ -107,7 +111,7 @@ export default function BusinessListScreen() {
     } finally {
       setLoadingMore(false);
     }
-  }, [selectedCategory, hostCountry, loadingMore]);
+  }, [selectedCategory, hostCountry, loadingMore, nearMe]);
 
   const refreshList = useCallback(async () => {
     trackScreen('BusinessList');
