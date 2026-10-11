@@ -11,32 +11,73 @@ export async function getCurrentLocation(): Promise<{ latitude: number; longitud
   return { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
 }
 
+/**
+ * Geocode using the free OpenStreetMap Nominatim API.
+ * Works on all devices regardless of Google Play Services.
+ */
+async function geocodeWithNominatim(
+  address: string,
+): Promise<{ latitude: number; longitude: number } | null> {
+  try {
+    const encoded = encodeURIComponent(address);
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'DiaspoAfricConnect/1.0',
+          Accept: 'application/json',
+        },
+      },
+    );
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data.length > 0) {
+      return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+    }
+  } catch {
+    // Nominatim request failed
+  }
+  return null;
+}
+
 /** Geocode an address string into coordinates. Returns null on failure.
+ *  Tries the device geocoder first, then falls back to OpenStreetMap Nominatim.
  *  Retries with a simplified address (city + state) when the full address fails. */
 export async function geocodeAddress(
   address: string,
 ): Promise<{ latitude: number; longitude: number } | null> {
+  // 1. Try device geocoder (fast but unreliable on some Android devices)
   try {
     const results = await Location.geocodeAsync(address);
     if (results.length > 0) {
       return { latitude: results[0].latitude, longitude: results[0].longitude };
     }
   } catch {
-    // Full address geocoding failed — try simplified version below
+    // Device geocoding failed
   }
 
-  // Retry with a simplified address: extract city + state from "street, city, state zip"
-  try {
-    const parts = address.split(',').map((p) => p.trim());
-    if (parts.length >= 2) {
-      const simplified = parts.slice(1).join(', '); // drop street, keep city/state/zip
+  // 2. Fallback to Nominatim (OpenStreetMap) — works on all devices
+  const nominatimResult = await geocodeWithNominatim(address);
+  if (nominatimResult) return nominatimResult;
+
+  // 3. Retry with simplified address: drop street, keep city/state/zip
+  const parts = address.split(',').map((p) => p.trim());
+  if (parts.length >= 2) {
+    const simplified = parts.slice(1).join(', ');
+
+    // Try device geocoder with simplified address
+    try {
       const retry = await Location.geocodeAsync(simplified);
       if (retry.length > 0) {
         return { latitude: retry[0].latitude, longitude: retry[0].longitude };
       }
+    } catch {
+      // Device simplified geocoding failed
     }
-  } catch {
-    // Simplified geocoding also failed
+
+    // Try Nominatim with simplified address
+    const nominatimRetry = await geocodeWithNominatim(simplified);
+    if (nominatimRetry) return nominatimRetry;
   }
 
   return null;
