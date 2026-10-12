@@ -91,26 +91,39 @@ function InnerLayout() {
   useNotificationObserver();
 
   // Register push token once the user is signed in.
-  // Only mark as registered once the token is successfully saved.
-  // Retry up to 3 times if registration fails (e.g. timing issue on cold start).
-  const tokenRetryCount = useRef(0);
+  // Retry up to 3 times with a delay if registration fails on cold start.
   useEffect(() => {
-    if (user?.uid && !tokenRegistered.current && tokenRetryCount.current < 3) {
-      tokenRetryCount.current += 1;
-      registerForPushNotifications(user.uid)
-        .then((token) => {
-          if (token) {
-            tokenRegistered.current = true;
-          }
-        })
-        .catch((e) => {
-          Sentry.captureException(e);
-        });
-    }
-    if (!user) {
+    if (!user?.uid) {
       tokenRegistered.current = false;
-      tokenRetryCount.current = 0;
+      return;
     }
+    if (tokenRegistered.current) return;
+
+    let cancelled = false;
+    const tryRegister = async (attempt: number) => {
+      if (cancelled || tokenRegistered.current) return;
+      try {
+        const token = await registerForPushNotifications(user.uid);
+        if (token) {
+          tokenRegistered.current = true;
+          Sentry.captureMessage(`[push] Token registered on attempt ${attempt}`, 'info');
+        } else if (attempt < 3 && !cancelled) {
+          Sentry.captureMessage(`[push] Attempt ${attempt} returned null, retrying in 5s`, 'warning');
+          setTimeout(() => tryRegister(attempt + 1), 5000);
+        } else {
+          Sentry.captureMessage(`[push] All ${attempt} attempts failed — no token saved`, 'error');
+        }
+      } catch (e) {
+        Sentry.captureException(e);
+        if (attempt < 3 && !cancelled) {
+          setTimeout(() => tryRegister(attempt + 1), 5000);
+        }
+      }
+    };
+
+    // Small delay on first attempt to let native modules fully initialize
+    const timer = setTimeout(() => tryRegister(1), 2000);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [user]);
 
   return (

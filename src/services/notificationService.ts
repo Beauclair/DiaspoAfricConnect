@@ -54,16 +54,11 @@ export async function registerForPushNotifications(uid: string): Promise<string 
   const env = (Constants as any).executionEnvironment;
   const ownership = Constants.appOwnership;
 
-  Sentry.addBreadcrumb({
-    category: 'push',
-    message: 'registerForPushNotifications called',
-    data: { uid, platform: Platform.OS, env, ownership, isExpoGo: isExpoGo() },
-    level: 'info',
-  });
+  Sentry.captureMessage(`[push] START — uid=${uid}, platform=${Platform.OS}, env=${env}, ownership=${ownership}, isExpoGo=${isExpoGo()}`, 'info');
 
   const Notifications = getNotifications();
   if (Platform.OS === 'web' || !Notifications) {
-    logger.error(`[push] Skipped — web or Notifications module unavailable (platform=${Platform.OS}, isExpoGo=${isExpoGo()}, env=${env}, ownership=${ownership})`);
+    Sentry.captureMessage(`[push] BAIL — web or Notifications unavailable (platform=${Platform.OS}, isExpoGo=${isExpoGo()}, env=${env}, ownership=${ownership})`, 'error');
     return null;
   }
 
@@ -78,7 +73,7 @@ export async function registerForPushNotifications(uid: string): Promise<string 
   }
 
   if (finalStatus !== 'granted') {
-    logger.error(`[push] Permission not granted: ${finalStatus}`);
+    Sentry.captureMessage(`[push] BAIL — permission not granted: ${finalStatus}`, 'error');
     return null;
   }
 
@@ -95,7 +90,7 @@ export async function registerForPushNotifications(uid: string): Promise<string 
   const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
 
   if (!projectId) {
-    logger.error(`[push] No Expo project ID found — expoConfig.extra.eas.projectId=${Constants.expoConfig?.extra?.eas?.projectId}, easConfig.projectId=${Constants.easConfig?.projectId}`);
+    Sentry.captureMessage(`[push] BAIL — no projectId (expoConfig.extra.eas.projectId=${Constants.expoConfig?.extra?.eas?.projectId}, easConfig.projectId=${Constants.easConfig?.projectId})`, 'error');
     return null;
   }
 
@@ -106,16 +101,11 @@ export async function registerForPushNotifications(uid: string): Promise<string 
     // Persist the token to the user's Firestore document
     await setDoc(doc(getDb(), 'users', uid), { expoPushToken: token }, { merge: true });
 
-    Sentry.addBreadcrumb({
-      category: 'push',
-      message: 'Push token registered successfully',
-      data: { uid, tokenPrefix: token.substring(0, 25) },
-      level: 'info',
-    });
+    Sentry.captureMessage(`[push] SUCCESS — token saved for ${uid}, prefix=${token.substring(0, 25)}`, 'info');
 
     return token;
   } catch (e) {
-    logger.error('[push] Failed to get/save push token:', e);
+    Sentry.captureException(e, { tags: { feature: 'push-registration' } });
     return null;
   }
 }
