@@ -90,16 +90,26 @@ function InnerLayout() {
   // Navigate to the right screen when a notification is tapped
   useNotificationObserver();
 
-  // Register push token once the user is signed in
+  // Register push token once the user is signed in.
+  // Only mark as registered once the token is successfully saved.
+  // Retry up to 3 times if registration fails (e.g. timing issue on cold start).
+  const tokenRetryCount = useRef(0);
   useEffect(() => {
-    if (user?.uid && !tokenRegistered.current) {
-      tokenRegistered.current = true;
-      registerForPushNotifications(user.uid).catch((e) => {
-        Sentry.captureException(e);
-      });
+    if (user?.uid && !tokenRegistered.current && tokenRetryCount.current < 3) {
+      tokenRetryCount.current += 1;
+      registerForPushNotifications(user.uid)
+        .then((token) => {
+          if (token) {
+            tokenRegistered.current = true;
+          }
+        })
+        .catch((e) => {
+          Sentry.captureException(e);
+        });
     }
     if (!user) {
       tokenRegistered.current = false;
+      tokenRetryCount.current = 0;
     }
   }, [user]);
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import * as Sentry from '@sentry/react-native';
 import { router } from 'expo-router';
 import { doc, setDoc } from 'firebase/firestore';
 import { getDb } from '../config/firebase';
@@ -11,6 +12,15 @@ import { logger } from '../utils/logger';
 type NotificationsModule = typeof import('expo-notifications');
 
 function isExpoGo(): boolean {
+  // Constants.appOwnership is deprecated in SDK 57.
+  // executionEnvironment is the reliable replacement:
+  //   'storeClient' = Expo Go (and legacy dev-client — but appOwnership
+  //                   narrows it to Expo Go specifically).
+  //   'standalone'  = production or EAS dev-build
+  //   'bare'        = bare RN project
+  const env = (Constants as any).executionEnvironment;
+  if (env) return env === 'storeClient' && Constants.appOwnership === 'expo';
+  // Fallback for older Constants versions
   return Constants.appOwnership === 'expo';
 }
 
@@ -41,8 +51,21 @@ export function configureNotificationHandler() {
 
 // ── Permission + token registration ─────────────────────────────────
 export async function registerForPushNotifications(uid: string): Promise<string | null> {
+  const env = (Constants as any).executionEnvironment;
+  const ownership = Constants.appOwnership;
+
+  Sentry.addBreadcrumb({
+    category: 'push',
+    message: 'registerForPushNotifications called',
+    data: { uid, platform: Platform.OS, env, ownership, isExpoGo: isExpoGo() },
+    level: 'info',
+  });
+
   const Notifications = getNotifications();
-  if (Platform.OS === 'web' || !Notifications) return null;
+  if (Platform.OS === 'web' || !Notifications) {
+    logger.error(`[push] Skipped — web or Notifications module unavailable (platform=${Platform.OS}, isExpoGo=${isExpoGo()}, env=${env}, ownership=${ownership})`);
+    return null;
+  }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -55,7 +78,7 @@ export async function registerForPushNotifications(uid: string): Promise<string 
   }
 
   if (finalStatus !== 'granted') {
-    logger.log('Push notification permission not granted');
+    logger.error(`[push] Permission not granted: ${finalStatus}`);
     return null;
   }
 
@@ -72,7 +95,7 @@ export async function registerForPushNotifications(uid: string): Promise<string 
   const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
 
   if (!projectId) {
-    logger.warn('No Expo project ID found — push token registration skipped');
+    logger.error(`[push] No Expo project ID found — expoConfig.extra.eas.projectId=${Constants.expoConfig?.extra?.eas?.projectId}, easConfig.projectId=${Constants.easConfig?.projectId}`);
     return null;
   }
 
@@ -83,9 +106,16 @@ export async function registerForPushNotifications(uid: string): Promise<string 
     // Persist the token to the user's Firestore document
     await setDoc(doc(getDb(), 'users', uid), { expoPushToken: token }, { merge: true });
 
+    Sentry.addBreadcrumb({
+      category: 'push',
+      message: 'Push token registered successfully',
+      data: { uid, tokenPrefix: token.substring(0, 25) },
+      level: 'info',
+    });
+
     return token;
   } catch (e) {
-    logger.error('Failed to get push token:', e);
+    logger.error('[push] Failed to get/save push token:', e);
     return null;
   }
 }
