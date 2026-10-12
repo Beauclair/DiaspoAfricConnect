@@ -21,7 +21,6 @@ import { getUserMessage } from '../../src/utils/errorMessages';
 import { trackEvent } from '../../src/config/analytics';
 import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
 import { geocodeAddress, StructuredAddress } from '../../src/utils/location';
-import { WebView } from 'react-native-webview';
 
 export default function AddBusinessScreen() {
   const { user } = useAuth();
@@ -114,25 +113,11 @@ export default function AddBusinessScreen() {
     }
   };
 
-  /** Build a self-contained Leaflet HTML page for the WebView map. */
-  const getMapHtml = (lat: number, lng: number) => `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-  <style>html,body,#map{margin:0;padding:0;width:100%;height:100%}</style>
-</head>
-<body>
-  <div id="map"></div>
-  <script>
-    var map=L.map('map',{zoomControl:false,attributionControl:false}).setView([${lat},${lng}],16);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
-    L.marker([${lat},${lng}]).addTo(map);
-  <\/script>
-</body>
-</html>`;
+  /** Open the address in Google Maps for visual verification. */
+  const openInMaps = () => {
+    const q = encodeURIComponent(`${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`);
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
+  };
 
   const doSubmit = useCallback(async () => {
     const validationError = validateBusinessForm({
@@ -266,14 +251,7 @@ export default function AddBusinessScreen() {
           {/* Location verification */}
           {verifiedCoords ? (
             <View style={[styles.mapPreview, { borderColor: colors.outlineVariant, borderRadius: radii.lg }]}>
-              <WebView
-                originWhitelist={['*']}
-                source={{ html: getMapHtml(verifiedCoords.latitude, verifiedCoords.longitude) }}
-                style={[styles.mapImage, { borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg }]}
-                scrollEnabled={false}
-                nestedScrollEnabled={false}
-              />
-              <View style={[styles.mapInfo, { backgroundColor: colors.surfaceContainerLow, borderBottomLeftRadius: radii.lg, borderBottomRightRadius: radii.lg }]}>
+              <View style={[styles.mapInfo, { backgroundColor: colors.surfaceContainerLow, borderRadius: radii.lg }]}>
                 <View style={styles.mapInfoRow}>
                   <MaterialIcons name="check-circle" size={20} color={colors.primary} />
                   <Text style={[Typography.bodyMedium, { color: colors.onSurface, marginLeft: 8, flex: 1 }]}>
@@ -282,10 +260,7 @@ export default function AddBusinessScreen() {
                 </View>
                 <View style={styles.mapActions}>
                   <TouchableOpacity
-                    onPress={() => {
-                      const q = encodeURIComponent(`${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`);
-                      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
-                    }}
+                    onPress={openInMaps}
                     style={styles.mapLink}
                   >
                     <MaterialIcons name="open-in-new" size={16} color={colors.primary} />
