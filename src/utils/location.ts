@@ -12,7 +12,49 @@ export async function getCurrentLocation(): Promise<{ latitude: number; longitud
 }
 
 /**
- * Geocode using the free OpenStreetMap Nominatim API.
+ * Geocode using the free OpenStreetMap Nominatim API (structured search).
+ * Passing address components separately gives much more accurate results
+ * than free-form search — avoids "address range" matches.
+ */
+async function geocodeWithNominatimStructured(
+  street: string,
+  city: string,
+  state: string,
+  postalcode: string,
+  country = 'US',
+): Promise<{ latitude: number; longitude: number } | null> {
+  try {
+    const params = new URLSearchParams({
+      street,
+      city,
+      state,
+      postalcode,
+      country,
+      format: 'json',
+      limit: '1',
+    });
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?${params}`,
+      {
+        headers: {
+          'User-Agent': 'DiaspoAfricConnect/1.0',
+          Accept: 'application/json',
+        },
+      },
+    );
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data.length > 0) {
+      return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+    }
+  } catch {
+    // Nominatim structured request failed
+  }
+  return null;
+}
+
+/**
+ * Geocode using the free OpenStreetMap Nominatim API (free-form search).
  * Works on all devices regardless of Google Play Services.
  */
 async function geocodeWithNominatim(
@@ -40,15 +82,44 @@ async function geocodeWithNominatim(
   return null;
 }
 
-/** Geocode an address string into coordinates. Returns null on failure.
- *  Tries the device geocoder first, then falls back to OpenStreetMap Nominatim.
- *  Retries with a simplified address (city + state) when the full address fails. */
+export interface StructuredAddress {
+  street: string;
+  city: string;
+  state: string;
+  postalcode: string;
+  country?: string;
+}
+
+/**
+ * Geocode an address. Accepts either a plain string (legacy) or structured
+ * address fields. Structured fields give significantly more accurate results
+ * because Nominatim can match each component independently.
+ */
 export async function geocodeAddress(
-  address: string,
+  addressOrFields: string | StructuredAddress,
 ): Promise<{ latitude: number; longitude: number } | null> {
-  // 1. Try device geocoder (fast but unreliable on some Android devices)
+  const isStructured = typeof addressOrFields !== 'string';
+
+  // Build a single-line address for device geocoder / free-form fallback
+  const fullAddress = isStructured
+    ? `${addressOrFields.street}, ${addressOrFields.city}, ${addressOrFields.state} ${addressOrFields.postalcode}`
+    : addressOrFields;
+
+  // 1. If structured, try Nominatim structured search first (most accurate)
+  if (isStructured) {
+    const structured = await geocodeWithNominatimStructured(
+      addressOrFields.street,
+      addressOrFields.city,
+      addressOrFields.state,
+      addressOrFields.postalcode,
+      addressOrFields.country ?? 'US',
+    );
+    if (structured) return structured;
+  }
+
+  // 2. Try device geocoder (fast but unreliable on some Android devices)
   try {
-    const results = await Location.geocodeAsync(address);
+    const results = await Location.geocodeAsync(fullAddress);
     if (results.length > 0) {
       return { latitude: results[0].latitude, longitude: results[0].longitude };
     }
@@ -56,16 +127,15 @@ export async function geocodeAddress(
     // Device geocoding failed
   }
 
-  // 2. Fallback to Nominatim (OpenStreetMap) — works on all devices
-  const nominatimResult = await geocodeWithNominatim(address);
+  // 3. Fallback to Nominatim free-form search
+  const nominatimResult = await geocodeWithNominatim(fullAddress);
   if (nominatimResult) return nominatimResult;
 
-  // 3. Retry with simplified address: drop street, keep city/state/zip
-  const parts = address.split(',').map((p) => p.trim());
+  // 4. Retry with simplified address: drop street, keep city/state/zip
+  const parts = fullAddress.split(',').map((p) => p.trim());
   if (parts.length >= 2) {
     const simplified = parts.slice(1).join(', ');
 
-    // Try device geocoder with simplified address
     try {
       const retry = await Location.geocodeAsync(simplified);
       if (retry.length > 0) {
@@ -75,7 +145,6 @@ export async function geocodeAddress(
       // Device simplified geocoding failed
     }
 
-    // Try Nominatim with simplified address
     const nominatimRetry = await geocodeWithNominatim(simplified);
     if (nominatimRetry) return nominatimRetry;
   }

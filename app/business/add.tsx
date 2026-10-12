@@ -20,7 +20,8 @@ import { useSubmitGuard } from '../../src/hooks';
 import { getUserMessage } from '../../src/utils/errorMessages';
 import { trackEvent } from '../../src/config/analytics';
 import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
-import { geocodeAddress } from '../../src/utils/location';
+import { geocodeAddress, StructuredAddress } from '../../src/utils/location';
+import { WebView } from 'react-native-webview';
 
 export default function AddBusinessScreen() {
   const { user } = useAuth();
@@ -90,8 +91,14 @@ export default function AddBusinessScreen() {
     }
     setVerifying(true);
     try {
-      const fullAddress = `${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`;
-      const coords = await geocodeAddress(fullAddress);
+      const structured: StructuredAddress = {
+        street: address.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        postalcode: zipCode.trim(),
+        country: countryConfig.code === 'UK' ? 'GB' : (countryConfig.code ?? 'US'),
+      };
+      const coords = await geocodeAddress(structured);
       if (coords) {
         setVerifiedCoords(coords);
       } else {
@@ -107,11 +114,25 @@ export default function AddBusinessScreen() {
     }
   };
 
-  const getStaticMapUrl = (lat: number, lng: number) => {
-    // Use OpenStreetMap static map (free, no API key needed)
-    const zoom = 16;
-    return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${zoom}&size=600x300&markers=${lat},${lng},red-pushpin`;
-  };
+  /** Build a self-contained Leaflet HTML page for the WebView map. */
+  const getMapHtml = (lat: number, lng: number) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+  <style>html,body,#map{margin:0;padding:0;width:100%;height:100%}</style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    var map=L.map('map',{zoomControl:false,attributionControl:false}).setView([${lat},${lng}],16);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+    L.marker([${lat},${lng}]).addTo(map);
+  <\/script>
+</body>
+</html>`;
 
   const doSubmit = useCallback(async () => {
     const validationError = validateBusinessForm({
@@ -127,8 +148,14 @@ export default function AddBusinessScreen() {
       // Use verified coordinates if available, otherwise geocode now
       let coords = verifiedCoords;
       if (!coords) {
-        const fullAddress = `${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`;
-        coords = await geocodeAddress(fullAddress);
+        const structured: StructuredAddress = {
+          street: address.trim(),
+          city: city.trim(),
+          state: state.trim(),
+          postalcode: zipCode.trim(),
+          country: countryConfig.code === 'UK' ? 'GB' : (countryConfig.code ?? 'US'),
+        };
+        coords = await geocodeAddress(structured);
       }
 
       if (!coords) {
@@ -239,10 +266,12 @@ export default function AddBusinessScreen() {
           {/* Location verification */}
           {verifiedCoords ? (
             <View style={[styles.mapPreview, { borderColor: colors.outlineVariant, borderRadius: radii.lg }]}>
-              <Image
-                source={{ uri: getStaticMapUrl(verifiedCoords.latitude, verifiedCoords.longitude) }}
+              <WebView
+                originWhitelist={['*']}
+                source={{ html: getMapHtml(verifiedCoords.latitude, verifiedCoords.longitude) }}
                 style={[styles.mapImage, { borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg }]}
-                resizeMode="cover"
+                scrollEnabled={false}
+                nestedScrollEnabled={false}
               />
               <View style={[styles.mapInfo, { backgroundColor: colors.surfaceContainerLow, borderBottomLeftRadius: radii.lg, borderBottomRightRadius: radii.lg }]}>
                 <View style={styles.mapInfoRow}>
@@ -253,7 +282,10 @@ export default function AddBusinessScreen() {
                 </View>
                 <View style={styles.mapActions}>
                   <TouchableOpacity
-                    onPress={() => Linking.openURL(`https://www.google.com/maps?q=${verifiedCoords.latitude},${verifiedCoords.longitude}`)}
+                    onPress={() => {
+                      const q = encodeURIComponent(`${address.trim()}, ${city.trim()}, ${state.trim()} ${zipCode.trim()}`);
+                      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
+                    }}
                     style={styles.mapLink}
                   >
                     <MaterialIcons name="open-in-new" size={16} color={colors.primary} />
