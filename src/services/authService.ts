@@ -2,8 +2,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail,
-  sendEmailVerification,
   updateProfile,
   User as FirebaseUser,
 } from 'firebase/auth';
@@ -26,8 +24,10 @@ export async function signUp(email: string, password: string, displayName: strin
   };
   await setDoc(doc(getDb(), 'users', credential.user.uid), userData);
 
-  // Send verification email so the user must confirm ownership.
-  await sendEmailVerification(credential.user);
+  // Send branded verification email via Cloud Function.
+  const functions = getFunctions();
+  const sendVerification = httpsCallable(functions, 'sendVerificationEmail');
+  await sendVerification();
 
   return credential.user;
 }
@@ -35,7 +35,9 @@ export async function signUp(email: string, password: string, displayName: strin
 /** Re-send the verification email for the currently signed-in user. */
 export async function resendVerificationEmail(): Promise<void> {
   if (!auth.currentUser) throw new Error('Not signed in');
-  await sendEmailVerification(auth.currentUser);
+  const functions = getFunctions();
+  const sendVerification = httpsCallable(functions, 'sendVerificationEmail');
+  await sendVerification();
 }
 
 export async function signIn(email: string, password: string): Promise<FirebaseUser> {
@@ -48,7 +50,9 @@ export async function logOut(): Promise<void> {
 }
 
 export async function resetPassword(email: string): Promise<void> {
-  await sendPasswordResetEmail(auth, email);
+  const functions = getFunctions();
+  const sendReset = httpsCallable(functions, 'sendPasswordResetEmail');
+  await sendReset({ email });
 }
 
 export async function getUserProfile(uid: string): Promise<User | null> {

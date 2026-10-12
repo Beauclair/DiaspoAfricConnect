@@ -21,5 +21,9 @@ export { reviewVerificationRequest } from "./admin/reviewVerification";
 export { listPendingVerifications } from "./admin/listPendingVerifications";
 export { bootstrapAdmin } from "./admin/bootstrapAdmin";
 
+// ── Email (branded templates via Admin SDK + Nodemailer) ────────────
+export { sendVerificationEmail } from "./email/sendVerificationEmail";
+export { sendPasswordResetEmail } from "./email/sendPasswordResetEmail";
+
 // ── Account management ──────────────────────────────────────────────
 export { deleteAccount } from "./account/deleteAccount";
