@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "277479570571",
+    "project_id": "diaspoafricconnect",
+    "storage_bucket": "diaspoafricconnect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277479570571:android:620b69b33e380bcd02688e",
+        "android_client_info": {
+          "package_name": "com.diaspoafricconnect.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "277479570571-igjp3rah8ss7arsflv69orumij4a6lgi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwhZbCixT0ooIiexFbddQTV2D9hkknvUo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "277479570571-igjp3rah8ss7arsflv69orumij4a6lgi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

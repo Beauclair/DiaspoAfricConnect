@@ -26,6 +26,7 @@ const config = {
     },
     package: 'com.diaspoafricconnect.app',
     versionCode: 2,
+    googleServicesFile: './google-services.json',
   },
 
   web: {
