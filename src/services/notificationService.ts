@@ -94,9 +94,18 @@ export async function registerForPushNotifications(uid: string): Promise<string 
     return null;
   }
 
+  Sentry.captureMessage(`[push] PASSED all checks — projectId=${projectId}, permission=${finalStatus}, requesting token...`, 'info');
+
   try {
     const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-    const token = tokenData.data;
+    const token = tokenData?.data;
+
+    if (!token) {
+      Sentry.captureMessage(`[push] FAIL — getExpoPushTokenAsync returned no data: ${JSON.stringify(tokenData)}`, 'error');
+      return null;
+    }
+
+    Sentry.captureMessage(`[push] GOT TOKEN — saving to Firestore for ${uid}, prefix=${token.substring(0, 25)}`, 'info');
 
     // Persist the token to the user's Firestore document
     await setDoc(doc(getDb(), 'users', uid), { expoPushToken: token }, { merge: true });
@@ -104,7 +113,8 @@ export async function registerForPushNotifications(uid: string): Promise<string 
     Sentry.captureMessage(`[push] SUCCESS — token saved for ${uid}, prefix=${token.substring(0, 25)}`, 'info');
 
     return token;
-  } catch (e) {
+  } catch (e: any) {
+    Sentry.captureMessage(`[push] EXCEPTION — ${e?.message || e} | code=${e?.code} | stack=${e?.stack?.substring(0, 300)}`, 'error');
     Sentry.captureException(e, { tags: { feature: 'push-registration' } });
     return null;
   }
