@@ -25,7 +25,7 @@ const config = {
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     package: 'com.diaspoafricconnect.app',
-    versionCode: 2,
+    versionCode: 3,
     googleServicesFile: './google-services.json',
   },
 
