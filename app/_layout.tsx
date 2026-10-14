@@ -6,8 +6,18 @@ import { PostHogProvider } from 'posthog-react-native';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { CountryProvider } from '../src/contexts/CountryContext';
 import { ThemeProvider, useTheme } from '../src/theme';
-import { SystemBars } from 'react-native-edge-to-edge';
+import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
+
+// react-native-edge-to-edge requires native modules unavailable in Expo Go.
+// Import it only when running a standalone/production build.
+let SystemBars: React.ComponentType<{ style: 'light' | 'dark' | 'auto' }> | null = null;
+if (Constants.appOwnership !== 'expo') {
+  try {
+    SystemBars = require('react-native-edge-to-edge').SystemBars;
+  } catch {}
+}
 import ErrorBoundary from '../src/components/common/ErrorBoundary';
 import OfflineBanner from '../src/components/common/OfflineBanner';
 import { initAnalytics, getPostHog } from '../src/config/analytics';
@@ -128,7 +138,7 @@ function InnerLayout() {
 
   return (
     <CountryProvider user={user}>
-      <SystemBars style="light" />
+      {SystemBars ? <SystemBars style="light" /> : <StatusBar style="light" backgroundColor="#1B5E20" />}
       <OfflineBanner />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
