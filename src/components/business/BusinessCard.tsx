@@ -93,7 +93,7 @@ export default function BusinessCard({ business, onPress, distance }: BusinessCa
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 14,
+    marginBottom: 16,
     overflow: 'hidden',
   },
   imageWrapper: {
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   content: {
-    padding: 14,
+    padding: 16,
   },
   header: {
     flexDirection: 'row',

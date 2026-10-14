@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import { LightColors, DarkColors, ThemeColors } from './colors';
 import { Typography } from './typography';
-import { Spacing, Radii, Shadows, Duration } from './tokens';
+import { Spacing, Radii, Shadows, Duration, Easing } from './tokens';
 
 export interface Theme {
   colors: ThemeColors;
@@ -11,6 +11,7 @@ export interface Theme {
   radii: typeof Radii;
   shadows: typeof Shadows;
   duration: typeof Duration;
+  easing: typeof Easing;
   isDark: boolean;
 }
 
@@ -27,6 +28,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     radii: Radii,
     shadows: Shadows,
     duration: Duration,
+    easing: Easing,
     isDark,
   }), [isDark]);
 

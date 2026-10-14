@@ -106,6 +106,20 @@ export async function searchBusinesses(
       b.zipCode?.toLowerCase().includes(lower) ||
       b.countryOfOrigin?.toLowerCase().includes(lower),
   );
+
+  // Prioritize name matches: exact start > contains > other field matches
+  filtered.sort((a, b) => {
+    const aName = a.name?.toLowerCase() ?? '';
+    const bName = b.name?.toLowerCase() ?? '';
+    const aStartsWith = aName.startsWith(lower) ? 0 : 1;
+    const bStartsWith = bName.startsWith(lower) ? 0 : 1;
+    if (aStartsWith !== bStartsWith) return aStartsWith - bStartsWith;
+
+    const aIncludes = aName.includes(lower) ? 0 : 1;
+    const bIncludes = bName.includes(lower) ? 0 : 1;
+    return aIncludes - bIncludes;
+  });
+
   return { data: filtered, lastDoc: null, hasMore: false };
 }
 
@@ -137,4 +151,18 @@ export async function getBusinessesByOwner(ownerId: string): Promise<Business[]>
 export async function deleteBusiness(id: string): Promise<void> {
   const db = getDb();
   await deleteDoc(doc(db, COLLECTION, id));
+}
+
+export async function getBusinessesByIds(ids: string[]): Promise<Business[]> {
+  if (ids.length === 0) return [];
+  const db = getDb();
+  // Firestore 'in' queries support max 30 items per batch
+  const results: Business[] = [];
+  for (let i = 0; i < ids.length; i += 30) {
+    const batch = ids.slice(i, i + 30);
+    const q = query(collection(db, COLLECTION), where('__name__', 'in', batch));
+    const snapshot = await getDocs(q);
+    results.push(...snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Business)));
+  }
+  return results;
 }

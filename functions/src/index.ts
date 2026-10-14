@@ -27,3 +27,7 @@ export { sendPasswordResetEmail } from "./email/sendPasswordResetEmail";
 
 // ── Account management ──────────────────────────────────────────────
 export { deleteAccount } from "./account/deleteAccount";
+
+// ── Dashboard ───────────────────────────────────────────────────────
+export { recordProfileView } from "./dashboard/recordProfileView";
+export { recordContactTap } from "./dashboard/recordContactTap";

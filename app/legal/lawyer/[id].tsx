@@ -26,6 +26,7 @@ import { Lawyer, Review } from '../../../src/types';
 import { logger } from '../../../src/utils/logger';
 import { trackEvent } from '../../../src/config/analytics';
 import { AnalyticsEvents } from '../../../src/constants/analyticsEvents';
+import { recordProfileView, recordContactTap } from '../../../src/services/dashboardService';
 
 export default function LawyerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -91,6 +92,7 @@ export default function LawyerDetailScreen() {
       setLawyer(l);
       if (l) {
         trackEvent(AnalyticsEvents.LAWYER_VIEWED, { lawyer_id: id });
+        recordProfileView('lawyer', id);
       }
 
       // Load reviews separately — the composite index may not exist yet
@@ -360,7 +362,7 @@ export default function LawyerDetailScreen() {
           <Card style={styles.infoCard}>
             <Text style={[styles.cardTitle, { color: colors.onSurface }]}>Contact Information</Text>
 
-            <TouchableOpacity style={styles.infoRow} onPress={() => Linking.openURL(`tel:${lawyer.phone}`)}>
+            <TouchableOpacity style={styles.infoRow} onPress={() => { recordContactTap('lawyer', lawyer.id, 'call'); Linking.openURL(`tel:${lawyer.phone}`); }}>
               <View style={[styles.infoIcon, { backgroundColor: colors.primaryContainer, borderRadius: radii.sm }]}>
                 <MaterialIcons name="phone" size={20} color={colors.primary} />
               </View>
@@ -371,7 +373,7 @@ export default function LawyerDetailScreen() {
               <MaterialIcons name="chevron-right" size={20} color={colors.onSurfaceVariant} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.infoRow} onPress={() => Linking.openURL(`mailto:${lawyer.email}`)}>
+            <TouchableOpacity style={styles.infoRow} onPress={() => { recordContactTap('lawyer', lawyer.id, 'email'); Linking.openURL(`mailto:${lawyer.email}`); }}>
               <View style={[styles.infoIcon, { backgroundColor: colors.primaryContainer, borderRadius: radii.sm }]}>
                 <MaterialIcons name="email" size={20} color={colors.primary} />
               </View>
@@ -383,8 +385,7 @@ export default function LawyerDetailScreen() {
             </TouchableOpacity>
 
             {lawyer.website && (
-              <TouchableOpacity style={styles.infoRow} onPress={() => Linking.openURL(lawyer.website!)}>
-                <View style={[styles.infoIcon, { backgroundColor: colors.primaryContainer, borderRadius: radii.sm }]}>
+              <TouchableOpacity style={styles.infoRow} onPress={() => { recordContactTap('lawyer', lawyer.id, 'website'); Linking.openURL(lawyer.website!); }}>                <View style={[styles.infoIcon, { backgroundColor: colors.primaryContainer, borderRadius: radii.sm }]}>
                   <MaterialIcons name="language" size={20} color={colors.primary} />
                 </View>
                 <View style={styles.infoContent}>
@@ -451,6 +452,7 @@ export default function LawyerDetailScreen() {
               style={[styles.actionBtn, { backgroundColor: colors.primary, borderRadius: radii.lg }]}
               onPress={() => {
                 trackEvent(AnalyticsEvents.LAWYER_CALL_TAPPED, { lawyer_id: lawyer.id });
+                recordContactTap('lawyer', lawyer.id, 'call');
                 Linking.openURL(`tel:${lawyer.phone}`);
               }}
             >

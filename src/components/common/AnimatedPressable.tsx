@@ -33,9 +33,10 @@ export default function AnimatedPress({
     transform: [{ scale: scale.value }],
   }));
 
+  // MD3 emphasized motion: higher damping for snappy feel, moderate stiffness
   const handlePressIn = useCallback(
     (e: any) => {
-      scale.value = withSpring(pressScale, { damping: 15, stiffness: 400 });
+      scale.value = withSpring(pressScale, { damping: 20, stiffness: 300, mass: 0.8 });
       if (haptic) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
@@ -46,7 +47,7 @@ export default function AnimatedPress({
 
   const handlePressOut = useCallback(
     (e: any) => {
-      scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+      scale.value = withSpring(1, { damping: 15, stiffness: 300, mass: 0.8 });
       onPressOut?.(e);
     },
     [onPressOut],

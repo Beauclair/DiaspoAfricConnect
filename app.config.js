@@ -7,7 +7,7 @@ const config = {
   name: 'DiaspoAfricConnect',
   slug: 'DiaspoAfricConnect',
   version: '1.0.0',
-  orientation: 'portrait',
+  orientation: 'default',
   icon: './assets/icon.png',
   scheme: 'diaspoafricconnect',
   userInterfaceStyle: 'automatic',
@@ -15,6 +15,7 @@ const config = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.diaspoafricconnect.app',
+    buildNumber: '2',
   },
 
   android: {
@@ -25,7 +26,7 @@ const config = {
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     package: 'com.diaspoafricconnect.app',
-    versionCode: 3,
+    versionCode: 5,
     googleServicesFile: './google-services.json',
   },
 
@@ -37,6 +38,16 @@ const config = {
   plugins: [
     'expo-router',
     'expo-font',
+    './plugins/withProguardObfuscation',
+    [
+      'react-native-edge-to-edge',
+      {
+        android: {
+          parentTheme: 'Material3',
+          enforceNavigationBarContrast: false,
+        },
+      },
+    ],
     [
       'expo-splash-screen',
       {

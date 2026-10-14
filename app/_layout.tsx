@@ -6,7 +6,7 @@ import { PostHogProvider } from 'posthog-react-native';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { CountryProvider } from '../src/contexts/CountryContext';
 import { ThemeProvider, useTheme } from '../src/theme';
-import { StatusBar } from 'expo-status-bar';
+import { SystemBars } from 'react-native-edge-to-edge';
 import * as SplashScreen from 'expo-splash-screen';
 import ErrorBoundary from '../src/components/common/ErrorBoundary';
 import OfflineBanner from '../src/components/common/OfflineBanner';
@@ -128,7 +128,7 @@ function InnerLayout() {
 
   return (
     <CountryProvider user={user}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <SystemBars style="light" />
       <OfflineBanner />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
@@ -137,6 +137,7 @@ function InnerLayout() {
         <Stack.Screen name="business" />
         <Stack.Screen name="admin" />
         <Stack.Screen name="legal" />
+        <Stack.Screen name="profile" />
       </Stack>
     </CountryProvider>
   );

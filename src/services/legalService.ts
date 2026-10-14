@@ -172,6 +172,20 @@ export async function searchLawyers(
       l.city?.toLowerCase().includes(lower) ||
       (l.specializations ?? []).some((s) => s?.toLowerCase().includes(lower)),
   );
+
+  // Prioritize name matches: exact start > contains > other field matches
+  filtered.sort((a, b) => {
+    const aName = a.name?.toLowerCase() ?? '';
+    const bName = b.name?.toLowerCase() ?? '';
+    const aStartsWith = aName.startsWith(lower) ? 0 : 1;
+    const bStartsWith = bName.startsWith(lower) ? 0 : 1;
+    if (aStartsWith !== bStartsWith) return aStartsWith - bStartsWith;
+
+    const aIncludes = aName.includes(lower) ? 0 : 1;
+    const bIncludes = bName.includes(lower) ? 0 : 1;
+    return aIncludes - bIncludes;
+  });
+
   return { data: filtered, lastDoc: null, hasMore: false };
 }
 

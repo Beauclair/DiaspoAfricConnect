@@ -42,6 +42,9 @@ export interface Business {
   verificationStatus: VerificationStatus;
   phoneVerified?: boolean;
   claimedPhone?: string;
+  totalViews?: number;
+  totalContactTaps?: number;
+  totalSaves?: number;
   createdAt: Timestamp;
 }
 
@@ -95,6 +98,8 @@ export interface Lawyer {
   verificationStatus: VerificationStatus;
   barAssociationNumber?: string;
   ownerId: string;
+  totalViews?: number;
+  totalContactTaps?: number;
   createdAt: Timestamp;
 }
 

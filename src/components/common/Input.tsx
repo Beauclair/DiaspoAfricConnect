@@ -60,17 +60,19 @@ export default function Input({
     ? colors.error
     : focused
     ? colors.primary
-    : colors.outlineVariant;
+    : colors.outline;
 
+  // MD3 outlined text field: transparent fill, 1dp border (2dp on focus),
+  // label above the field, 56dp minimum height for single-line inputs.
   return (
     <View style={[styles.container, style]}>
       {label && (
         <Text
           style={[
-            typography.labelMedium,
+            typography.bodySmall,
             {
               color: error ? colors.error : focused ? colors.primary : colors.onSurfaceVariant,
-              marginBottom: 6,
+              marginBottom: 4,
             },
           ]}
         >
@@ -82,10 +84,11 @@ export default function Input({
         style={[
           styles.inputWrapper,
           {
-            backgroundColor: colors.surfaceContainerLow,
+            backgroundColor: 'transparent',
             borderColor,
-            borderRadius: radii.md,
+            borderRadius: radii.xs,
             borderWidth: focused || error ? 2 : 1,
+            minHeight: multiline ? undefined : 56,
           },
         ]}
       >
@@ -140,8 +143,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   inputWithIcon: {
     paddingRight: 4,

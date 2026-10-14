@@ -1,12 +1,12 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, TextInput, Alert,
-  FlatList, Dimensions, NativeScrollEvent, NativeSyntheticEvent, KeyboardAvoidingView, Platform, Keyboard,
+  FlatList, NativeScrollEvent, NativeSyntheticEvent, KeyboardAvoidingView, Platform, Keyboard,
+  useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, Stack, router, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
 import { useTheme, Typography } from '../../src/theme';
 import Card from '../../src/components/common/Card';
 import Button from '../../src/components/common/Button';
@@ -16,6 +16,8 @@ import Skeleton from '../../src/components/common/Skeleton';
 import ErrorView from '../../src/components/common/ErrorView';
 import { getBusinessById, deleteBusiness } from '../../src/services/businessService';
 import { getReviewsForBusiness, addReview, respondToReview, updateReview, deleteReview } from '../../src/services/reviewService';
+import { toggleSavedBusiness, getSavedBusinessIds } from '../../src/services/authService';
+import { recordProfileView, recordContactTap } from '../../src/services/dashboardService';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { requireAuth } from '../../src/utils/authGuard';
 import { useSubmitGuard } from '../../src/hooks';
@@ -29,6 +31,7 @@ export default function BusinessDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { colors, radii } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const [business, setBusiness] = useState<Business | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +47,8 @@ export default function BusinessDetailScreen() {
   const [respondingSubmitting, setRespondingSubmitting] = useState(false);
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingBookmark, setSavingBookmark] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const isOwner = business && user && business.ownerId === user.uid;
@@ -60,12 +65,19 @@ export default function BusinessDetailScreen() {
       setReviews(revs.data);
       if (biz) {
         trackEvent(AnalyticsEvents.BUSINESS_VIEWED, { business_id: id, category: biz.category });
+        // Record view for owner dashboard (non-owners only, handled server-side)
+        recordProfileView('business', id);
+      }
+      // Check if the business is saved by the current user
+      if (user) {
+        const savedIds = await getSavedBusinessIds(user.uid);
+        setIsSaved(savedIds.includes(id));
       }
     } catch (e: any) {
       setError(getUserMessage(e, 'loadBusiness', 'Failed to load business details.'));
     }
     setLoading(false);
-  }, [id]);
+  }, [id, user]);
 
   // Reload data every time the screen gains focus (e.g. returning from claim screen)
   useFocusEffect(
@@ -239,6 +251,23 @@ export default function BusinessDetailScreen() {
     setRespondingSubmitting(false);
   };
 
+  const handleToggleSave = async () => {
+    if (!user || !id) {
+      requireAuth(user, () => {});
+      return;
+    }
+    setSavingBookmark(true);
+    try {
+      const nowSaved = await toggleSavedBusiness(user.uid, id);
+      setIsSaved(nowSaved);
+      trackEvent(nowSaved ? AnalyticsEvents.BUSINESS_SAVED : AnalyticsEvents.BUSINESS_UNSAVED, { business_id: id });
+      recordContactTap('business', id, nowSaved ? 'save' : 'unsave');
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to update saved status.');
+    }
+    setSavingBookmark(false);
+  };
+
   if (loading) return (
     <>
       <Stack.Screen options={{ headerTitle: '' }} />
@@ -280,11 +309,11 @@ export default function BusinessDetailScreen() {
               showsHorizontalScrollIndicator={false}
               keyExtractor={(_, i) => `photo-${i}`}
               onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
                 setActivePhotoIndex(index);
               }}
               renderItem={({ item }) => (
-                <NetworkImage uri={item} style={styles.heroImage} />
+                <NetworkImage uri={item} style={[styles.heroImage, { width: screenWidth }]} />
               )}
             />
             {business.photos.length > 1 && (
@@ -400,6 +429,22 @@ export default function BusinessDetailScreen() {
               variant="compact"
               size="md"
             />
+            {!isOwner && (
+              <TouchableOpacity
+                onPress={handleToggleSave}
+                disabled={savingBookmark}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel={isSaved ? 'Unsave business' : 'Save business'}
+                style={{ opacity: savingBookmark ? 0.5 : 1 }}
+              >
+                <MaterialIcons
+                  name={isSaved ? 'bookmark' : 'bookmark-border'}
+                  size={28}
+                  color={isSaved ? colors.primary : colors.onSurfaceVariant}
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Show full verification badge for visitors when verified */}
@@ -418,6 +463,7 @@ export default function BusinessDetailScreen() {
               style={styles.infoRow}
               onPress={() => {
                 trackEvent(AnalyticsEvents.BUSINESS_DIRECTIONS_TAPPED, { business_id: business.id });
+                recordContactTap('business', business.id, 'directions');
                 const address = `${business.address}, ${business.city}, ${business.state} ${business.zipCode}`;
                 const encoded = encodeURIComponent(address);
                 const url = Platform.select({
@@ -434,6 +480,7 @@ export default function BusinessDetailScreen() {
             {business.phone && (
               <TouchableOpacity style={styles.infoRow} onPress={() => {
                 trackEvent(AnalyticsEvents.BUSINESS_CALL_TAPPED, { business_id: business.id });
+                recordContactTap('business', business.id, 'call');
                 Linking.openURL(`tel:${business.phone}`);
               }}>
                 <MaterialIcons name="phone" size={20} color={colors.primary} />
@@ -443,6 +490,7 @@ export default function BusinessDetailScreen() {
             {business.website && (
               <TouchableOpacity style={styles.infoRow} onPress={() => {
                 trackEvent(AnalyticsEvents.BUSINESS_WEBSITE_TAPPED, { business_id: business.id });
+                recordContactTap('business', business.id, 'website');
                 Linking.openURL(business.website!);
               }}>
                 <MaterialIcons name="language" size={20} color={colors.primary} />
@@ -600,7 +648,7 @@ export default function BusinessDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  heroImage: { width: SCREEN_WIDTH, height: 220 },
+  heroImage: { width: '100%', height: 220 },
   placeholder: { justifyContent: 'center', alignItems: 'center' },
   dotRow: {
     flexDirection: 'row',

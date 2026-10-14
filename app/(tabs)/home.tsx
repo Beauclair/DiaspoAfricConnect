@@ -101,10 +101,10 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 16 }}>
         {/* ── Hero gradient header ── */}
         <LinearGradient
-          colors={['#1B5E20', '#1B5E20', '#1B5E20']}
+          colors={['#2E7D32', '#2E7D32', '#2E7D32']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.hero, { paddingTop: insets.top + 20 }]}
@@ -310,8 +310,8 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 12,
+    gap: 16,
+    marginTop: 16,
   },
   gridCard: {
     flex: 1,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   /* Sections */
   section: {
-    marginTop: 28,
+    marginTop: 24,
   },
   emptyCard: {
     padding: 24,

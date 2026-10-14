@@ -158,11 +158,11 @@ export default function ProfileScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 120 }}
+      contentContainerStyle={{ paddingBottom: 16 }}
     >
       {/* Profile header */}
       <LinearGradient
-        colors={['#1B6B2E', '#145222', '#0D3B17']}
+        colors={['#2E7D32', '#256D29', '#1B5E20']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.profileHeader, { paddingTop: insets.top + 20 }]}
@@ -273,15 +273,17 @@ export default function ProfileScreen() {
           <Divider />
           <MenuItem icon="gavel" label="My Attorney Profiles" onPress={() => router.push('/legal/my-lawyers')} />
           <Divider />
-          <MenuItem icon="bookmark" label="Saved Businesses" onPress={() => {}} />
+          <MenuItem icon="insights" label="Activity Dashboard" onPress={() => router.push('/profile/dashboard')} />
           <Divider />
-          <MenuItem icon="history" label="My Reviews" onPress={() => {}} />
+          <MenuItem icon="bookmark" label="Saved Businesses" onPress={() => router.push('/profile/saved-businesses')} />
           <Divider />
-          <MenuItem icon="notifications" label="Notifications" onPress={() => {}} />
+          <MenuItem icon="history" label="My Reviews" onPress={() => router.push('/profile/my-reviews')} />
           <Divider />
-          <MenuItem icon="help-outline" label="Help & Support" onPress={() => {}} />
+          <MenuItem icon="notifications" label="Notifications" onPress={() => router.push('/profile/notifications')} />
           <Divider />
-          <MenuItem icon="info" label="About DiaspoAfricConnect" onPress={() => {}} />
+          <MenuItem icon="help-outline" label="Help & Support" onPress={() => router.push('/profile/help-support')} />
+          <Divider />
+          <MenuItem icon="info" label="About DiaspoAfricConnect" onPress={() => router.push('/profile/about')} />
           <Divider />
           <MenuItem icon="privacy-tip" label="Privacy Policy" onPress={() => router.push('/legal/privacy-policy')} />
           <Divider />

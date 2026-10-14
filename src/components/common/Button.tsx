@@ -32,10 +32,11 @@ export default function Button({
   const { colors, radii, typography } = useTheme();
   const isDisabled = disabled || loading;
 
+  // MD3 button heights: small 36dp, medium 40dp, large 48dp
   const sizeStyles = {
-    sm: { paddingVertical: 8, paddingHorizontal: 16, ...typography.labelMedium },
-    md: { paddingVertical: 12, paddingHorizontal: 22, ...typography.labelLarge },
-    lg: { paddingVertical: 16, paddingHorizontal: 28, ...typography.titleMedium },
+    sm: { height: 36, paddingHorizontal: 16, ...typography.labelMedium },
+    md: { height: 40, paddingHorizontal: 24, ...typography.labelLarge },
+    lg: { height: 48, paddingHorizontal: 28, ...typography.titleMedium },
   };
 
   const variantStyles: Record<string, { bg: string; text: string; border?: string }> = {
@@ -65,7 +66,7 @@ export default function Button({
         {
           backgroundColor: v.bg,
           borderRadius: radii.md,
-          paddingVertical: s.paddingVertical,
+          height: s.height,
           paddingHorizontal: s.paddingHorizontal,
           borderWidth: v.border ? 1.5 : 0,
           borderColor: v.border || 'transparent',

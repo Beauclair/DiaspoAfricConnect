@@ -162,3 +162,28 @@ export async function respondToReview(reviewId: string, response: string): Promi
     ownerResponseAt: Timestamp.now(),
   });
 }
+
+// ── User reviews ──
+
+export async function getReviewsByUser(
+  userId: string,
+  cursor?: unknown,
+): Promise<PaginatedResult<Review>> {
+  const db = getDb();
+  const constraints: any[] = [
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+  ];
+  if (cursor) constraints.push(startAfter(cursor as QueryDocumentSnapshot));
+  constraints.push(firestoreLimit(REVIEW_PAGE_SIZE));
+
+  const q = query(collection(db, 'reviews'), ...constraints);
+  const snapshot = await getDocs(q);
+  const lastDoc = snapshot.docs[snapshot.docs.length - 1] ?? null;
+
+  return {
+    data: snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Review)),
+    lastDoc,
+    hasMore: snapshot.docs.length === REVIEW_PAGE_SIZE,
+  };
+}

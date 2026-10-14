@@ -54,6 +54,10 @@ export interface ThemeColors {
   overlay: string;
   shimmer: string;
   scrim: string;
+
+  // Status bar / toolbar differentiation (Material 500/700)
+  primaryFixed: string;       // 500 — toolbar / app bars
+  primaryFixedDim: string;    // 700 — status bar
 }
 
 export const LightColors: ThemeColors = {
@@ -107,6 +111,10 @@ export const LightColors: ThemeColors = {
   overlay: 'rgba(0, 0, 0, 0.5)',
   shimmer: '#E5E7EB',
   scrim: 'rgba(0, 0, 0, 0.3)',
+
+  // Status bar / toolbar differentiation
+  primaryFixed: '#2E7D32',     // Green 500 — toolbar / app bars
+  primaryFixedDim: '#1B5E20',  // Green 700 — status bar
 };
 
 export const DarkColors: ThemeColors = {
@@ -160,4 +168,8 @@ export const DarkColors: ThemeColors = {
   overlay: 'rgba(0, 0, 0, 0.7)',
   shimmer: '#374151',
   scrim: 'rgba(0, 0, 0, 0.6)',
+
+  // Status bar / toolbar differentiation
+  primaryFixed: '#1E4620',     // Dark mode toolbar
+  primaryFixedDim: '#0D2B10',  // Dark mode status bar
 };

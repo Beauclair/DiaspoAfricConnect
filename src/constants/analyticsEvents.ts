@@ -41,9 +41,14 @@ export const AnalyticsEvents = {
   LAWYER_DELETED: 'lawyer_deleted',
   LAWYER_CALL_TAPPED: 'lawyer_call_tapped',
 
+  // ── Saved ──
+  BUSINESS_SAVED: 'business_saved',
+  BUSINESS_UNSAVED: 'business_unsaved',
+
   // ── Engagement ──
   SCREEN_VIEWED: 'screen_viewed',
   COUNTRY_CHANGED: 'country_changed',
+  DASHBOARD_VIEWED: 'dashboard_viewed',
 } as const;
 
 export type AnalyticsEventName = (typeof AnalyticsEvents)[keyof typeof AnalyticsEvents];
@@ -82,4 +87,5 @@ export interface EventProperties {
 
   [AnalyticsEvents.SCREEN_VIEWED]: { screen_name: string };
   [AnalyticsEvents.COUNTRY_CHANGED]: { from: string; to: string };
+  [AnalyticsEvents.DASHBOARD_VIEWED]: { entity_type: string; entity_id: string };
 }

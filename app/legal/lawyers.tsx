@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
-  lawyerCard: { marginBottom: 12 },
+  lawyerCard: { marginBottom: 16 },
   lawyerHeader: { flexDirection: 'row', alignItems: 'center' },
   avatar: {
     width: 48, height: 48, borderRadius: 24,

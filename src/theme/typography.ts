@@ -1,6 +1,6 @@
 /**
- * Type scale — Material 3 inspired.
- * Each entry has fontSize, lineHeight, fontWeight, and optional letterSpacing.
+ * Type scale — Material Design 3 specification.
+ * https://m3.material.io/styles/typography/type-scale-tokens
  */
 
 import { TextStyle } from 'react-native';
@@ -16,86 +16,88 @@ interface TypeToken {
 
 export const Typography = {
   displayLarge: {
-    fontSize: 34,
-    lineHeight: 42,
-    fontWeight: '700' as FontWeight,
-    letterSpacing: -0.5,
+    fontSize: 57,
+    lineHeight: 64,
+    fontWeight: '400' as FontWeight,
+    letterSpacing: -0.25,
   },
   displayMedium: {
-    fontSize: 28,
-    lineHeight: 36,
-    fontWeight: '700' as FontWeight,
-    letterSpacing: -0.3,
+    fontSize: 45,
+    lineHeight: 52,
+    fontWeight: '400' as FontWeight,
   },
   displaySmall: {
-    fontSize: 24,
-    lineHeight: 32,
-    fontWeight: '700' as FontWeight,
+    fontSize: 36,
+    lineHeight: 44,
+    fontWeight: '400' as FontWeight,
   },
   headlineLarge: {
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '700' as FontWeight,
+    fontSize: 32,
+    lineHeight: 40,
+    fontWeight: '400' as FontWeight,
   },
   headlineMedium: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: '600' as FontWeight,
+    fontSize: 28,
+    lineHeight: 36,
+    fontWeight: '400' as FontWeight,
   },
   headlineSmall: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '600' as FontWeight,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '400' as FontWeight,
   },
   titleLarge: {
-    fontSize: 17,
-    lineHeight: 24,
-    fontWeight: '600' as FontWeight,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '400' as FontWeight,
   },
   titleMedium: {
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '600' as FontWeight,
-    letterSpacing: 0.1,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '500' as FontWeight,
+    letterSpacing: 0.15,
   },
   titleSmall: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: '600' as FontWeight,
+    fontWeight: '500' as FontWeight,
     letterSpacing: 0.1,
   },
   bodyLarge: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400' as FontWeight,
+    letterSpacing: 0.5,
   },
   bodyMedium: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '400' as FontWeight,
+    letterSpacing: 0.25,
   },
   bodySmall: {
     fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 16,
     fontWeight: '400' as FontWeight,
+    letterSpacing: 0.4,
   },
   labelLarge: {
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 20,
-    fontWeight: '600' as FontWeight,
+    fontWeight: '500' as FontWeight,
     letterSpacing: 0.1,
   },
   labelMedium: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: '500' as FontWeight,
-    letterSpacing: 0.2,
+    letterSpacing: 0.5,
   },
   labelSmall: {
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '500' as FontWeight,
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
 } as const satisfies Record<string, TypeToken>;
 

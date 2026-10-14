@@ -217,7 +217,7 @@ export default function BusinessListScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <LinearGradient
-        colors={['#1B6B2E', '#145222']}
+        colors={['#2E7D32', '#256D29']}
         style={[styles.header, { paddingTop: insets.top + 12 }]}
       >
         <Text style={[typography.displaySmall, { color: '#FFFFFF' }]}>
@@ -271,7 +271,7 @@ export default function BusinessListScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: spacing.xxl, paddingBottom: 120 }}
+          contentContainerStyle={{ padding: spacing.xxl, paddingBottom: 80 }}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={ListFooter}
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 24,
     right: 20,
     width: 56,
     height: 56,

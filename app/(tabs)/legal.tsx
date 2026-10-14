@@ -58,10 +58,10 @@ export default function LegalAidHomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
         {/* Hero header */}
         <LinearGradient
-          colors={['#1B6B2E', '#145222', '#0D3B17']}
+          colors={['#2E7D32', '#256D29', '#1B5E20']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.hero, { paddingTop: insets.top + 16 }]}

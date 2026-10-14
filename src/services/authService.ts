@@ -5,7 +5,7 @@ import {
   updateProfile,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth, getDb } from '../config/firebase';
 import { User } from '../types';
@@ -72,4 +72,24 @@ export async function deleteAccount(): Promise<void> {
   await deleteFn();
   // Sign out locally so the client auth state is cleared after server-side deletion.
   await signOut(auth);
+}
+
+export async function toggleSavedBusiness(uid: string, businessId: string): Promise<boolean> {
+  const db = getDb();
+  const userRef = doc(db, 'users', uid);
+  const snapshot = await getDoc(userRef);
+  const saved: string[] = snapshot.data()?.savedBusinesses ?? [];
+  const isSaved = saved.includes(businessId);
+
+  await setDoc(userRef, {
+    savedBusinesses: isSaved ? arrayRemove(businessId) : arrayUnion(businessId),
+  }, { merge: true });
+
+  return !isSaved; // returns true if now saved, false if unsaved
+}
+
+export async function getSavedBusinessIds(uid: string): Promise<string[]> {
+  const db = getDb();
+  const snapshot = await getDoc(doc(db, 'users', uid));
+  return snapshot.data()?.savedBusinesses ?? [];
 }
