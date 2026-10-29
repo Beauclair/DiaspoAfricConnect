@@ -16,6 +16,9 @@ const config = {
     supportsTablet: true,
     bundleIdentifier: 'com.diaspoafricconnect.app',
     buildNumber: '2',
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
 
   android: {
