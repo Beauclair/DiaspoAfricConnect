@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Business on DiaspoAfricConnect</title>
+
+  <!-- Open Graph (for social sharing previews) -->
+  <meta property="og:title" content="Check out this business on DiaspoAfricConnect" />
+  <meta property="og:description" content="Discover African diaspora businesses, attorneys, and legal resources — all in one app." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://diaspoafricconnect.web.app" />
+
+  <!-- Deep-link attempt (Android intent + iOS universal link fallback) -->
+  <script>
+    (function () {
+      // Extract the business ID from the URL path: /business/<id>
+      var parts = window.location.pathname.split('/');
+      var bizId = parts[parts.length - 1] || parts[parts.length - 2];
+      var deepLink = 'diaspoafricconnect://business/' + bizId;
+
+      // Try to open the app via custom scheme
+      var now = Date.now();
+      window.location.href = deepLink;
+
+      // If the app didn't open within 1.5s, the page is still visible — do nothing,
+      // the user will see the landing page below with store links.
+      setTimeout(function () {
+        if (Date.now() - now < 2000) return; // app opened (page was backgrounded)
+      }, 1500);
+    })();
+  </script>
+
+  <style>
+    :root { --green: #1B5E20; --gold: #F9A825; --green-light: #2E7D32; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: var(--green); color: #fff; text-align: center; padding: 2rem;
+    }
+    .card {
+      background: #fff; color: #333; border-radius: 16px;
+      padding: 2rem; max-width: 420px; width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    }
+    .card h1 { font-size: 1.5rem; color: var(--green); margin-bottom: .5rem; }
+    .card p  { font-size: .95rem; color: #555; line-height: 1.5; margin-bottom: 1.25rem; }
+    .emoji { font-size: 3rem; margin-bottom: 1rem; }
+    .btn {
+      display: inline-block; padding: .75rem 1.5rem; border-radius: 8px;
+      font-size: 1rem; font-weight: 600; text-decoration: none;
+      margin: .35rem;
+    }
+    .btn-gold { background: var(--gold); color: #333; }
+    .btn-outline { background: transparent; border: 2px solid var(--green); color: var(--green); }
+    .store-links { margin-top: 1rem; }
+    .store-links a { display: inline-block; margin: .25rem .5rem; }
+    .store-links img { height: 44px; border-radius: 8px; }
+    .footer { margin-top: 1.5rem; font-size: .8rem; opacity: .7; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="emoji">🌍</div>
+    <h1>DiaspoAfricConnect</h1>
+    <p>This business is listed on <strong>DiaspoAfricConnect</strong> — the community
+       platform for the African diaspora to discover businesses, attorneys, and
+       legal resources.</p>
+
+    <a class="btn btn-gold" id="openApp" href="#">Open in App</a>
+
+    <div class="store-links">
+      <p style="font-size:.85rem; color:#888; margin-bottom:.5rem;">Get the app:</p>
+      <a href="https://play.google.com/store/apps/details?id=com.diaspoafricconnect.app" target="_blank" rel="noopener">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" />
+      </a>
+      <a href="https://apps.apple.com/app/diaspoafricconnect/id6746498170" target="_blank" rel="noopener">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" />
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">© DiaspoAfricConnect</div>
+
+  <script>
+    // Wire up the "Open in App" button
+    var parts = window.location.pathname.split('/');
+    var bizId = parts[parts.length - 1] || parts[parts.length - 2];
+    var btn = document.getElementById('openApp');
+    btn.href = 'diaspoafricconnect://business/' + bizId;
+  </script>
+</body>
+</html>

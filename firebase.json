@@ -15,6 +15,16 @@
   "hosting": {
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "/auth/action",
+        "destination": "/auth-action.html"
+      },
+      {
+        "source": "/business/**",
+        "destination": "/business/index.html"
+      }
+    ],
     "headers": [
       {
         "source": "**",
