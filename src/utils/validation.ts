@@ -37,6 +37,7 @@ export function isStrongPassword(password: string): string | null {
 export function validateBusinessForm(fields: {
   name: string;
   description: string;
+  locationType: 'physical' | 'service-area' | 'online';
   address: string;
   city: string;
   state: string;
@@ -45,14 +46,29 @@ export function validateBusinessForm(fields: {
   website?: string;
 }, hostCountry: HostCountryCode = 'US'): string | null {
   const config = getCountryConfig(hostCountry);
+  const { locationType } = fields;
   if (!fields.name.trim()) return 'Business name is required';
   if (!fields.description.trim()) return 'Description is required';
-  if (!fields.address.trim()) return 'Address is required';
   if (!fields.city.trim()) return 'City is required';
-  if (!fields.state.trim()) return `${config.addressFields.regionLabel} is required`;
-  if (!isValidPostalCode(fields.zipCode, hostCountry)) return `Enter a valid ${config.addressFields.postalCodeLabel.toLowerCase()} (e.g. ${config.addressFields.postalCodePlaceholder.replace('e.g. ', '')})`;
+
+  if (locationType === 'physical') {
+    if (!fields.address.trim()) return 'Street address is required for a physical location';
+    if (!fields.state.trim()) return `${config.addressFields.regionLabel} is required`;
+    if (!isValidPostalCode(fields.zipCode, hostCountry)) return `Enter a valid ${config.addressFields.postalCodeLabel.toLowerCase()} (e.g. ${config.addressFields.postalCodePlaceholder.replace('e.g. ', '')})`;
+  }
+
+  if (locationType === 'service-area') {
+    if (!fields.state.trim()) return `${config.addressFields.regionLabel} is required`;
+    if (fields.zipCode.trim() && !isValidPostalCode(fields.zipCode, hostCountry)) return `Enter a valid ${config.addressFields.postalCodeLabel.toLowerCase()} (e.g. ${config.addressFields.postalCodePlaceholder.replace('e.g. ', '')})`;
+  }
+
+  if (locationType === 'online') {
+    if (fields.zipCode.trim() && !isValidPostalCode(fields.zipCode, hostCountry)) return `Enter a valid ${config.addressFields.postalCodeLabel.toLowerCase()} (e.g. ${config.addressFields.postalCodePlaceholder.replace('e.g. ', '')})`;
+  }
+
   if (!fields.phone.trim()) return 'Phone number is required';
   if (!isValidPhone(fields.phone, hostCountry)) return `Enter a valid phone number (e.g. ${config.phoneFields.placeholder})`;
+
   if (fields.website && !isValidURL(fields.website)) return 'Website must start with http:// or https://';
   return null;
 }

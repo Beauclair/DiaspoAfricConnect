@@ -33,7 +33,7 @@ export default function BusinessCard({ business, onPress, distance }: BusinessCa
         },
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`${business.name}, ${business.category}, rated ${business.averageRating.toFixed(1)} stars, ${business.city} ${business.state}`}
+      accessibilityLabel={`${business.name}, ${business.category}, rated ${business.averageRating.toFixed(1)} stars, ${business.city}${business.state ? ` ${business.state}` : ''}`}
     >
       {/* Image section */}
       <View style={styles.imageWrapper}>
@@ -71,10 +71,21 @@ export default function BusinessCard({ business, onPress, distance }: BusinessCa
 
         <View style={styles.metaRow}>
           <Badge label={business.category.charAt(0).toUpperCase() + business.category.slice(1)} variant="primary" size="sm" />
-          <MaterialIcons name="location-on" size={13} color={colors.onSurfaceVariant} />
-          <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, flex: 1 }]} numberOfLines={1}>
-            {business.city}, {business.state}
-          </Text>
+          {business.locationType === 'online' ? (
+            <>
+              <MaterialIcons name="laptop" size={13} color={colors.onSurfaceVariant} />
+              <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, flex: 1 }]} numberOfLines={1}>
+                Online
+              </Text>
+            </>
+          ) : (
+            <>
+              <MaterialIcons name="location-on" size={13} color={colors.onSurfaceVariant} />
+              <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, flex: 1 }]} numberOfLines={1}>
+                {business.city}{business.state ? `, ${business.state}` : ''}
+              </Text>
+            </>
+          )}
           {distance ? (
             <View style={styles.distanceBadge}>
               <MaterialIcons name="near-me" size={11} color={colors.primary} />

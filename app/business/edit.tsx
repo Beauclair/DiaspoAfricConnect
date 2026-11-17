@@ -15,7 +15,7 @@ import { getBusinessById, updateBusiness } from '../../src/services/businessServ
 import { uploadBusinessPhotos } from '../../src/services/storageService';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useCountry } from '../../src/contexts/CountryContext';
-import { Business, BusinessCategory } from '../../src/types';
+import { Business, BusinessCategory, LocationType } from '../../src/types';
 import { BUSINESS_CATEGORIES } from '../../src/constants/categories';
 import { validateBusinessForm } from '../../src/utils/validation';
 import { useSubmitGuard } from '../../src/hooks';
@@ -34,6 +34,7 @@ export default function EditBusinessScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<BusinessCategory>('restaurant');
+  const [locationType, setLocationType] = useState<LocationType>('physical');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -69,10 +70,11 @@ export default function EditBusinessScreen() {
       setName(biz.name);
       setDescription(biz.description);
       setCategory(biz.category);
-      setAddress(biz.address);
+      setLocationType(biz.locationType || 'physical');
+      setAddress(biz.address || '');
       setCity(biz.city);
-      setState(biz.state);
-      setZipCode(biz.zipCode);
+      setState(biz.state || '');
+      setZipCode(biz.zipCode || '');
       setPhone(biz.phone || '');
       setWebsite(biz.website || '');
       setExistingPhotos(biz.photos || []);
@@ -118,11 +120,23 @@ export default function EditBusinessScreen() {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /** Reset address-related state when location type changes. */
+  const handleLocationTypeChange = (type: LocationType) => {
+    setLocationType(type);
+    if (type === 'online') {
+      setAddress('');
+      setState('');
+      setZipCode('');
+    } else if (type === 'service-area') {
+      setAddress('');
+    }
+  };
+
   const doSave = useCallback(async () => {
     if (!id || !user) return;
     const businessHostCountry = hostCountry;
     const validationError = validateBusinessForm({
-      name, description, address, city, state, zipCode, phone, website,
+      name, description, locationType, address, city, state, zipCode, phone, website,
     }, businessHostCountry);
     if (validationError) {
       Alert.alert('Validation Error', validationError);
@@ -140,13 +154,14 @@ export default function EditBusinessScreen() {
         name,
         description,
         category,
-        address,
+        locationType,
         city,
-        state,
-        zipCode,
         phone: phone.trim(),
         photos: allPhotos,
       };
+      if (locationType === 'physical' || address.trim()) updateData.address = address.trim();
+      if (locationType !== 'online' || state.trim()) updateData.state = state.trim();
+      if (locationType === 'physical' || zipCode.trim()) updateData.zipCode = zipCode.trim();
       if (website.trim()) updateData.website = website.trim();
       else updateData.website = '';
 
@@ -160,7 +175,7 @@ export default function EditBusinessScreen() {
     } finally {
       setSaving(false);
     }
-  }, [id, user, hostCountry, name, description, address, city, state, zipCode, phone, website, category, existingPhotos, newImages]);
+  }, [id, user, hostCountry, name, description, address, city, state, zipCode, phone, website, category, locationType, existingPhotos, newImages]);
 
   const handleSave = useSubmitGuard(doSave, 5000);
 
@@ -226,17 +241,56 @@ export default function EditBusinessScreen() {
             )}
           </View>
 
-          <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={setAddress} required />
+          <Text style={[styles.label, { color: colors.onSurface }]}>Location Type <Text style={{ color: colors.error }}>*</Text></Text>
+          <View style={[styles.locationTypeRow, { borderColor: colors.outlineVariant, borderRadius: radii.md, backgroundColor: colors.surfaceContainerLow }]}>
+            {([
+              { key: 'physical' as LocationType, icon: 'storefront' as const, label: 'Physical' },
+              { key: 'service-area' as LocationType, icon: 'directions-car' as const, label: 'Service Area' },
+              { key: 'online' as LocationType, icon: 'laptop' as const, label: 'Online' },
+            ]).map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[
+                  styles.locationTypeBtn,
+                  { borderRadius: radii.sm },
+                  locationType === opt.key && { backgroundColor: colors.primary },
+                ]}
+                onPress={() => handleLocationTypeChange(opt.key)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: locationType === opt.key }}
+              >
+                <MaterialIcons name={opt.icon} size={18} color={locationType === opt.key ? '#FFFFFF' : colors.onSurfaceVariant} />
+                <Text style={[styles.locationTypeLabel, { color: locationType === opt.key ? '#FFFFFF' : colors.onSurfaceVariant }]}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {locationType === 'physical' && (
+            <Text style={[styles.locationTypeHint, { color: colors.onSurfaceVariant }]}>Customers visit your location</Text>
+          )}
+          {locationType === 'service-area' && (
+            <Text style={[styles.locationTypeHint, { color: colors.onSurfaceVariant }]}>You travel to your customers</Text>
+          )}
+          {locationType === 'online' && (
+            <Text style={[styles.locationTypeHint, { color: colors.onSurfaceVariant }]}>No physical location — you operate online</Text>
+          )}
+
+          {(locationType === 'physical') && (
+            <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={setAddress} required />
+          )}
           <Input label="City" placeholder="Enter city" value={city} onChangeText={setCity} required />
-          <PickerSelect
-            label={countryConfig.addressFields.regionLabel}
-            placeholder={countryConfig.addressFields.regionPlaceholder}
-            value={state}
-            options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
-            onValueChange={setState}
-            required
-          />
-          <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
+          {(locationType !== 'online') && (
+            <PickerSelect
+              label={countryConfig.addressFields.regionLabel}
+              placeholder={countryConfig.addressFields.regionPlaceholder}
+              value={state}
+              options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
+              onValueChange={setState}
+              required={locationType !== 'online'}
+            />
+          )}
+          {(locationType === 'physical') && (
+            <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={setZipCode} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
+          )}
           <Input label="Phone" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" required />
           <Input label="Website" placeholder="https://..." value={website} onChangeText={setWebsite} autoCapitalize="none" />
 
@@ -253,6 +307,22 @@ const styles = StyleSheet.create({
   title: { ...Typography.displaySmall, marginBottom: 24 },
   label: { ...Typography.titleSmall, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 },
+  locationTypeRow: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    padding: 4,
+    marginBottom: 4,
+  },
+  locationTypeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 10,
+  },
+  locationTypeLabel: { fontSize: 13, fontWeight: '600' },
+  locationTypeHint: { fontSize: 12, marginBottom: 16 },
   imageRow: { flexDirection: 'row', gap: 10, marginBottom: 20, flexWrap: 'wrap' },
   imageWrapper: { position: 'relative' },
   thumbnail: { width: 90, height: 90 },

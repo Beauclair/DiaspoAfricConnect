@@ -51,7 +51,7 @@ export default function BusinessListScreen() {
 
       const useMiles = countryConfig?.useMiles ?? false;
       const decorated = list.map((b) => {
-        const km = getDistanceKm(loc.latitude, loc.longitude, b.coordinates.latitude, b.coordinates.longitude);
+        const km = getDistanceKm(loc.latitude, loc.longitude, b.coordinates?.latitude ?? 0, b.coordinates?.longitude ?? 0);
         const label = formatDistance(km, useMiles);
         if (label) distances.set(b.id, label);
         return { b, km };
