@@ -11,28 +11,8 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://diaspoafricconnect.web.app" />
 
-  <!-- Deep-link attempt (Android intent + iOS universal link fallback) -->
-  <script>
-    (function () {
-      // Extract the business ID from the URL path: /business/<id>
-      var parts = window.location.pathname.split('/');
-      var bizId = parts[parts.length - 1] || parts[parts.length - 2];
-      var deepLink = 'diaspoafricconnect://business/' + bizId;
-
-      // Try to open the app via custom scheme
-      var now = Date.now();
-      window.location.href = deepLink;
-
-      // If the app didn't open within 1.5s, the page is still visible — do nothing,
-      // the user will see the landing page below with store links.
-      setTimeout(function () {
-        if (Date.now() - now < 2000) return; // app opened (page was backgrounded)
-      }, 1500);
-    })();
-  </script>
-
   <style>
-    :root { --green: #1B5E20; --gold: #F9A825; --green-light: #2E7D32; }
+    :root { --green: #1B5E20; --gold: #F9A825; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -54,7 +34,6 @@
       margin: .35rem;
     }
     .btn-gold { background: var(--gold); color: #333; }
-    .btn-outline { background: transparent; border: 2px solid var(--green); color: var(--green); }
     .store-links { margin-top: 1rem; }
     .store-links a { display: inline-block; margin: .25rem .5rem; }
     .store-links img { height: 44px; border-radius: 8px; }
@@ -85,11 +64,26 @@
   <div class="footer">© DiaspoAfricConnect</div>
 
   <script>
-    // Wire up the "Open in App" button
-    var parts = window.location.pathname.split('/');
-    var bizId = parts[parts.length - 1] || parts[parts.length - 2];
-    var btn = document.getElementById('openApp');
-    btn.href = 'diaspoafricconnect://business/' + bizId;
+    (function () {
+      var parts = window.location.pathname.split('/');
+      var bizId = parts[parts.length - 1] || parts[parts.length - 2];
+      var deepLink = 'diaspoafricconnect://business/' + bizId;
+
+      // Wire up the "Open in App" button
+      document.getElementById('openApp').href = deepLink;
+
+      // On mobile, try to open the app automatically after the page has rendered.
+      // Use a hidden iframe so the page stays visible if the scheme isn't handled.
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        var iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = deepLink;
+        document.body.appendChild(iframe);
+        // Clean up after a short delay
+        setTimeout(function () { document.body.removeChild(iframe); }, 2000);
+      }
+    })();
   </script>
 </body>
 </html>
