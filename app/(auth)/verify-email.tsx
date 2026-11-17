@@ -128,6 +128,13 @@ export default function VerifyEmailScreen() {
           </Text>
         </View>
 
+        <View style={[styles.infoBox, { backgroundColor: colors.surfaceContainerLow, borderRadius: radii.md }]}>
+          <MaterialIcons name="report-gmailerrorred" size={18} color={colors.onSurfaceVariant} />
+          <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, flex: 1, marginLeft: 8, lineHeight: 18 }]}>
+            Didn't receive the email? Check your spam or junk folder.
+          </Text>
+        </View>
+
         <Button
           title={cooldown > 0 ? `Resend Email (${cooldown}s)` : 'Resend Verification Email'}
           onPress={handleResend}

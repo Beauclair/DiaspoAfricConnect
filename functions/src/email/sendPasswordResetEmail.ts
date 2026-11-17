@@ -5,10 +5,27 @@ import { sendEmail } from "./transporter";
 import { passwordResetEmailHtml } from "./templates";
 import { isEmailRateLimited } from "./rateLimit";
 
-const ACTION_CODE_SETTINGS = {
-  url: "https://diaspoafricconnect.web.app",
-  handleCodeInApp: false,
-};
+const CUSTOM_ACTION_PAGE =
+  "https://diaspoafricconnect.web.app/auth-action.html";
+
+/**
+ * Rewrite a Firebase-generated action link so it points to our custom
+ * auth-action.html page instead of the default `__/auth/action` handler.
+ *
+ * The Firebase link looks like:
+ *   https://…/__/auth/action?mode=resetPassword&oobCode=…&apiKey=…&lang=en
+ *
+ * We keep every query parameter and just swap the base URL.
+ */
+function rewriteActionLink(firebaseLink: string): string {
+  const url = new URL(firebaseLink);
+  const custom = new URL(CUSTOM_ACTION_PAGE);
+  // Carry over all query params (mode, oobCode, apiKey, continueUrl, lang…)
+  url.searchParams.forEach((value, key) => {
+    custom.searchParams.set(key, value);
+  });
+  return custom.toString();
+}
 
 /**
  * Callable Cloud Function that generates a branded password-reset email.
@@ -50,12 +67,11 @@ export const sendPasswordResetEmail = onCall(
 
       const displayName = userRecord.displayName || "there";
 
-      const link = await admin.auth().generatePasswordResetLink(
-        email,
-        ACTION_CODE_SETTINGS,
-      );
+      // Generate the Firebase reset link, then rewrite it to our custom page
+      const firebaseLink = await admin.auth().generatePasswordResetLink(email);
+      const resetLink = rewriteActionLink(firebaseLink);
 
-      const html = passwordResetEmailHtml(displayName, link);
+      const html = passwordResetEmailHtml(displayName, resetLink);
       await sendEmail(email, "Reset your password — DiaspoAfricConnect", html);
 
       logger.info(`Password reset email sent to ${email}`);

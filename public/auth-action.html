@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiaspoAfricConnect</title>
+  <style>
+    :root { --green: #1B6B2E; --deep-green: #1B5E20; --gold: #F9A825; --red: #D32F2F; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: var(--green); color: #fff; text-align: center; padding: 2rem;
+    }
+    .card {
+      background: #fff; color: #333; border-radius: 16px;
+      padding: 40px 32px; max-width: 420px; width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    }
+    .icon { font-size: 56px; margin-bottom: 12px; }
+    h1 { font-size: 1.5rem; color: var(--deep-green); margin-bottom: 8px; }
+    p { font-size: 1rem; color: #555; margin-bottom: 20px; line-height: 1.5; }
+
+    .form-group { text-align: left; margin-bottom: 16px; }
+    label { display: block; font-size: 0.875rem; font-weight: 600; color: #333; margin-bottom: 6px; }
+    .input-wrap {
+      position: relative; display: flex; align-items: center;
+    }
+    .input-wrap input {
+      width: 100%; padding: 12px 44px 12px 14px; font-size: 1rem;
+      border: 2px solid #ddd; border-radius: 8px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-wrap input:focus { border-color: var(--green); }
+    .input-wrap input.input-error { border-color: var(--red); }
+    .toggle-eye {
+      position: absolute; right: 10px; background: none; border: none;
+      cursor: pointer; padding: 4px; display: flex; align-items: center;
+      color: #999; transition: color 0.2s;
+    }
+    .toggle-eye:hover { color: #555; }
+    .toggle-eye svg { width: 22px; height: 22px; }
+
+    .hint { font-size: 0.8rem; color: #999; margin-top: 4px; }
+    .error-text { font-size: 0.85rem; color: var(--red); margin-top: 6px; }
+    .error-box { background: #FFF3F3; color: var(--red); padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 16px; }
+
+    .btn {
+      display: inline-block; background: var(--gold); color: #fff;
+      font-size: 1rem; font-weight: 700; text-decoration: none;
+      padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12); width: 100%;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-outline {
+      background: transparent; color: var(--deep-green); border: 2px solid var(--deep-green);
+      box-shadow: none; margin-top: 12px;
+    }
+    .btn-outline:hover { background: #f0f7f0; }
+
+    .muted { font-size: .85rem; color: #999; margin-top: 16px; }
+    .hidden { display: none; }
+
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- LOADING STATE (shown while we detect the mode) -->
+    <div id="loadingState">
+      <div class="icon"><span class="spinner" style="width:40px;height:40px;border-width:4px;border-color:rgba(27,107,46,0.2);border-top-color:var(--green);"></span></div>
+      <p style="margin-top:12px;">Loading…</p>
+    </div>
+
+    <!-- RESET PASSWORD FORM -->
+    <div id="resetFormState" class="hidden">
+      <div class="icon">🔒</div>
+      <h1>Reset Your Password</h1>
+      <p>Enter your new password below.</p>
+
+      <div id="errorBox" class="error-box hidden"></div>
+
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <div class="input-wrap">
+          <input type="password" id="newPassword" placeholder="At least 6 characters" autocomplete="new-password" />
+          <button type="button" class="toggle-eye" onclick="toggleVisibility('newPassword', this)" aria-label="Show password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="hint">Minimum 6 characters</div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="input-wrap">
+          <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password" />
+          <button type="button" class="toggle-eye" onclick="toggleVisibility('confirmPassword', this)" aria-label="Show password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div id="matchError" class="error-text hidden">Passwords do not match</div>
+      </div>
+
+      <button class="btn" id="resetBtn" onclick="handleReset()">Reset Password</button>
+    </div>
+
+    <!-- RESET SUCCESS -->
+    <div id="resetSuccessState" class="hidden">
+      <div class="icon">✅</div>
+      <h1>Password Updated!</h1>
+      <p>Your password has been reset successfully. You can now log in with your new password.</p>
+      <button class="btn" onclick="openApp()">Open DiaspoAfricConnect</button>
+      <p class="muted">If the button doesn't work, open the app manually and sign in.</p>
+    </div>
+
+    <!-- EMAIL VERIFIED SUCCESS -->
+    <div id="verifySuccessState" class="hidden">
+      <div class="icon">✅</div>
+      <h1>Email Verified!</h1>
+      <p>Your email address has been verified successfully. You can now return to the app.</p>
+      <button class="btn" onclick="openApp()">Open DiaspoAfricConnect</button>
+      <p class="muted">The app detects your verification automatically — just switch back to it.</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="errorState" class="hidden">
+      <div class="icon">⚠️</div>
+      <h1 id="errorStateTitle">Link Expired</h1>
+      <p id="errorStateMsg">This link has expired or is invalid. Please request a new one from the app.</p>
+      <button class="btn btn-outline" onclick="openApp()">Open DiaspoAfricConnect</button>
+    </div>
+  </div>
+
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-auth-compat.js"></script>
+
+  <script>
+    firebase.initializeApp({
+      apiKey: 'AIzaSyBqfIyOBPgjM4yRSMeA0nt68C7u9uRkHws',
+      authDomain: 'diaspoafricconnect.firebaseapp.com',
+      projectId: 'diaspoafricconnect',
+    });
+
+    var auth = firebase.auth();
+    var params = new URLSearchParams(window.location.search);
+    var oobCode = params.get('oobCode');
+    var mode = params.get('mode');
+
+    var EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    var EYE_CLOSED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+    function toggleVisibility(inputId, btn) {
+      var input = document.getElementById(inputId);
+      var showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.innerHTML = showing ? EYE_OPEN : EYE_CLOSED;
+      btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    }
+
+    function showState(id) {
+      ['loadingState', 'resetFormState', 'resetSuccessState', 'verifySuccessState', 'errorState']
+        .forEach(function (s) { document.getElementById(s).classList.add('hidden'); });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function showError(title, msg) {
+      document.getElementById('errorStateTitle').textContent = title;
+      document.getElementById('errorStateMsg').textContent = msg;
+      showState('errorState');
+    }
+
+    // Route based on mode
+    if (!oobCode) {
+      showError('Invalid Link', 'This link is missing required information. Please request a new one from the app.');
+    } else if (mode === 'resetPassword') {
+      document.title = 'Reset Password — DiaspoAfricConnect';
+      // Verify the code is still valid before showing the form
+      auth.verifyPasswordResetCode(oobCode)
+        .then(function () { showState('resetFormState'); })
+        .catch(function () {
+          showError('Link Expired', 'This password reset link has expired or has already been used. Please request a new one from the app.');
+        });
+    } else if (mode === 'verifyEmail') {
+      document.title = 'Email Verified — DiaspoAfricConnect';
+      auth.applyActionCode(oobCode)
+        .then(function () { showState('verifySuccessState'); })
+        .catch(function () {
+          showError('Verification Failed', 'This verification link has expired or has already been used. Please request a new one from the app.');
+        });
+    } else if (mode === 'recoverEmail') {
+      document.title = 'Recover Email — DiaspoAfricConnect';
+      auth.checkActionCode(oobCode)
+        .then(function (info) { return auth.applyActionCode(oobCode); })
+        .then(function () {
+          showError('Email Recovered', 'Your email address has been restored. For safety, please reset your password from the app.');
+          document.getElementById('errorStateTitle').textContent = 'Email Recovered';
+          document.querySelector('#errorState .icon').textContent = '✅';
+        })
+        .catch(function () {
+          showError('Recovery Failed', 'This email recovery link has expired or is invalid. Please contact support.');
+        });
+    } else {
+      showError('Invalid Link', 'This link is not recognized. Please request a new one from the app.');
+    }
+
+    function handleReset() {
+      var pw = document.getElementById('newPassword').value;
+      var confirmPw = document.getElementById('confirmPassword').value;
+      var errorBox = document.getElementById('errorBox');
+      var matchError = document.getElementById('matchError');
+      var btn = document.getElementById('resetBtn');
+
+      // Clear previous errors
+      errorBox.classList.add('hidden');
+      matchError.classList.add('hidden');
+      document.getElementById('newPassword').classList.remove('input-error');
+      document.getElementById('confirmPassword').classList.remove('input-error');
+
+      // Validate
+      if (pw.length < 6) {
+        errorBox.textContent = 'Password must be at least 6 characters.';
+        errorBox.classList.remove('hidden');
+        document.getElementById('newPassword').classList.add('input-error');
+        document.getElementById('newPassword').focus();
+        return;
+      }
+
+      if (pw !== confirmPw) {
+        matchError.classList.remove('hidden');
+        document.getElementById('confirmPassword').classList.add('input-error');
+        document.getElementById('confirmPassword').focus();
+        return;
+      }
+
+      // Submit
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Resetting…';
+
+      auth.confirmPasswordReset(oobCode, pw)
+        .then(function () { showState('resetSuccessState'); })
+        .catch(function (err) {
+          btn.disabled = false;
+          btn.textContent = 'Reset Password';
+
+          if (err.code === 'auth/expired-action-code') {
+            showError('Link Expired', 'This reset link has expired. Please request a new one from the app.');
+            return;
+          }
+          if (err.code === 'auth/invalid-action-code') {
+            showError('Link Invalid', 'This reset link is invalid or has already been used. Please request a new one.');
+            return;
+          }
+
+          var msg = 'Something went wrong. Please try again.';
+          if (err.code === 'auth/weak-password') {
+            msg = 'Password is too weak. Please choose a stronger password.';
+          }
+          errorBox.textContent = msg;
+          errorBox.classList.remove('hidden');
+        });
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !document.getElementById('resetFormState').classList.contains('hidden')) {
+        handleReset();
+      }
+    });
+
+    function openApp() {
+      var ua = navigator.userAgent || '';
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
+      var isAndroid = /Android/i.test(ua);
+
+      if (isIOS) {
+        var iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = 'diaspoafricconnect://login';
+        document.body.appendChild(iframe);
+        setTimeout(function () { document.body.removeChild(iframe); }, 2000);
+      } else if (isAndroid) {
+        window.location.href = 'diaspoafricconnect://login';
+      }
+
+      setTimeout(function () {
+        if (document.hidden || document.webkitHidden) return;
+        if (isIOS) {
+          window.location.href = 'https://apps.apple.com/app/diaspoafricconnect/id6822469224';
+        } else if (isAndroid) {
+          window.location.href = 'https://play.google.com/store/apps/details?id=com.diaspoafricconnect.app';
+        }
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
