@@ -5,7 +5,7 @@ import Constants from 'expo-constants';
 const extra = Constants.expoConfig?.extra ?? {};
 
 const routingIntegration = Sentry.reactNavigationIntegration({
-  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+  enableTimeToInitialDisplay: false,
 });
 
 Sentry.init({
