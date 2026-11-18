@@ -7,6 +7,15 @@ import { useTheme } from '../../src/theme';
 export default function BusinessLayout() {
   const { colors } = useTheme();
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      // Deep-linked with no stack — go to business list
+      router.replace('/(tabs)/business');
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top']}>
       <Stack
@@ -16,7 +25,7 @@ export default function BusinessLayout() {
           headerTitleStyle: { fontWeight: '500', color: colors.onSurface, fontSize: 22 },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={handleBack}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               style={{ marginRight: Platform.OS === 'ios' ? 8 : 0 }}
             >

@@ -19,6 +19,7 @@ const config = {
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
+    associatedDomains: ['applinks:diaspoafricconnect.web.app'],
   },
 
   android: {
@@ -31,6 +32,20 @@ const config = {
     package: 'com.diaspoafricconnect.app',
     versionCode: 5,
     googleServicesFile: './google-services.json',
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: [
+          {
+            scheme: 'https',
+            host: 'diaspoafricconnect.web.app',
+            pathPrefix: '/business/',
+          },
+        ],
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+    ],
   },
 
   web: {
