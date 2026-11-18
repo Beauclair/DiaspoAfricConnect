@@ -15,7 +15,7 @@ const config = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.diaspoafricconnect.app',
-    buildNumber: '2',
+    buildNumber: '3',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -30,7 +30,7 @@ const config = {
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     package: 'com.diaspoafricconnect.app',
-    versionCode: 5,
+    versionCode: 6,
     googleServicesFile: './google-services.json',
     intentFilters: [
       {
