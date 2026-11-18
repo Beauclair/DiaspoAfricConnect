@@ -6,7 +6,7 @@ require('dotenv').config();
 const config = {
   name: 'DiaspoAfricConnect',
   slug: 'DiaspoAfricConnect',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'default',
   icon: './assets/icon.png',
   scheme: 'diaspoafricconnect',
