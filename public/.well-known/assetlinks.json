@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.diaspoafricconnect.app",
+      "sha256_cert_fingerprints": [
+        "4E:4F:1D:1E:11:1E:10:2E:D9:EA:2A:36:07:6D:C1:CB:2C:45:00:30:98:FE:61:C0:65:CA:6F:28:CA:4E:3C:AF"
+      ]
+    }
+  }
+]

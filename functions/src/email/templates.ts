@@ -76,7 +76,82 @@ function escapeHtmlAttr(url: string): string {
   return url.replace(/&/g, "&amp;");
 }
 
+/** Secondary muted button (for share / copy link sections). */
+function secondaryButton(href: string, label: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+  <tr>
+    <td align="center" style="padding:12px 0 4px;">
+      <a href="${href}" target="_blank"
+         style="display:inline-block;background:#FFFFFF;color:#1B6B2E;font-size:14px;font-weight:600;
+                text-decoration:none;padding:10px 28px;border-radius:8px;
+                border:2px solid #1B6B2E;">
+        ${label}
+      </a>
+    </td>
+  </tr>
+</table>`;
+}
+
 // ── Public template functions ────────────────────────────────────────────────
+
+export function businessRegistrationEmailHtml(
+  ownerName: string,
+  businessName: string,
+  category: string,
+  city: string,
+  listingUrl: string,
+): string {
+  const capitalizedCategory = category.charAt(0).toUpperCase() + category.slice(1);
+  return layout(`
+    <h2 style="margin:0 0 16px;font-size:20px;color:#1B5E20;">Your Business Is Live! 🎉</h2>
+    <p style="margin:0 0 12px;font-size:15px;color:#333333;line-height:1.6;">
+      Hi <strong>${ownerName}</strong>,
+    </p>
+    <p style="margin:0 0 20px;font-size:15px;color:#333333;line-height:1.6;">
+      Congratulations! Your business <strong>"${businessName}"</strong> is now listed
+      on DiaspoAfricConnect and visible to the community.
+    </p>
+
+    <!-- Business summary card -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:#F8FFF8;border:1px solid #E0E0E0;border-radius:8px;margin-bottom:20px;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 6px;font-size:13px;color:#777777;">BUSINESS NAME</p>
+          <p style="margin:0 0 12px;font-size:16px;color:#333333;font-weight:600;">${businessName}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#777777;">CATEGORY</p>
+          <p style="margin:0 0 12px;font-size:16px;color:#333333;">${capitalizedCategory}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#777777;">LOCATION</p>
+          <p style="margin:0;font-size:16px;color:#333333;">${city}</p>
+        </td>
+      </tr>
+    </table>
+
+    ${ctaButton(escapeHtmlAttr(listingUrl), "View Your Listing")}
+
+    <!-- Share section -->
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid #EEEEEE;">
+      <p style="margin:0 0 8px;font-size:15px;color:#1B5E20;font-weight:600;">📤 Share Your Listing</p>
+      <p style="margin:0 0 12px;font-size:14px;color:#333333;line-height:1.5;">
+        Copy this link and share it with your community, on social media, or via WhatsApp:
+      </p>
+      <p style="margin:0 0 12px;font-size:13px;color:#1B6B2E;word-break:break-all;line-height:1.4;
+                background:#F5F5F5;padding:10px 14px;border-radius:6px;">
+        ${escapeHtmlAttr(listingUrl)}
+      </p>
+    </div>
+
+    <!-- Next steps -->
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid #EEEEEE;">
+      <p style="margin:0 0 10px;font-size:15px;color:#1B5E20;font-weight:600;">💡 Next Steps</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333333;line-height:1.8;">
+        <tr><td style="padding:2px 0;">📸&nbsp; Add photos to attract more customers</td></tr>
+        <tr><td style="padding:2px 0;">⭐&nbsp; Ask happy customers to leave reviews</td></tr>
+        <tr><td style="padding:2px 0;">✅&nbsp; Verify your business to earn a trust badge</td></tr>
+      </table>
+    </div>
+  `);
+}
 
 export function verificationEmailHtml(
   userName: string,

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -8,7 +7,6 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -86,9 +84,16 @@ const TAB_ICONS: Record<string, string> = {
   profile: 'person',
 };
 
-export default function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+type TabBarProps = {
+  state: { index: number; routes: { key: string; name: string; params?: object }[] };
+  descriptors: Record<string, { options: { tabBarLabel?: string | ((...args: any[]) => React.ReactNode); title?: string } }>;
+  emitter: { emit: (event: { type: string; target: string; canPreventDefault?: boolean }) => { defaultPrevented: boolean } };
+  navigateToTab: (routeKey: string) => void;
+  insets: { top: number; right: number; bottom: number; left: number };
+};
+
+export default function CustomTabBar({ state, descriptors, emitter, navigateToTab, insets }: TabBarProps) {
   const { colors, shadows } = useTheme();
-  const insets = useSafeAreaInsets();
 
   return (
     <View
@@ -113,18 +118,18 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
           const iconName = TAB_ICONS[route.name] || 'circle';
 
           const onPress = () => {
-            const event = navigation.emit({
+            const event = emitter.emit({
               type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              navigateToTab(route.key);
             }
           };
 
           const onLongPress = () => {
-            navigation.emit({ type: 'tabLongPress', target: route.key });
+            emitter.emit({ type: 'tabLongPress', target: route.key });
           };
 
           return (

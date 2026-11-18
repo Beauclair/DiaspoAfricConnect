@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["8KNY32VNLR.com.diaspoafricconnect.app"],
+        "paths": ["/business/*"],
+        "components": [
+          { "/": "/business/*" }
+        ]
+      }
+    ]
+  }
+}

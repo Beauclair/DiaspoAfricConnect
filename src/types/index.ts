@@ -16,6 +16,8 @@ export interface User {
 
 export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
 
+export type LocationType = 'physical' | 'service-area' | 'online';
+
 export interface Business {
   id: string;
   name: string;
@@ -23,11 +25,12 @@ export interface Business {
   category: BusinessCategory;
   countryOfOrigin: string;
   hostCountry: HostCountryCode;
-  address: string;
+  locationType?: LocationType;
+  address?: string;
   city: string;
-  state: string;
-  zipCode: string;
-  coordinates: {
+  state?: string;
+  zipCode?: string;
+  coordinates?: {
     latitude: number;
     longitude: number;
   };

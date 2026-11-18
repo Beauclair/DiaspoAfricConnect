@@ -459,24 +459,52 @@ export default function BusinessDetailScreen() {
           <Text style={[styles.description, { color: colors.onSurface }]}>{business.description}</Text>
 
           <Card style={styles.infoCard}>
-            <TouchableOpacity
-              style={styles.infoRow}
-              onPress={() => {
-                trackEvent(AnalyticsEvents.BUSINESS_DIRECTIONS_TAPPED, { business_id: business.id });
-                recordContactTap('business', business.id, 'directions');
-                const address = `${business.address}, ${business.city}, ${business.state} ${business.zipCode}`;
-                const encoded = encodeURIComponent(address);
-                const url = Platform.select({
-                  ios: `maps:0,0?q=${encoded}`,
-                  default: `geo:0,0?q=${encoded}`,
-                });
-                Linking.openURL(url);
-              }}
-            >
-              <MaterialIcons name="location-on" size={20} color={colors.primary} />
-              <Text style={[styles.infoText, { color: colors.primary }]}>{business.address}, {business.city}, {business.state} {business.zipCode}</Text>
-              <MaterialIcons name="open-in-new" size={16} color={colors.onSurfaceVariant} />
-            </TouchableOpacity>
+            {/* Address / location info — adapts to location type */}
+            {(() => {
+              const lt = business.locationType;
+              if (lt === 'online') {
+                return (
+                  <View style={styles.infoRow}>
+                    <MaterialIcons name="laptop" size={20} color={colors.primary} />
+                    <Text style={[styles.infoText, { color: colors.onSurface }]}>Online Business</Text>
+                  </View>
+                );
+              }
+              if (lt === 'service-area') {
+                return (
+                  <View style={styles.infoRow}>
+                    <MaterialIcons name="location-on" size={20} color={colors.primary} />
+                    <Text style={[styles.infoText, { color: colors.onSurface }]}>
+                      {business.city}{business.state ? `, ${business.state}` : ''}
+                    </Text>
+                    <View style={[styles.serviceAreaBadge, { backgroundColor: colors.primary + '15', borderRadius: radii.sm }]}>
+                      <Text style={[Typography.labelSmall, { color: colors.primary }]}>Service area</Text>
+                    </View>
+                  </View>
+                );
+              }
+              // physical or legacy (no locationType) — full clickable address
+              const fullAddress = [business.address, business.city, `${business.state || ''} ${business.zipCode || ''}`.trim()].filter(Boolean).join(', ');
+              return (
+                <TouchableOpacity
+                  style={styles.infoRow}
+                  onPress={() => {
+                    trackEvent(AnalyticsEvents.BUSINESS_DIRECTIONS_TAPPED, { business_id: business.id });
+                    recordContactTap('business', business.id, 'directions');
+                    const encoded = encodeURIComponent(fullAddress);
+                    const url = Platform.select({
+                      ios: `maps:0,0?q=${encoded}`,
+                      default: `geo:0,0?q=${encoded}`,
+                    });
+                    Linking.openURL(url);
+                  }}
+                >
+                  <MaterialIcons name="location-on" size={20} color={colors.primary} />
+                  <Text style={[styles.infoText, { color: colors.primary }]}>{fullAddress}</Text>
+                  <MaterialIcons name="open-in-new" size={16} color={colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              );
+            })()}
             {business.phone && (
               <TouchableOpacity style={styles.infoRow} onPress={() => {
                 trackEvent(AnalyticsEvents.BUSINESS_CALL_TAPPED, { business_id: business.id });
@@ -699,6 +727,7 @@ const styles = StyleSheet.create({
   infoCard: { marginTop: 16 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
   infoText: { ...Typography.bodyMedium, flex: 1 },
+  serviceAreaBadge: { paddingHorizontal: 8, paddingVertical: 2 },
   reviewsSection: { marginTop: 24 },
   reviewsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sectionTitle: { ...Typography.headlineMedium },

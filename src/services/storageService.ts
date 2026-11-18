@@ -48,7 +48,7 @@ export async function uploadImage(base64Data: string, path: string, contentType 
   }
   const tmpFile = new File(tmpDir, tmpName);
   tmpFile.create();
-  tmpFile.write(optimised, { encoding: 'base64' });
+  await tmpFile.write(optimised, { encoding: 'base64' });
 
   const fileSize = tmpFile.size;
   logger.log(`[upload] Temp file: ${tmpFile.uri}, size=${fileSize}`);

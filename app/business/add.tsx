@@ -13,7 +13,7 @@ import { addBusiness } from '../../src/services/businessService';
 import { uploadBusinessPhotos } from '../../src/services/storageService';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useCountry } from '../../src/contexts/CountryContext';
-import { BusinessCategory } from '../../src/types';
+import { BusinessCategory, LocationType } from '../../src/types';
 import { BUSINESS_CATEGORIES } from '../../src/constants/categories';
 import { validateBusinessForm } from '../../src/utils/validation';
 import { useSubmitGuard } from '../../src/hooks';
@@ -31,6 +31,7 @@ export default function AddBusinessScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<BusinessCategory>('restaurant');
+  const [locationType, setLocationType] = useState<LocationType>('physical');
 
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -82,6 +83,19 @@ export default function AddBusinessScreen() {
   const handleAddressChange = (setter: (v: string) => void) => (value: string) => {
     setter(value);
     setVerifiedCoords(null);
+  };
+
+  /** Reset address-related state when location type changes. */
+  const handleLocationTypeChange = (type: LocationType) => {
+    setLocationType(type);
+    setVerifiedCoords(null);
+    if (type === 'online') {
+      setAddress('');
+      setState('');
+      setZipCode('');
+    } else if (type === 'service-area') {
+      setAddress('');
+    }
   };
 
   const verifyLocation = async () => {
@@ -142,7 +156,7 @@ export default function AddBusinessScreen() {
 
   const doSubmit = useCallback(async () => {
     const validationError = validateBusinessForm({
-      name, description, address, city, state, zipCode, phone, website,
+      name, description, locationType, address, city, state, zipCode, phone, website,
     }, hostCountry);
     if (validationError) {
       Alert.alert('Validation Error', validationError);
@@ -151,9 +165,9 @@ export default function AddBusinessScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      // Use verified coordinates if available, otherwise geocode now
+      // Use verified coordinates if available, otherwise geocode now (physical only)
       let coords = verifiedCoords;
-      if (!coords) {
+      if (!coords && locationType === 'physical') {
         const structured: StructuredAddress = {
           street: address.trim(),
           city: city.trim(),
@@ -164,7 +178,7 @@ export default function AddBusinessScreen() {
         coords = await geocodeAddress(structured);
       }
 
-      if (!coords) {
+      if (locationType === 'physical' && !coords) {
         Alert.alert(
           'Location Notice',
           'We could not determine the exact location for this address. Your business will be saved but may not appear correctly in "Near Me" results. You can edit the address later to fix this.',
@@ -175,18 +189,19 @@ export default function AddBusinessScreen() {
         name,
         description,
         category,
+        locationType,
         hostCountry,
-        address,
         city,
-        state,
-        zipCode,
-        coordinates: coords ?? { latitude: 0, longitude: 0 },
         phone: phone.trim(),
         languagesSpoken: [],
         photos: [],
         ownerId: user.uid,
         isVerified: false,
       };
+      if (locationType === 'physical' || address.trim()) businessData.address = address.trim();
+      if (locationType !== 'online' || state.trim()) businessData.state = state.trim();
+      if (locationType === 'physical' || zipCode.trim()) businessData.zipCode = zipCode.trim();
+      if (locationType === 'physical') businessData.coordinates = coords ?? { latitude: 0, longitude: 0 };
       if (website.trim()) businessData.website = website.trim();
 
       const businessId = await addBusiness(businessData as any);
@@ -200,13 +215,13 @@ export default function AddBusinessScreen() {
       Alert.alert('Success', 'Business added successfully!', [
         { text: 'View', onPress: () => router.replace({ pathname: '/business/[id]', params: { id: businessId } }) },
       ]);
-      trackEvent(AnalyticsEvents.BUSINESS_ADDED, { category, has_photos: images.length > 0, host_country: hostCountry });
+      trackEvent(AnalyticsEvents.BUSINESS_ADDED, { category, location_type: locationType, has_photos: images.length > 0, host_country: hostCountry });
     } catch (e: any) {
       Alert.alert('Error', getUserMessage(e, 'addBusiness', 'Failed to add business. Please try again.'));
     } finally {
       setLoading(false);
     }
-  }, [name, description, address, city, state, zipCode, phone, website, category, hostCountry, user, images, verifiedCoords]);
+  }, [name, description, address, city, state, zipCode, phone, website, category, locationType, hostCountry, user, images, verifiedCoords]);
 
   const handleSubmit = useSubmitGuard(doSubmit, 5000);
 
@@ -257,20 +272,59 @@ export default function AddBusinessScreen() {
             )}
           </View>
 
-          <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={handleAddressChange(setAddress)} required />
-          <Input label="City" placeholder="Enter city" value={city} onChangeText={handleAddressChange(setCity)} required />
-          <PickerSelect
-            label={countryConfig.addressFields.regionLabel}
-            placeholder={countryConfig.addressFields.regionPlaceholder}
-            value={state}
-            options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
-            onValueChange={(v) => { setState(v); setVerifiedCoords(null); }}
-            required
-          />
-          <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={handleAddressChange(setZipCode)} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
+          <Text style={[styles.label, { color: colors.onSurface }]}>Location Type <Text style={{ color: colors.error }}>*</Text></Text>
+          <View style={[styles.locationTypeRow, { borderColor: colors.outlineVariant, borderRadius: radii.md, backgroundColor: colors.surfaceContainerLow }]}>
+            {([
+              { key: 'physical' as LocationType, icon: 'storefront' as const, label: 'Physical' },
+              { key: 'service-area' as LocationType, icon: 'directions-car' as const, label: 'Service Area' },
+              { key: 'online' as LocationType, icon: 'laptop' as const, label: 'Online' },
+            ]).map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[
+                  styles.locationTypeBtn,
+                  { borderRadius: radii.sm },
+                  locationType === opt.key && { backgroundColor: colors.primary },
+                ]}
+                onPress={() => handleLocationTypeChange(opt.key)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: locationType === opt.key }}
+              >
+                <MaterialIcons name={opt.icon} size={18} color={locationType === opt.key ? '#FFFFFF' : colors.onSurfaceVariant} />
+                <Text style={[styles.locationTypeLabel, { color: locationType === opt.key ? '#FFFFFF' : colors.onSurfaceVariant }]}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {locationType === 'physical' && (
+            <Text style={[styles.locationTypeHint, { color: colors.onSurfaceVariant }]}>Customers visit your location</Text>
+          )}
+          {locationType === 'service-area' && (
+            <Text style={[styles.locationTypeHint, { color: colors.onSurfaceVariant }]}>You travel to your customers</Text>
+          )}
+          {locationType === 'online' && (
+            <Text style={[styles.locationTypeHint, { color: colors.onSurfaceVariant }]}>No physical location — you operate online</Text>
+          )}
 
-          {/* Location verification */}
-          {verifiedCoords ? (
+          {(locationType === 'physical') && (
+            <Input label="Street Address" placeholder="Enter street address" value={address} onChangeText={handleAddressChange(setAddress)} required />
+          )}
+          <Input label="City" placeholder="Enter city" value={city} onChangeText={handleAddressChange(setCity)} required />
+          {(locationType !== 'online') && (
+            <PickerSelect
+              label={countryConfig.addressFields.regionLabel}
+              placeholder={countryConfig.addressFields.regionPlaceholder}
+              value={state}
+              options={countryConfig.regions.map((r) => ({ label: r.name, value: r.name }))}
+              onValueChange={(v) => { setState(v); setVerifiedCoords(null); }}
+              required={locationType !== 'online'}
+            />
+          )}
+          {(locationType === 'physical') && (
+            <Input label={countryConfig.addressFields.postalCodeLabel} placeholder={countryConfig.addressFields.postalCodePlaceholder} value={zipCode} onChangeText={handleAddressChange(setZipCode)} keyboardType={countryConfig.addressFields.postalCodeKeyboardType} required />
+          )}
+
+          {/* Location verification — physical locations only */}
+          {locationType === 'physical' && (verifiedCoords ? (
             <View style={[styles.mapPreview, { borderColor: colors.outlineVariant, borderRadius: radii.lg }]}>
               <WebView
                 originWhitelist={['*']}
@@ -309,7 +363,7 @@ export default function AddBusinessScreen() {
               variant="tonal"
               style={{ marginBottom: 16 }}
             />
-          )}
+          ))}
           <Input label="Phone" placeholder={countryConfig.phoneFields.placeholder} value={phone} onChangeText={setPhone} keyboardType="phone-pad" required />
           <Input label="Website" placeholder="https://..." value={website} onChangeText={setWebsite} autoCapitalize="none" />
 
@@ -327,6 +381,22 @@ const styles = StyleSheet.create({
   subtitle: { ...Typography.bodyMedium, marginTop: 4, marginBottom: 24 },
   label: { ...Typography.titleSmall, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 },
+  locationTypeRow: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    padding: 4,
+    marginBottom: 4,
+  },
+  locationTypeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 10,
+  },
+  locationTypeLabel: { fontSize: 13, fontWeight: '600' },
+  locationTypeHint: { fontSize: 12, marginBottom: 16 },
   imageRow: { flexDirection: 'row', gap: 10, marginBottom: 20, flexWrap: 'wrap' },
   imageWrapper: { position: 'relative' },
   thumbnail: { width: 90, height: 90 },

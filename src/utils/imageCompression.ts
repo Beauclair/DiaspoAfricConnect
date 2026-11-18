@@ -31,7 +31,7 @@ export async function compressImage(
   const tmpName = `src_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
   const tmpFile = new File(tmpDir, tmpName);
   tmpFile.create();
-  tmpFile.write(base64Data, { encoding: 'base64' });
+  await tmpFile.write(base64Data, { encoding: 'base64' });
 
   const originalSize = tmpFile.size ?? 0;
   logger.log(`[compress] Original ≈${(originalSize / 1024).toFixed(0)} KB`);

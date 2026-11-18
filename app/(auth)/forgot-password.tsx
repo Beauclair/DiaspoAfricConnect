@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { router } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme';
 import Button from '../../src/components/common/Button';
 import Input from '../../src/components/common/Input';
@@ -11,10 +12,10 @@ import { trackEvent } from '../../src/config/analytics';
 import { AnalyticsEvents } from '../../src/constants/analyticsEvents';
 
 export default function ForgotPasswordScreen() {
-  const { colors, typography } = useTheme();
+  const { colors, typography, radii } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
   const doReset = useCallback(async () => {
@@ -24,11 +25,10 @@ export default function ForgotPasswordScreen() {
     }
     setLoading(true);
     setError('');
-    setMessage('');
     try {
       await resetPassword(email);
       trackEvent(AnalyticsEvents.PASSWORD_RESET_REQUESTED, { email_provided: true });
-      setMessage('Password reset email sent. Check your inbox.');
+      setSent(true);
     } catch (e: any) {
       setError(getUserMessage(e, 'resetPassword', 'Failed to send reset email. Please try again.'));
     } finally {
@@ -37,6 +37,48 @@ export default function ForgotPasswordScreen() {
   }, [email]);
 
   const handleReset = useSubmitGuard(doReset, 10000);
+
+  if (sent) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.scroll}>
+          <View style={styles.header}>
+            <MaterialIcons name="mark-email-read" size={64} color={colors.primary} />
+            <Text style={[styles.title, { color: colors.primary, marginTop: 16 }]}>Check Your Email</Text>
+            <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+              We sent a password reset link to
+            </Text>
+            <Text style={[typography.titleMedium, { color: colors.primary, marginTop: 4 }]}>
+              {email}
+            </Text>
+          </View>
+
+          <View style={[styles.infoBox, { backgroundColor: colors.surfaceContainerLow, borderRadius: radii.md }]}>
+            <MaterialIcons name="report-gmailerrorred" size={18} color={colors.onSurfaceVariant} />
+            <Text style={[typography.bodySmall, { color: colors.onSurfaceVariant, flex: 1, marginLeft: 8, lineHeight: 18 }]}>
+              Didn't receive the email? Check your spam or junk folder.
+            </Text>
+          </View>
+
+          <View style={styles.form}>
+            <Button
+              title="Back to Login"
+              onPress={() => router.back()}
+              icon="login"
+            />
+
+            <Button
+              title="Send Again"
+              onPress={() => { setSent(false); setError(''); }}
+              variant="outline"
+              icon="refresh"
+              style={{ marginTop: 16 }}
+            />
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -57,7 +99,6 @@ export default function ForgotPasswordScreen() {
           />
 
           {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
-          {message ? <Text style={[styles.success, { color: colors.success }]}>{message}</Text> : null}
 
           <Button title="Send Reset Link" onPress={handleReset} loading={loading} />
 
@@ -102,8 +143,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
-  success: {
-    textAlign: 'center',
-    marginBottom: 16,
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 14,
+    marginBottom: 24,
+    width: '100%',
   },
 });
